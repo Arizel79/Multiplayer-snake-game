@@ -37,6 +37,7 @@ class SnakeGameClient:
     MAX_SHOWN_MESSAGES_CHAT_ON = 6
 
     def __init__(self, server_address=None, nickname=None, skin=None):
+        self.show_debug = False
         self.server_address = server_address
         self.nickname = nickname
         self.skin = skin
@@ -54,7 +55,7 @@ class SnakeGameClient:
         self.direction = None
         self.to_send = Queue()
         self.new_direction = None
-
+        self.is_open_tablist = False
         self.render_state = None
         self.alert_message = None
         self.input_queue = Queue()  # Очередь для хранения нажатых клавиш
@@ -63,16 +64,21 @@ class SnakeGameClient:
     def _input_thread_worker(self):
         """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
         while self.input_thread_running:
+            logger.info("_input_thread_worker iter")
+            self.render()
             key = self.screen.get_key(0)  # Блокирующий вызов с небольшим таймаутом
             if key is not None:
                 self.input_queue.put(key)
 
-            self.render()
 
     def get_game_map_coords_on_scr(self):
         x, y = self.screen.get_sizes()
         x1, y1, x2, y2 = 1, 1, x - 2, y - 2
         return x1, y1, x2, y2
+    def handle_chat_message(self, message):
+        from_user = message.get("from_user", None)
+        if not from_user is None:
+            self.add_chat_message(f"<yellow>{html.escape(from_user)}</yellow> : {html.escape(message.get('data', None))}")
 
     async def handle_data(self, data):
         logger.info(f"Data: {data}")
@@ -80,7 +86,8 @@ class SnakeGameClient:
         if data.get("type", None) == "game_state":
             self.game_state = data
         elif data.get("type", None) == "chat_message":
-            pass
+            self.handle_chat_message(data)
+            # self.add_chat_message(data["data"])
             # self.chat_messages += data.get("data", None)
         else:
             assert False, data
@@ -93,10 +100,12 @@ class SnakeGameClient:
     async def send_chat(self):
         message = self.chat_prompt.lstrip()
         if message != "":
-            self.chat_messages.append(self.chat_prompt)
+
 
             if self.is_message_for_send(message):
                 self.to_send.put({"type": "chat_message", "data": message})
+            else:
+                self.chat_messages.append(self.chat_prompt)
             self.chat_prompt = ""
             self.is_open_chat = False
 
@@ -112,6 +121,7 @@ class SnakeGameClient:
                     elif key == "\x08":
                         if len(self.chat_prompt) > 0:
                             self.chat_prompt = self.chat_prompt[:-1]
+
                     elif key == "\n":
                         await self.send_chat()
                     else:
@@ -128,6 +138,10 @@ class SnakeGameClient:
                         self.new_direction = 'right'
                     elif key == 'q':
                         self.running = False
+                    elif key == "\t":
+                        self.is_open_tablist = not self.is_open_tablist
+                    elif key == "`":
+                        self.show_debug = not self.show_debug
                     elif key.lower() == 't':
                         self.is_open_chat = True
 
@@ -147,6 +161,7 @@ class SnakeGameClient:
 
     async def connect(self, uri):
         async with websockets.connect(uri) as websocket:
+            logger.info("coon")
             self.render_state = "game"
             self.websocket = websocket
             # Send player info
@@ -178,15 +193,15 @@ class SnakeGameClient:
 
                 # self.render()
 
-    def get_me(self):
+    def get_follow(self) -> (int, int):
         try:
-            return self.game_state["snakes"][str(self.player_id)]
-        except KeyError:
-            raise Disconnected("No player! I death!..")
 
-    def get_my_coords(self):
-        xy = self.get_me()["body"][0]
-        return list(xy.values())
+            return [i for i in self.game_state["snakes"][str(self.player_id)]["body"][0].values()]
+        except (KeyError, TypeError):
+            return 0, 0
+
+    def get_my_coords(self) ->  (int, int):
+        return self.get_follow()
 
     def calc_coords(self, mx, my) -> (int, int):
         px, py = self.get_my_coords()
@@ -195,6 +210,8 @@ class SnakeGameClient:
         return cX + sx1 - px + mx, cY + sy1 - py + my
 
     def render_game_world(self):
+        if self.game_state is None:
+            return
         x1, y1, x2, y2 = self.game_state["map_borders"]
         self.screen.draw_rectangle(*self.calc_coords(x1 - 1, y1 - 1), *self.calc_coords(x2 + 1, y2 + 1),
                                    Symbol("X", Colors.BLACK, Colors.BLACK, Styles.BLINK),
@@ -228,7 +245,7 @@ class SnakeGameClient:
     def render_chat(self):
         x, y = self.screen.get_sizes()
         if self.is_open_chat:
-            self.screen.set_str(0, y - 1, f"> {self.chat_prompt}")
+            self.screen.set_str(0, y - 1, f"> {self.chat_prompt.ljust(32)}")
 
         out = ""
         if self.is_open_chat:
@@ -237,9 +254,15 @@ class SnakeGameClient:
             lst = self.chat_messages[-max(self.MAX_SHOWN_MESSAGES_CHAT_OFF, len(self.chat_messages)):]
 
         for i in lst:
-            out += f"{html.escape(i)}\n"
+            if self.is_open_chat:
+                out += f"{i}\n"
+            else:
+                out += f"{i[:min(80, len(i))]}\n"
 
-        self.screen.set_text(0, y - 1, out, anchor_x=Anchors.LEFT_ANCHOR, anchor_y=Anchors.DOWN_ANCHOR, parse_html=True)
+        self.screen.set_text(0, y - 1, out, anchor_x=Anchors.LEFT_ANCHOR,
+                             style=TextStyle(Colors.GREEN, Colors.BLACK),
+                             anchor_y=Anchors.DOWN_ANCHOR, parse_html=True)
+
 
     def render(self):
 
@@ -247,8 +270,9 @@ class SnakeGameClient:
 
         # self.screen.clear()
         self.screen.clear()
-
+        logger.info(f"render_state : {self.render_state}")
         if self.render_state == "game":
+            logger.info("98")
             self.render_game_world()
             self.screen.set_text(0, 0, "Snake game by @Ariel79", TextStyle(Colors.YELLOW))
             self.screen.set_text(
@@ -260,7 +284,8 @@ class SnakeGameClient:
 
         elif self.render_state == "alert":
             render_alert(self.screen, self.alert_message)
-
+        if self.show_debug:
+            self.screen.set_text(x, 0, f"<cyan>DEBUG</cyan>\n{self.get_follow()}", parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR, anchor_y=Anchors.UP_ANCHOR)
         self.screen.update()
 
     def alert(self, title, message):
@@ -276,30 +301,37 @@ class SnakeGameClient:
             try:
                 self.alert(f"Connecting to {self.server_address}", "Please, wait...")
                 await self.connect(f"ws://{self.server_address}")
+
+
             except websockets.exceptions.ConnectionClosedOK:
-                self.alert("Disconnected", "Server closed")
-                return  # Добавляем return для немедленного выхода
+                self.alert("<red>Disconnected</red>", "Server closed")
+                while self.running:
+                    await asyncio.sleep(.1)
+            except Disconnected as e:
+                self.alert("<red>Youre death</red>", f"Death...")
+                while self.running:
+                    await asyncio.sleep(.1)
             except Exception as e:
                 err = f"{type(e).__name__}: {str(e)}"
                 logger.error(err)
-                self.alert("Disconnected", f"{err}")
-
-            finally:
+                self.alert("<red>Disconnected</red>", f"{err}")
                 while self.running:
-                    await asyncio.sleep(0.1)  # Чтобы не грузить процессор
+                    await asyncio.sleep(.1)
+
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, shutting down...")
-
         finally:
             # Корректное завершение
             self.running = False
             self.input_thread_running = False
+
+            # Даем потоку немного времени на завершение
             if hasattr(self, 'input_thread') and self.input_thread.is_alive():
-                self.input_thread.join(timeout=1)  # Даем потоку 1 секунду на завершение
+                self.input_thread.join(timeout=0.5)
+
             self.screen.quit()
-            return
-
-
+            # Выходим из программы
+            raise SystemExit(0)
 
 def prompt(sc, title="!prompt!", message="???", default="none"):
     style = TextStyle("white", "black")
