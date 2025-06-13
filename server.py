@@ -4,7 +4,7 @@ import json
 import random
 from collections import deque
 from dataclasses import dataclass, asdict
-
+from random import randint
 import websockets
 
 
@@ -26,7 +26,7 @@ class Snake:
 
 
 class Server:
-    def __init__(self, port, width=120, height=40):
+    def __init__(self, port, width=60, height=20):
         self.port = port
 
         self.width = width
@@ -36,9 +36,10 @@ class Server:
         self.food = []
         self.players = {}
         self.game_speed = 0.2
-        self.max_food = width * height // 16
+        self.max_food = 5
 
-        self.connections = set()
+        self.connections = {}
+
     def get_avalible_coords(self):
         x1, y1, x2, y2 = self.get_map_rect()
         while True:
@@ -48,7 +49,8 @@ class Server:
             if not p in self.food:
                 break
         return x, y
-    def add_player(self, player_id:int, name, color):
+
+    def add_player(self, player_id: int, name, color):
         if player_id in self.snakes:
             return False
 
@@ -69,8 +71,8 @@ class Server:
         return True
 
     def remove_player(self, player_id):
-        #if player_id in self.snakes:
-        #    del self.snakes[player_id]
+        if player_id in self.snakes:
+            del self.snakes[player_id]
         if player_id in self.players:
             del self.players[player_id]
 
@@ -90,6 +92,15 @@ class Server:
             x = random.randint(x1, x2)
             y = random.randint(y1, y2)
             self.food.append(Point(x, y))
+
+    def player_death(self, player_id):
+        print(f"Player {player_id} death")
+
+        self.snakes[player_id].alive = False
+        self.connections
+        # del self.snakes[player_id]
+        # del self.players[player_id]
+
 
     def get_map_rect(self):
         x1, y1, x2, y2 = -(self.width // 2), -(self.height // 2), self.width // 2, self.height // 2
@@ -148,14 +159,13 @@ class Server:
                 snake.body.pop()
 
         # Remove dead snakes
-        for snake_id in list(self.snakes.keys()):
-            if not self.snakes[snake_id].alive:
-                self.remove_player(snake_id)
+        # for snake_id in list(self.snakes.keys()):
+        #    if not self.snakes[snake_id].alive:
+        #        self.remove_player(snake_id)
 
         # Generate new food
         self.generate_food()
-    def get_name_by_player_id(self, player_id):
-        pass
+
     def to_dict(self):
         return {
             'type': "game_state",
@@ -164,37 +174,64 @@ class Server:
                 'body': [asdict(p) for p in s.body],
                 'color': s.color,
                 'name': s.name,
-                'score': s.score
+                'score': s.score,
+                'alive': s.alive
             } for pid, s in self.snakes.items()},
             'food': [asdict(f) for f in self.food],
             'players': self.players
         }
+
     async def broadcast_chat_message(self, data):
-        connections = copy.copy(self.connections)
+        connections_ = copy.copy(self.connections)
         to_send = json.dumps(data)
         print(f"Send: {data}")
-        for ws in connections:
+
+        for plaier_id, ws in connections_.items():
             await ws.send(to_send)
 
     async def handle_client_chat_message(self, player_id, message: str):
         if message.startswith("/"):
             lst = message.split()
         else:
-            nickname = "noname"
-            await self.broadcast_chat_message({"type": "chat_message", "data": f"{message}", "from_user": f"{player_id}"})
+            nickname = self.players[player_id]
+            await self.broadcast_chat_message(
+                {"type": "chat_message", "data": f"{message}", "from_user": f"{nickname}"})
 
-
-    async def handle_client_data(self, player_id, data):
+    async def handle_client_data(self, player_id:str, data:dict):
         print(f"Rec {player_id}: {data}")
         if data["type"] == "direction":
             self.change_direction(player_id, data['data'])
         elif data["type"] == "chat_message":
             await self.handle_client_chat_message(player_id, data["data"])
+        elif data["type"] == "kill_me":
+            print(98)
+            self.player_death(player_id)
+        elif data["type"] == "respawn":
+            if self.snakes[player_id].alive == False:
 
+                await self.respawn(player_id)
+    async def respawn(self, player_id):
+        print(f"respawn {player_id}")
+        x, y = self.get_avalible_coords()
+        # Create snake body
+        body = deque([Point(x, y)])
+        for i in range(1, 8):
+            body.append(Point(x - i, y))
+
+        self.snakes[player_id] = Snake(
+            body=body,
+            direction='right',
+            next_direction='right',
+            color=self.snakes[player_id].color,
+            name=self.snakes[player_id].name,
+            alive=True
+        )
+
+        # self.players[player_id] = name
     async def handle_connection(self, websocket):
-        print(1)
-        self.connections.add(websocket)
+
         player_id = get_random_id()
+        self.connections[player_id] = websocket
         await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
         try:
             data = await websocket.recv()
@@ -202,10 +239,9 @@ class Server:
                 player_info = json.loads(data)
                 name = player_info.get('name', 'Player')
                 color = player_info.get('color', 'green')
-                if not player_id:
-                    await websocket.close()
-                    return
+
                 self.add_player(player_id, name, color)
+
                 await websocket.send(json.dumps(self.to_dict()))
                 async for message in websocket:
                     try:
@@ -213,16 +249,15 @@ class Server:
                         await self.handle_client_data(player_id, data)
                     except:
                         pass
+
             except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError):
                 await websocket.close()
                 return
 
 
         finally:
-            self.connections.discard(websocket)
-            if player_id:
-                self.remove_player(player_id)
-
+            del self.connections[player_id]
+            self.remove_player(player_id)
 
     async def game_loop(self):
         while True:
@@ -231,9 +266,13 @@ class Server:
 
             # Send update to all connected clients
             connections_ = copy.copy(self.connections)
-            for ws in connections_:
+            for player_id, ws in connections_.items():
                 try:
+                    # if self.snakes[player_id].alive:
                     await ws.send(json.dumps(state))
+                    if not self.snakes[player_id].alive:
+
+                        await ws.send(json.dumps({"type": "you_died", "data": "Oops, you died... This is end)\n\nNOTE: dont prees Z ;)"}))
                 except Exception as e:
                     print(f"239 - {type(e).__name__}: e")
 
@@ -246,12 +285,15 @@ class Server:
             print(f"Server started at localhost:{self.port}")
             await asyncio.Future()
 
+
 def get_random_id():
-    return random.randint(0, 99999999)
+    return str(random.randint(0, 99999999))
+
 
 async def main():
     game_state = Server(8090)
     await game_state.run()
+
 
 if __name__ == "__main__":
     try:
