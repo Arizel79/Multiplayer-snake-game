@@ -6,6 +6,13 @@ from collections import deque
 from dataclasses import dataclass, asdict
 from random import randint
 import websockets
+from string import ascii_letters, digits
+from time import time
+
+VALID_NAME_CHARS = ascii_letters + digits + "_"
+
+DEFAULT_SNAKE_LENGHT = 5
+SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
 
 
 @dataclass
@@ -25,8 +32,16 @@ class Snake:
     alive: bool = True
 
 
+@dataclass
+class Player:
+    player_id: str
+    name: str
+    color: str
+    alive: bool
+
+
 class Server:
-    def __init__(self, port, width=60, height=20):
+    def __init__(self, port, width=80, height=40):
         self.port = port
 
         self.width = width
@@ -36,9 +51,19 @@ class Server:
         self.food = []
         self.players = {}
         self.game_speed = 0.2
-        self.max_food = 5
-
+        self.max_food = 64
+        self.lost_perc = 0.05
         self.connections = {}
+
+        self.TICK = 0.05
+
+    def get_all_food_count(self):
+        food_count = 0
+        food_count += len(self.food)
+
+        for k, v in self.snakes.items():
+            food_count += len(v.body)
+        return food_count
 
     def get_avalible_coords(self):
         x1, y1, x2, y2 = self.get_map_rect()
@@ -50,27 +75,23 @@ class Server:
                 break
         return x, y
 
-    def add_player(self, player_id: int, name, color):
+    async def add_player(self, player_id: str, name, color):
         if player_id in self.snakes:
             return False
-
-        x, y = self.get_avalible_coords()
-        # Create snake body
-        body = deque([Point(x, y)])
-        for i in range(1, 3):
-            body.append(Point(x - i, y))
-
-        self.snakes[player_id] = Snake(
-            body=body,
-            direction='right',
-            next_direction='right',
+        self.players[player_id] = Player(
+            player_id=player_id,
+            name=name,
             color=color,
-            name=name
-        )
-        self.players[player_id] = name
+            alive=True)
+        await self.spawn(player_id)
+        await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
+                                           "data": f"<yellow>[</yellow><green>-</green><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>joined the game</yellow>"})
         return True
 
-    def remove_player(self, player_id):
+    async def remove_player(self, player_id):
+        await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
+                                           "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
+
         if player_id in self.snakes:
             del self.snakes[player_id]
         if player_id in self.players:
@@ -87,26 +108,48 @@ class Server:
                 snake.next_direction = direction
 
     def generate_food(self):
-        x1, y1, x2, y2 = self.get_map_rect()
-        if len(self.food) < self.max_food:
-            x = random.randint(x1, x2)
-            y = random.randint(y1, y2)
-            self.food.append(Point(x, y))
+        if self.get_all_food_count() < self.max_food:
+            x1, y1, x2, y2 = self.get_map_rect()
+            if len(self.food) < self.max_food:
+                x = random.randint(x1, x2)
+                y = random.randint(y1, y2)
+                self.food.append(Point(x, y))
 
-    def player_death(self, player_id):
-        print(f"Player {player_id} death")
+    async def player_death(self, player_id, reason: str = "No reason"):
+        print(f"Player {player_id} death ({reason})")
 
         self.snakes[player_id].alive = False
-        self.connections
+        body = self.snakes[player_id].body
+        del self.snakes[player_id]  # del snake
+        self.players[player_id].alive = False
+        state = self.to_dict()
+        ws = self.connections[player_id]
+        await ws.send(json.dumps(state))
+        await self.connections[player_id].send(json.dumps({"type": "you_died", "data": reason}))
+        await self.broadcast_chat_message({"type": "chat_message", "subtype": "death_message",
+                                           "data": f'{await self.get_stilizate_name_color(player_id)} {reason}'})
+        for i in body:
+            self.food.append(i)
         # del self.snakes[player_id]
         # del self.players[player_id]
-
 
     def get_map_rect(self):
         x1, y1, x2, y2 = -(self.width // 2), -(self.height // 2), self.width // 2, self.height // 2
         return x1, y1, x2, y2
 
-    def update(self):
+    def is_name_valid(self, name: str):
+        if len(name) > 16:
+            return "Nickname is too long"
+        elif len(name) < 4:
+            return "Nickname is too short"
+
+        for i in name:
+            if i.lower() not in VALID_NAME_CHARS:
+                return "Nickname contain invalid characters"
+
+        return True
+
+    async def update(self):
         # Update directions
         for snake in self.snakes.values():
             snake.direction = snake.next_direction
@@ -128,17 +171,18 @@ class Server:
             elif snake.direction == 'right':
                 new_head.x += 1
 
-            # Check collisions with walls
-            # if (new_head.x < 0 or new_head.x >= self.width or
-            #         new_head.y < 0 or new_head.y >= self.height):
-            #     snake.alive = False
-            #     continue
+            walls = self.get_map_rect()
+            if (new_head.x < walls[0] or new_head.x > walls[2] or
+                    new_head.y < walls[1] or new_head.y > walls[3]):
+                await self.player_death(snake_id, "Сrashed into the border of the world")
+                continue
 
             # Check collisions with other snakes
-            for other_snake in self.snakes.values():
+            snakes = copy.copy(self.snakes)
+            for other_snake in snakes.values():
                 if new_head in other_snake.body:
-                    snake.alive = False
-                    break
+                    await self.player_death(snake_id, f'Crashed into "{other_snake.name}" snake')
+                    continue
 
             if not snake.alive:
                 continue
@@ -158,12 +202,8 @@ class Server:
                 snake.body.appendleft(new_head)
                 snake.body.pop()
 
-        # Remove dead snakes
-        # for snake_id in list(self.snakes.keys()):
-        #    if not self.snakes[snake_id].alive:
-        #        self.remove_player(snake_id)
+            await self.steal_body(snake_id)
 
-        # Generate new food
         self.generate_food()
 
     def to_dict(self):
@@ -178,7 +218,9 @@ class Server:
                 'alive': s.alive
             } for pid, s in self.snakes.items()},
             'food': [asdict(f) for f in self.food],
-            'players': self.players
+            'players': {pid: {"name": pl.name,
+                              "color": pl.color,
+                              "alive": pl.alive} for pid, pl in self.players.items()}
         }
 
     async def broadcast_chat_message(self, data):
@@ -189,47 +231,66 @@ class Server:
         for plaier_id, ws in connections_.items():
             await ws.send(to_send)
 
+    async def get_stilizate_name_color(self, player_id, text=None):
+        color = self.players.get(player_id, {}).color
+        if text == None:
+            text = self.players.get(player_id).name
+
+        if color in SNAKE_COLORS:
+            pass
+        else:
+            color = "white"
+
+        return f"<{color}>{text}</{color}>"
+
     async def handle_client_chat_message(self, player_id, message: str):
+        con = self.connections[player_id]
         if message.startswith("/"):
             lst = message.split()
+            if lst[0] == "/help":
+                await con.send(json.dumps({"type": "chat_message",
+                                           "data": f"Help mesaage here?"}))
+            elif lst[0] == "/kill":
+                await self.player_death(player_id, "kill command")
         else:
-            nickname = self.players[player_id]
+            name = self.players[player_id].name
             await self.broadcast_chat_message(
-                {"type": "chat_message", "data": f"{message}", "from_user": f"{nickname}"})
+                {"type": "chat_message", "data": f"{message}",
+                 "from_user": f"{await self.get_stilizate_name_color(player_id)}"})
 
-    async def handle_client_data(self, player_id:str, data:dict):
+    async def handle_client_data(self, player_id: str, data: dict):
         print(f"Rec {player_id}: {data}")
         if data["type"] == "direction":
             self.change_direction(player_id, data['data'])
         elif data["type"] == "chat_message":
             await self.handle_client_chat_message(player_id, data["data"])
         elif data["type"] == "kill_me":
-            print(98)
-            self.player_death(player_id)
+            await self.player_death(player_id)
         elif data["type"] == "respawn":
-            if self.snakes[player_id].alive == False:
+            await self.respawn(player_id)
 
-                await self.respawn(player_id)
-    async def respawn(self, player_id):
-        print(f"respawn {player_id}")
+    async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
         x, y = self.get_avalible_coords()
         # Create snake body
         body = deque([Point(x, y)])
-        for i in range(1, 8):
+        for i in range(1, lenght):
             body.append(Point(x - i, y))
 
         self.snakes[player_id] = Snake(
             body=body,
             direction='right',
             next_direction='right',
-            color=self.snakes[player_id].color,
-            name=self.snakes[player_id].name,
+            color=self.players[player_id].color,
+            name=self.players[player_id].name,
             alive=True
         )
+        self.players[player_id].alive = True
 
-        # self.players[player_id] = name
+    async def respawn(self, player_id):
+        print(f"respawn {player_id} ({self.players[player_id].name})")
+        await self.spawn(player_id)
+
     async def handle_connection(self, websocket):
-
         player_id = get_random_id()
         self.connections[player_id] = websocket
         await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
@@ -238,9 +299,19 @@ class Server:
             try:
                 player_info = json.loads(data)
                 name = player_info.get('name', 'Player')
-                color = player_info.get('color', 'green')
+                name_valid = self.is_name_valid(name)
+                if not name_valid is True:
+                    await websocket.send(json.dumps({"type": "connection_error",
+                                                     "data": f"Invalid name: {name_valid}"}))
+                    return
 
-                self.add_player(player_id, name, color)
+                color = player_info.get('color', 'green')
+                if not color in SNAKE_COLORS:
+                    await websocket.send(json.dumps({"type": "connection_error",
+                                                     "data": f"Invalid snake color\nValid colors: {', '.join(SNAKE_COLORS)}"}))
+                    return
+
+                await self.add_player(player_id, name, color)
 
                 await websocket.send(json.dumps(self.to_dict()))
                 async for message in websocket:
@@ -256,23 +327,27 @@ class Server:
 
 
         finally:
+            await websocket.close()
             del self.connections[player_id]
-            self.remove_player(player_id)
+            await self.remove_player(player_id)
+
+    async def steal_body(self, player_id):
+        snake = self.snakes[player_id]
+        if random.random() < self.lost_perc:
+            snake.body.pop()
+            print("lost food snake")
 
     async def game_loop(self):
+        old_tick_time = time()
         while True:
-            self.update()
+            await self.update()
             state = self.to_dict()
 
-            # Send update to all connected clients
             connections_ = copy.copy(self.connections)
             for player_id, ws in connections_.items():
                 try:
-                    # if self.snakes[player_id].alive:
                     await ws.send(json.dumps(state))
-                    if not self.snakes[player_id].alive:
 
-                        await ws.send(json.dumps({"type": "you_died", "data": "Oops, you died... This is end)\n\nNOTE: dont prees Z ;)"}))
                 except Exception as e:
                     print(f"239 - {type(e).__name__}: e")
 
