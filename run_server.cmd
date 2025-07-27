@@ -1,0 +1,1 @@
+python server.py --food_perc 50 --map_width 10 --map_height 10 --log_lvl DEBUG --server_name "test serv"

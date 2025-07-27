@@ -5,12 +5,15 @@ from pprint import pformat
 import threading
 import websockets
 import json
+
 from pyAsciiEngine import *
+
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
 from random import randint, choice
-from pyexpat.errors import messages
+
+# input()
 
 SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
 
@@ -34,6 +37,7 @@ logger.info("start")
 class Disconnected(Exception):
     pass
 
+
 class ServerConnectionError(Exception):
     pass
 
@@ -47,7 +51,7 @@ class SnakeGameClient:
         self.server_address = server_address
         self.nickname = nickname
         self.color = color
-        self.screen = ConsoleScreen()
+        self.screen = None
         self.player_id = None
         self.player_color = "green"
         self.game_state = None
@@ -62,6 +66,7 @@ class SnakeGameClient:
         self.to_send = Queue()
         self.new_direction = None
         self.is_open_tablist = False
+        self.server_desc = "Welcome to server!"
 
         self.state = None
 
@@ -71,12 +76,16 @@ class SnakeGameClient:
         self.input_thread = threading.Thread(target=self._input_thread_worker, daemon=True)
 
     def _input_thread_worker(self):
-        """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
-        while self.input_thread_running:
-            self.render()
-            key = self.screen.get_key(.01)  # Блокирующий вызов с небольшим таймаутом
-            if key is not None:
-                self.input_queue.put(key)
+        self.screen = ConsoleScreen()
+        try:
+            """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
+            while self.input_thread_running:
+                self.render()
+                key = self.screen.get_key(.01)  # Блокирующий вызов с небольшим таймаутом
+                if key is not None:
+                    self.input_queue.put(key)
+        finally:
+            self.screen.quit()
 
     def get_game_map_coords_on_scr(self):
         x, y = self.screen.get_sizes()
@@ -98,7 +107,6 @@ class SnakeGameClient:
             elif from_user in ["", None]:
                 self.add_chat_message(f"{message.get('data', None)}")
 
-
     async def on_my_death(self, data):
 
         self.state = "died"
@@ -107,17 +115,19 @@ class SnakeGameClient:
 
         self.direction = None
         self.alert_message = data.get("data", "no died message recived")
+
     async def handle_data(self, data):
         logger.info(f"Data: {data}")
         if data.get("type", None) == "game_state":
             self.game_state = data
+        elif data.get("type", None) == "set_server_desc":
+            self.server_desc = data["data"]
         elif data.get("type", None) == "chat_message":
             self.handle_chat_message(data)
 
         elif data.get("type", None) == 'connection_error':
-            self.state = "alert"
-            self.alert_message = data.get("data", "???")
             raise ServerConnectionError
+
         elif data.get("type", None) == "you_died":
             await self.on_my_death(data)
         else:
@@ -210,13 +220,12 @@ class SnakeGameClient:
 
     def is_me_alive(self):
         if self.game_state is None:
-            return  False
+            return False
         snake = self.game_state["snakes"].get(self.player_id, None)
         if snake is None:
             return False
 
         return bool(self.game_state) and snake["alive"]
-
 
     async def connect(self, uri):
         async with websockets.connect(uri) as websocket:
@@ -247,7 +256,6 @@ class SnakeGameClient:
                 while not self.to_send.empty():
                     await websocket.send(json.dumps(self.to_send.get()))
 
-
     def get_follow(self) -> (int, int):
         try:
 
@@ -263,6 +271,7 @@ class SnakeGameClient:
         sx1, sy1, sx2, sy2 = self.get_game_map_coords_on_scr()
         cX, cY = (sx1 + sx2) // 2, (sy1 + sy2) // 2
         return cX + sx1 - px + mx, cY + sy1 - py + my
+
     def get_stilizate_name_color(self, player_id, text=None):
         color = self.game_state["players"].get(player_id, {})["color"]
         if text == None:
@@ -273,12 +282,13 @@ class SnakeGameClient:
         else:
             color = "white"
         return f"<{color}>{text}</{color}>"
+
     def render_tablist(self):
         x, y = self.screen.get_sizes()
 
         if self.is_open_tablist:
 
-            tablist = f"\n<yellow>Server {self.server_address}</yellow>\n\nPlayers ({len(self.game_state["players"])}):\n"
+            tablist = f"\n<yellow>Server {self.server_address}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])}):\n"
             for k, v in self.game_state["players"].items():
                 if k == self.player_id:
                     tablist += f"[ME] {self.get_stilizate_name_color(k)}\n"
@@ -379,7 +389,7 @@ class SnakeGameClient:
 
 {self.alert_message}
 
-Prees SPACE to respawn"""
+<b>Prees SPACE to respawn</b>"""
             render_alert(self.screen, text)
         if self.show_debug:
             pretty_str = pformat(self.game_state)
@@ -391,32 +401,34 @@ Prees SPACE to respawn"""
         self.state = "alert"
         self.alert_message = f"<bold>{title}</bold>\n\n{message}"
 
+    async def wait_for_end(self):
+        while self.state != None:
+            await asyncio.sleep(.01)
+            await self.handle_input()
     async def run_game(self):
+        print("Welcome to Multiplayer Snake by @Arizel79")
         try:
             self.input_thread.start()
 
-
             try:
-                self.alert(f"Connecting to {self.server_address}", "Please, wait...")
+                self.alert(f"Connecting to {self.server_address}", "<b>Please, wait...<b/>")
                 await self.connect(f"ws://{self.server_address}")
 
 
             except websockets.exceptions.ConnectionClosedOK:
-                self.alert("<red>Disconnected</red>", "Server closed")
-                while self.state != None:
-                    await asyncio.sleep(.1)
-                    await self.handle_input()
+                self.alert("<red>Disconnected</red>", "<b>Server closed</b>\n\nYou can try reconnect later")
+                await self.wait_for_end()
+            except ConnectionRefusedError as e:
+                self.alert(f"<red>Cannot connect to the server</red>", f"<b>ConnectionRefusedError</b>\n\n{e}")
+                await self.wait_for_end()
 
             except Disconnected as e:
-                self.alert("<red>Youre death</red>", f"Death...")
-                while self.state != None:
-                    await asyncio.sleep(.1)
-                    await self.handle_input()
+                self.alert("<red>DEATH</red>", f"You are death")
+                await self.wait_for_end()
+
             except ServerConnectionError:
                 self.alert("<red>ServerConnectionError</red>", f"{self.alert_message}")
-                while self.state != None:
-                    await asyncio.sleep(.1)
-                    await self.handle_input()
+                await self.wait_for_end()
             # except Exception as e:
             #     err = f"{type(e).__name__}: {str(e)}"
             #     logger.error(err)
@@ -428,7 +440,8 @@ Prees SPACE to respawn"""
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, shutting down...")
         finally:
-            # Корректное завершение
+
+            self.screen.quit()
             self.running = False
             self.input_thread_running = False
 
@@ -436,7 +449,6 @@ Prees SPACE to respawn"""
             if hasattr(self, 'input_thread') and self.input_thread.is_alive():
                 self.input_thread.join(timeout=0.5)
 
-            self.screen.quit()
             # Выходим из программы
             # raise SystemExit(0)
 
@@ -486,7 +498,7 @@ def render_alert(scr: ConsoleScreen, full_text):
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79")
     parser.add_argument('--name', type=str, help='Snake name', default=f"player_{randint(0, 99999)}")
     parser.add_argument('--color', type=str, help='Snake color', default=choice(SNAKE_COLORS))
     parser.add_argument('--server', type=str, help='Server address', default="localhost:8090")
