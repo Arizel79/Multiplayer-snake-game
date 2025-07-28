@@ -1,0 +1,3 @@
+import client
+
+client.main()

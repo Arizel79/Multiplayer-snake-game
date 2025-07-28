@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 
 # Создаем обработчик для ротации логов (макс. 5 файлов по 1 МБ каждый)
 handler = RotatingFileHandler(
-    'app.log',
+    '../app.log',
     maxBytes=1024 * 1024,  # 1 MB
     encoding='utf-8'
 )
@@ -192,8 +192,7 @@ class SnakeGameClient:
                             self.is_open_tablist = not self.is_open_tablist
                         elif key == "`":
                             self.show_debug = not self.show_debug
-                        elif key == "z":
-                            await self.websocket.send(json.dumps({"type": 'kill_me'}))
+
                         elif key.lower() == 't':
                             self.is_open_chat = True
 
@@ -287,17 +286,25 @@ class SnakeGameClient:
         x, y = self.screen.get_sizes()
 
         if self.is_open_tablist:
-
-            tablist = f"\n<yellow>Server {self.server_address}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])}):\n"
-            for k, v in self.game_state["players"].items():
-                if k == self.player_id:
-                    tablist += f"[ME] {self.get_stilizate_name_color(k)}\n"
+            alive_count = 0
+            dead_count = 0
+            for player_id, player in self.game_state["players"].items():
+                if player["alive"]:
+                    alive_count += 1
                 else:
-                    if v['alive']:
-                        tablist += f"{self.get_stilizate_name_color(k)}\n"
-                    else:
-                        tablist += f"<red>[DEATH]<red> {self.get_stilizate_name_color(k)}\n"
+                    dead_count += 1
+            tablist = f"\n<yellow>Server {self.server_address}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])})\n(<green>Alive: {alive_count}</green> | <red>Dead: {dead_count}</red>):\n"
+
+            for player_id, player in self.game_state["players"].items():
+                death_flag = ""
+                if not player["alive"]:
+                    death_flag = "<red>[DEATH]</red> "
+                if player_id == self.player_id:
+                    tablist += f"<cyan>[ME]</cyan> {death_flag}{self.get_stilizate_name_color(player_id)} [S: {player['score']}; D: {player['deaths']}; K: {player['kills']}]\n"
+                else:
+                    tablist += f"{death_flag}{self.get_stilizate_name_color(player_id)}  [S: {player['score']}; D: {player['deaths']}; K: {player['kills']}]\n"
             max_str = 0
+            print(tablist)
             tablist = tablist.splitlines()
             for i in tablist:
                 if len(i) > max_str:
@@ -310,6 +317,12 @@ class SnakeGameClient:
                                  parse_html=True,
                                  anchor_x=Anchors.CENTER_X_ANCHOR, anchor_y=Anchors.UP_ANCHOR)
 
+    def get_snake_color_segment(self, color, segment_n):
+        if segment_n == 0:
+            return Symbol("0", color, Colors.BLACK, Styles.DIM)
+        else:
+            return Symbol("o", color, Colors.BLACK)
+
     def render_game_world(self):
         if self.game_state is None:
             return
@@ -318,30 +331,26 @@ class SnakeGameClient:
                                    Symbol("X", Colors.BLACK, Colors.BLACK, Styles.BLINK),
                                    isFill=False)
 
+        for snake_id, snake in self.game_state['snakes'].items():
+            color = snake['color']
+            death_symbol = Symbol("X")
+
+            for i, segment in enumerate(snake['body'][::-1]):
+                if snake["alive"]:
+                    smbl = self.get_snake_color_segment(snake["color"], len(snake['body']) - i - 1)
+                else:
+                    smbl = death_symbol
+                self.screen.set_symbol_obj(
+                    *self.calc_coords(segment['x'], segment['y']),
+                    smbl
+                )
+
         for food in self.game_state['food']:
             self.screen.setSymbol(
                 *self.calc_coords(food['x'], food['y']),
                 '*',
                 TextStyle("red", "black", "bold")
             )
-
-        for snake_id, snake in self.game_state['snakes'].items():
-            color = snake['color']
-            head_style = TextStyle(color, "black", "bold")
-            body_style = TextStyle(color, "black")
-
-            for i, segment in enumerate(snake['body']):
-                if i == 0:  # head
-                    smbl = "0"
-                    st = head_style
-                else:
-                    smbl = "o"
-                    st = body_style
-                self.screen.setSymbol(
-                    *self.calc_coords(segment['x'], segment['y']),
-                    smbl,
-                    st
-                )
 
     def render_chat(self):
         x, y = self.screen.get_sizes()
@@ -364,7 +373,16 @@ class SnakeGameClient:
         self.screen.set_text(0, y - 1, out, anchor_x=Anchors.LEFT_ANCHOR,
                              style=TextStyle(Colors.WHITE, Colors.BLACK, ),
                              anchor_y=Anchors.DOWN_ANCHOR, parse_html=True)
-
+    def get_params(self, player_id, with_header=True):
+        sn = self.game_state["snakes"][player_id]
+        pl = self.game_state["players"][player_id]
+        header = ""
+        if with_header:
+            header = f"Player {self.get_stilizate_name_color(player_id)}\n"
+        out = f"""{header}Score: {sn["score"]}
+Total kills: {pl["kills"]}
+Total deaths: {pl["deaths"]}"""
+        return out
     def render(self):
         x, y = self.screen.get_sizes()
 
@@ -385,9 +403,11 @@ class SnakeGameClient:
         elif self.state == "alert":
             render_alert(self.screen, self.alert_message)
         elif self.state == "died":
-            text = f"""<red><bold>DIED</bold></red>
+            text = f"""<red><bold>You died</bold></red>
 
 {self.alert_message}
+
+{self.get_params(self.player_id)}
 
 <b>Prees SPACE to respawn</b>"""
             render_alert(self.screen, text)
@@ -405,6 +425,7 @@ class SnakeGameClient:
         while self.state != None:
             await asyncio.sleep(.01)
             await self.handle_input()
+
     async def run_game(self):
         print("Welcome to Multiplayer Snake by @Arizel79")
         try:
@@ -497,7 +518,7 @@ def render_alert(scr: ConsoleScreen, full_text):
     scr.update()
 
 
-async def main():
+async def run_client():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79")
     parser.add_argument('--name', type=str, help='Snake name', default=f"player_{randint(0, 99999)}")
     parser.add_argument('--color', type=str, help='Snake color', default=choice(SNAKE_COLORS))
@@ -509,8 +530,12 @@ async def main():
     # await run_game(args.address, args.name, args.skin)
 
 
-if __name__ == "__main__":
+def main():
     try:
-        asyncio.run(main())
+        asyncio.run(run_client())
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == '__main__':
+    main()
