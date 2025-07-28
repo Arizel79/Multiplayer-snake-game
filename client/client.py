@@ -6,32 +6,24 @@ import threading
 import websockets
 import json
 
-from pyAsciiEngine import *
 
+import traceback
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
 from random import randint, choice
+import re
+import sys
 
-# input()
+from pyAsciiEngine import *
+
 
 SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
 
-# Создаем логгер
-logger = logging.getLogger('my_app')
-logger.setLevel(logging.INFO)
 
-# Создаем обработчик для ротации логов (макс. 5 файлов по 1 МБ каждый)
-handler = RotatingFileHandler(
-    '../app.log',
-    maxBytes=1024 * 1024,  # 1 MB
-    encoding='utf-8'
-)
-handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-
-# Добавляем обработчик к логгеру
-logger.addHandler(handler)
-logger.info("start")
+def remove_html_tags(text):
+    clean_text = re.sub(r'<[^>]*>', '', text)
+    return clean_text
 
 
 class Disconnected(Exception):
@@ -46,7 +38,7 @@ class SnakeGameClient:
     MAX_SHOWN_MESSAGES_CHAT_OFF = 10
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
 
-    def __init__(self, server_address=None, nickname=None, color=None):
+    def __init__(self, server_address=None, nickname=None, color=None, logging_level="debug"):
         self.show_debug = False
         self.server_address = server_address
         self.nickname = nickname
@@ -75,9 +67,34 @@ class SnakeGameClient:
         self.input_thread_running = True
         self.input_thread = threading.Thread(target=self._input_thread_worker, daemon=True)
 
+        self.logging_level = logging_level
+        self.setup_logger(__name__, "../server.log", getattr(logging, self.logging_level))
+
+    def setup_logger(self, name, log_file='client.log', level=logging.INFO):
+        """Настройка логгера с выводом в консоль и файл."""
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(level)
+
+        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
+
+        # Обработчик для записи в файл
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(file_formatter)
+
+        # Обработчик для вывода в консоль
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(console_formatter)
+
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+
+        return self.logger
+
     def _input_thread_worker(self):
-        self.screen = ConsoleScreen()
+
         try:
+            self.screen = ConsoleScreen()
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
             while self.input_thread_running:
                 self.render()
@@ -117,7 +134,7 @@ class SnakeGameClient:
         self.alert_message = data.get("data", "no died message recived")
 
     async def handle_data(self, data):
-        logger.info(f"Data: {data}")
+        # self.logger.debug(f"Recieved data: {data}")
         if data.get("type", None) == "game_state":
             self.game_state = data
         elif data.get("type", None) == "set_server_desc":
@@ -161,7 +178,7 @@ class SnakeGameClient:
     async def handle_input(self):
         try:
             while True:
-                key = self.input_queue.get_nowait()  # Неблокирующее получение
+                key = self.input_queue.get_nowait()
                 key_ = key.lower()
                 if self.state == "game":
                     if self.is_open_chat:
@@ -193,7 +210,7 @@ class SnakeGameClient:
                         elif key == "`":
                             self.show_debug = not self.show_debug
 
-                        elif key.lower() == 't':
+                        elif key_ in ['t', "е"]:
                             self.is_open_chat = True
 
                         if self.new_direction is not None and self.new_direction != self.direction:
@@ -227,7 +244,8 @@ class SnakeGameClient:
         return bool(self.game_state) and snake["alive"]
 
     async def connect(self, uri):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
+            self.logger.info(f"Connected to {self.server_address}")
             self.state = "game"
             self.websocket = websocket
             await websocket.send(json.dumps({
@@ -237,6 +255,8 @@ class SnakeGameClient:
 
             message = await asyncio.wait_for(websocket.recv(), timeout=0.1)
             data = json.loads(message)
+            if data["type"] == "connection_error":
+                raise ConnectionError(data["data"])
             self.player_id = data["player_id"]
 
             while self.running:
@@ -333,7 +353,7 @@ class SnakeGameClient:
 
         for snake_id, snake in self.game_state['snakes'].items():
             color = snake['color']
-            death_symbol = Symbol("X")
+            death_symbol = Symbol("D", Colors.BLACK, Colors.BLACK, Styles.BLINK)
 
             for i, segment in enumerate(snake['body'][::-1]):
                 if snake["alive"]:
@@ -373,16 +393,19 @@ class SnakeGameClient:
         self.screen.set_text(0, y - 1, out, anchor_x=Anchors.LEFT_ANCHOR,
                              style=TextStyle(Colors.WHITE, Colors.BLACK, ),
                              anchor_y=Anchors.DOWN_ANCHOR, parse_html=True)
+
     def get_params(self, player_id, with_header=True):
         sn = self.game_state["snakes"][player_id]
         pl = self.game_state["players"][player_id]
         header = ""
         if with_header:
-            header = f"Player {self.get_stilizate_name_color(player_id)}\n"
+            header = f"-----[{self.get_stilizate_name_color(player_id)}]-----\n"
         out = f"""{header}Score: {sn["score"]}
 Total kills: {pl["kills"]}
-Total deaths: {pl["deaths"]}"""
+Total deaths: {pl["deaths"]}
+{'-' * len(remove_html_tags(header))}"""
         return out
+
     def render(self):
         x, y = self.screen.get_sizes()
 
@@ -427,11 +450,14 @@ Total deaths: {pl["deaths"]}"""
             await self.handle_input()
 
     async def run_game(self):
-        print("Welcome to Multiplayer Snake by @Arizel79")
+        print("Welcome to Multiplayer Snake by @Arizel79 (github.com/Arizel79)")
+        print(f"Server: {self.server_address}")
+        print("")
+        self.logger.info(f"Logging level: {self.logging_level}")
         try:
             self.input_thread.start()
-
             try:
+                self.logger.info(f"Trying connecting to {self.server_address}...")
                 self.alert(f"Connecting to {self.server_address}", "<b>Please, wait...<b/>")
                 await self.connect(f"ws://{self.server_address}")
 
@@ -440,26 +466,34 @@ Total deaths: {pl["deaths"]}"""
                 self.alert("<red>Disconnected</red>", "<b>Server closed</b>\n\nYou can try reconnect later")
                 await self.wait_for_end()
             except ConnectionRefusedError as e:
-                self.alert(f"<red>Cannot connect to the server</red>", f"<b>ConnectionRefusedError</b>\n\n{e}")
-                await self.wait_for_end()
+                self.logger.error(f"{type(e).__name__}: {e}")
+                self.alert(f"<red>Error connecting to {self.server_address}</red>",
+                           f"<b>ConnectionRefusedError</b>\n\n{e}")
 
-            except Disconnected as e:
-                self.alert("<red>DEATH</red>", f"You are death")
                 await self.wait_for_end()
+            # except ConnectionRefusedError as e:
+            #     self.alert(f"<red>Cannot connect to the server</red>", f"<b>ConnectionRefusedError</b>\n\n{e}")
+            #     await self.wait_for_end()
+            #
+            # except Disconnected as e:
+            #     self.alert("<red>DEATH</red>", f"You are death")
+            #     await self.wait_for_end()
+            #
+            except ConnectionError as e:
+                self.logger.warning(f"{type(e).__name__}: {e}")
+                self.alert("<red>Server send error</red>", e)
+                await self.wait_for_end()
+            except Exception as e:
+                if type(e) == KeyboardInterrupt:
+                    raise KeyboardInterrupt
+                traceback_str = traceback.format_exc()
+                self.logger.critical(traceback_str)
+                self.logger.critical(f"Game crashed. Error: {type(e).__name__}: {e}")
 
-            except ServerConnectionError:
-                self.alert("<red>ServerConnectionError</red>", f"{self.alert_message}")
-                await self.wait_for_end()
-            # except Exception as e:
-            #     err = f"{type(e).__name__}: {str(e)}"
-            #     logger.error(err)
-            #     self.alert("<red>Disconnected</red>", f"{err}")
-            #     while self.state != None:
-            #         await asyncio.sleep(.1)
-            #         await self.handle_input()
+
 
         except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt received, shutting down...")
+            self.logger.warning("KeyboardInterrupt received, shutting down...")
         finally:
 
             self.screen.quit()
@@ -523,9 +557,12 @@ async def run_client():
     parser.add_argument('--name', type=str, help='Snake name', default=f"player_{randint(0, 99999)}")
     parser.add_argument('--color', type=str, help='Snake color', default=choice(SNAKE_COLORS))
     parser.add_argument('--server', type=str, help='Server address', default="localhost:8090")
+    parser.add_argument('--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help='Level of logging', default="INFO")
+
     args = parser.parse_args()
 
-    g = SnakeGameClient(args.server, args.name, args.color)
+    g = SnakeGameClient(args.server, args.name, args.color, logging_level=args.log_lvl)
     await g.run_game()
     # await run_game(args.address, args.name, args.skin)
 

@@ -11,7 +11,7 @@ from time import time
 import argparse
 import logging
 import sys
-
+import traceback
 prnt = print
 
 @dataclass
@@ -71,7 +71,8 @@ class Server:
         self.game_speed = 0.0002
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
-        self.lost_perc = 1
+        self.stealing_chance = 0.01
+        self.stealing_value = 0.1
         self.connections = {}
         if server_desc is None:
             self.server_desc = f"<green>Welcome to our Server {server_name}!</green>"
@@ -79,7 +80,7 @@ class Server:
             self.server_desc = server_desc
 
         self.old_tick_time = time()
-        self.TICK_SPEED = 0.05  # sec
+        self.tick = 0.05  # sec
 
         self.last_normal_snake_move_time = time()
         self.last_fast_snake_move_time = time()
@@ -152,6 +153,8 @@ class Server:
         return True
 
     async def remove_player(self, player_id):
+        if player_id not in self.players.keys():
+            return True
         self.logger.info(f"Player {self.get_player(player_id)} disconnected")
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
                                            "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
@@ -160,6 +163,7 @@ class Server:
             del self.snakes[player_id]
         if player_id in self.players:
             del self.players[player_id]
+        return True
 
     def change_direction(self, player_id, direction):
         if player_id in self.snakes:
@@ -186,7 +190,7 @@ class Server:
         if self.snakes[player_id].immortal and not if_immortal:
             return False
 
-        self.logger.info(f"Player {self.get_player(player_id)} death ({reason})")
+
 
         self.snakes[player_id].alive = False
         body = self.snakes[player_id].body
@@ -197,6 +201,7 @@ class Server:
         ws = self.connections[player_id]
         await ws.send(json.dumps(state))
         text = f'{reason.replace("%NAME%", await self.get_stilizate_name_color(player_id))}'
+        self.logger.info(f"Player {self.get_player(player_id)} death ({text})")
         await self.connections[player_id].send(json.dumps({"type": "you_died", "data": text}))
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "death_message",
                                            "data": text})
@@ -437,7 +442,14 @@ class Server:
         await self.spawn(player_id)
 
     async def handle_connection(self, websocket):
-        self.logger.debug(f"{websocket.remote_address} is trying to connect to the server")
+
+        if len(self.players) >= self.max_players:
+            self.logger.info(f"{websocket.remote_address} is trying to connect, but the server is full")
+            await websocket.send(json.dumps({"type": "connection_error",
+                                             "data": f"Server is full ({len(self.players)} / {self.max_players})"}))
+            return
+        else:
+            self.logger.debug(f"{websocket.remote_address} is trying to connect to the server")
         while True:
             player_id = get_random_id()
             if not (player_id in self.players.keys()):
@@ -452,12 +464,14 @@ class Server:
                 name = player_info.get('name', 'Player')
                 name_valid = self.is_name_valid(name)
                 if not name_valid is True:
+                    self.logger.debug(f"{websocket.remote_address} choosen invalid name")
                     await websocket.send(json.dumps({"type": "connection_error",
                                                      "data": f"Invalid name: {name_valid}"}))
                     return
 
                 color = player_info.get('color', 'green')
                 if not color in self.SNAKE_COLORS:
+                    self.logger.debug(f"{websocket.remote_address} choosen invalid color")
                     await websocket.send(json.dumps({"type": "connection_error",
                                                      "data": f"Invalid snake color\nValid colors: {', '.join(self.SNAKE_COLORS)}"}))
                     return
@@ -472,7 +486,8 @@ class Server:
                     except:
                         pass
 
-            except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError):
+            except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError) as e:
+                self.logger.warning(f"{type(e).__name__}: {e}")
                 await websocket.close()
                 return
 
@@ -485,73 +500,97 @@ class Server:
 
 
     async def steal_body(self, player_id):
-        return
-        self.logger.debug(f"Stealing body from {self.get_player(player_id)}")
+
         snake = self.snakes[player_id]
-        if random.random() < self.lost_perc:
+        if random.random() < self.stealing_chance:
+            self.logger.debug(f"Stealed body from {self.get_player(player_id)}")
             if len(snake.body) > 5:
                 snake.body.pop()
 
     async def on_tick(self):
         for player_id, pl in self.players.items():
             pass
-            # await self.steal_body(player_id)
+            await self.steal_body(player_id)
+
+        await self.send_game_state_to_all()
+
+    async def send_game_state_to_all(self):
+        state = self.to_dict()
+
+        connections_ = copy.copy(self.connections)
+        for player_id, ws in connections_.items():
+            try:
+                await ws.send(json.dumps(state))
+            except websockets.exceptions.ConnectionClosedOK:
+                pass
+            finally:
+                pass
 
     async def game_loop(self):
 
         while True:
             await self.update()
             now = time()
-            if now >= self.old_tick_time + self.TICK_SPEED:
+            if now >= self.old_tick_time + self.tick:
                 self.old_tick_time = now
                 await self.on_tick()
-            state = self.to_dict()
 
-            connections_ = copy.copy(self.connections)
-            for player_id, ws in connections_.items():
-                try:
-                    await ws.send(json.dumps(state))
-                except websockets.exceptions.ConnectionClosedOK:
-                    pass
-                finally:
-                    pass
 
             await asyncio.sleep(self.game_speed)
 
     async def run(self):
-        asyncio.create_task(self.game_loop())
+        self.game_task = asyncio.create_task(self.game_loop())
         try:
             async with websockets.serve(self.handle_connection, "localhost", self.port):
                 print(f"Server started at localhost:{self.port}")
-                # self.logger.info(f"Server started at localhost:{self.port}")
-
                 await asyncio.Future()
-        except OSError as e:
-            self.logger.fatal(f"OSError: {e}")
+        except asyncio.CancelledError:
+            pass
+
+        except Exception as e:
+            self.logger.critical(traceback.format_exc())
+            self.logger.critical(f"Crashed. Error: {type(e).__name__}: {e}")
+
+        finally:
+            self.game_task.cancel()
+            try:
+                await self.game_task
+            except KeyboardInterrupt:
+                pass
 
 
 def get_random_id():
     return hex(random.randint(0, 131_072))
 
+def positive_int(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
+    return ivalue
 
 async def run_server():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
-    parser.add_argument('--port', type=int, help='Server port', default=8090)
+    parser.add_argument('--port', type=int, help='Server port (default: 8090)', default=8090)
     parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
     parser.add_argument('--server_desc', type=str, help='Description of server', default=None)
-    parser.add_argument('--max_players', type=int, help='Max online players count', default=20)
+    parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
     parser.add_argument('--map_width', type=int, help='Width of server map', default=60)
     parser.add_argument('--map_height', type=int, help='Height of server map', default=30)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %', default=10)
+    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %%', default=10)
     parser.add_argument('--move_timeout', type=int, help='Timeout move snake', default=0.1)
-    parser.add_argument('--log_lvl', type=str.upper, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-                        help='Level of logging: DEBUG/INFO/WARNING/ERROR/CRITICAL', default="INFO")
+    parser.add_argument('--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help='Level of logging', default="INFO")
     args = parser.parse_args()
 
     game_state = Server(port=args.port, map_width=args.map_width, map_height=args.map_height,
                         max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
                         max_food_perc=args.food_perc, logging_level=args.log_lvl, normal_move_timeout=args.move_timeout)
-    await game_state.run()
+    try:
+        await game_state.run()
+    except asyncio.CancelledError:
+        pass  # Игнорируем CancelledError при нормальном завершении
+
+
 
 
 def main():
@@ -559,6 +598,7 @@ def main():
         asyncio.run(run_server())
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt. Server quit")
+        return
 
 
 if __name__ == '__main__':
