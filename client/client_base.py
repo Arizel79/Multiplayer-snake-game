@@ -18,7 +18,7 @@ class ServerConnectionError(Exception):
 
 
 class ClientBase(ABC):
-    MAX_SHOWN_MESSAGES_CHAT_OFF = 10
+    MAX_SHOWN_MESSAGES_CHAT_OFF = 5
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
 
     def __init__(self, server_address=None, nickname=None, color=None, logging_level="debug"):

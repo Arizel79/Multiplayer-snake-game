@@ -30,7 +30,7 @@ class Snake:
     score: int = 1
     alive: bool = True
     is_fast: str = False
-    immortal: bool = True # бессмерный
+    immortal: bool = False # бессмерный
 
 
 @dataclass
@@ -54,10 +54,11 @@ class Server:
       # каждые 0.3 сек двигаемся
 
 
-    def __init__(self, port, map_width=80, map_height=40, max_players=20, max_food=50,
+    def __init__(self, address, port, map_width=80, map_height=40, max_players=20, max_food=50,
                  server_name="Test Server", server_desc=None, logging_level="debug",
                  max_food_perc=10, normal_move_timeout=0.3):
         self.port = port
+        self.address = address
 
         self.width = map_width
         self.height = map_height
@@ -290,7 +291,7 @@ class Server:
                 # Check collisions with other snakes
                 snakes = copy.copy(self.snakes)
                 for other_snake_id, other_snake in snakes.items():
-                    if new_head in other_snake.body and (not other_snake is snake):
+                    if new_head in other_snake.body and (not other_snake is snake) and other_snake.alive:
                         await self.player_death(player_id, f'Crashed into "{other_snake.name}" snake')
                         self.players[other_snake_id].kills += 1
                         continue
@@ -541,8 +542,8 @@ class Server:
     async def run(self):
         self.game_task = asyncio.create_task(self.game_loop())
         try:
-            async with websockets.serve(self.handle_connection, "localhost", self.port):
-                print(f"Server started at localhost:{self.port}")
+            async with websockets.serve(self.handle_connection, self.address, self.port):
+                print(f"Server started at {self.address}:{self.port}")
                 await asyncio.Future()
         except asyncio.CancelledError:
             pass
@@ -570,7 +571,8 @@ def positive_int(value):
 
 async def run_server():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
-    parser.add_argument('--port', type=int, help='Server port (default: 8090)', default=8090)
+    parser.add_argument('--address', "--ip", type=str, help='Server port (default: 8090)', default="0.0.0.0")
+    parser.add_argument('--port',"--p", type=int, help='Server port (default: 8090)', default=8090)
     parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
     parser.add_argument('--server_desc', type=str, help='Description of server', default=None)
     parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
@@ -582,7 +584,7 @@ async def run_server():
                         help='Level of logging', default="INFO")
     args = parser.parse_args()
 
-    game_state = Server(port=args.port, map_width=args.map_width, map_height=args.map_height,
+    game_state = Server(address=args.address, port=args.port, map_width=args.map_width, map_height=args.map_height,
                         max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
                         max_food_perc=args.food_perc, logging_level=args.log_lvl, normal_move_timeout=args.move_timeout)
     try:

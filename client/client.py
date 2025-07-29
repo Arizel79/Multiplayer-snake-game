@@ -10,7 +10,7 @@ from pyAsciiEngine import *
 class ClientCLI(ClientBase):
     SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
 
-    def __init__(self, *args,  interactive=False,**kwargs):
+    def __init__(self, *args, interactive=False, **kwargs):
         super().__init__(*args, **kwargs)
         if interactive:
             self.logger.info("Interactive prompting enabled")
@@ -215,21 +215,32 @@ Total deaths: {pl["deaths"]}
         self.screen.draw_rectangle(*self.calc_coords(x1 - 1, y1 - 1), *self.calc_coords(x2 + 1, y2 + 1),
                                    Symbol("X", Colors.BLACK, Colors.BLACK, Styles.BLINK),
                                    isFill=False)
-
+        # Death snakes
         for snake_id, snake in self.game_state['snakes'].items():
+            if snake["alive"]:
+                continue
+            # color = snake['color']
+            death_symbol = Symbol("D", Colors.BLACK, Colors.BLACK, Styles.BLINK)
+
+            for i, segment in enumerate(snake['body'][::-1]):
+                self.screen.set_symbol_obj(
+                    *self.calc_coords(segment['x'], segment['y']),
+                    death_symbol
+                )
+        # Alive snakes
+        for snake_id, snake in self.game_state['snakes'].items():
+            if not snake["alive"]:
+                continue
             color = snake['color']
             death_symbol = Symbol("D", Colors.BLACK, Colors.BLACK, Styles.BLINK)
 
             for i, segment in enumerate(snake['body'][::-1]):
-                if snake["alive"]:
-                    smbl = self.get_snake_color_segment(snake["color"], len(snake['body']) - i - 1)
-                else:
-                    smbl = death_symbol
+                smbl = self.get_snake_color_segment(snake["color"], len(snake['body']) - i - 1)
                 self.screen.set_symbol_obj(
                     *self.calc_coords(segment['x'], segment['y']),
                     smbl
                 )
-
+        # Food
         for food in self.game_state['food']:
             self.screen.setSymbol(
                 *self.calc_coords(food['x'], food['y']),
@@ -245,9 +256,9 @@ Total deaths: {pl["deaths"]}
 
         out = ""
         if self.is_open_chat:
-            lst = self.chat_messages[-max(self.MAX_SHOWN_MESSAGES_CHAT_ON, len(self.chat_messages)):]
+            lst = self.chat_messages[-min(self.MAX_SHOWN_MESSAGES_CHAT_ON, len(self.chat_messages)):]
         else:
-            lst = self.chat_messages[-max(self.MAX_SHOWN_MESSAGES_CHAT_OFF, len(self.chat_messages)):]
+            lst = self.chat_messages[-min(self.MAX_SHOWN_MESSAGES_CHAT_OFF, len(self.chat_messages)):]
 
         for i in lst:
             if self.is_open_chat:
