@@ -115,7 +115,7 @@ Total deaths: {pl["deaths"]}
 
         # self.screen.clear()
         self.screen.clear()
-        if self.state == "game":
+        if self.state == "game" and (not self.game_state  is None):
             self.render_game_world()
             x_, y_ = self.get_my_coords()
             self.screen.set_text(0, 0, "<bold>Multiplayer snake game</bold>\n"
