@@ -34,7 +34,7 @@ class Snake:
     max_size: int = size
     alive: bool = True
     is_fast: str = False
-    immortal: bool = False  # бессмерный
+    immortal: bool = True  # бессмерный
 
     def remove_segment(self, n=1, min_pop_size=2):
         for i in range(n):
@@ -177,6 +177,7 @@ class Server:
     async def remove_player(self, player_id):
         if player_id not in self.players.keys():
             return True
+        del self.connections[player_id]
         self.logger.info(f"Player {self.get_player(player_id)} disconnected")
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
                                            "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
@@ -249,38 +250,38 @@ class Server:
     async def update(self):
         self.generate_food()
 
-            # Update directions first
-        for sn_id, snake in self.snakes.items():
+        # Update directions for all snakes first
+        for snake in self.snakes.values():
             snake.direction = snake.next_direction
 
-            # Determine movement timing
-            now = time()
-            move_fast = (snake.is_fast and
-                         self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT <= now)
-            move_normal = (not snake.is_fast and
-                           self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT <= now)
+        # Determine movement timing
+        now = time()
+        move_normal = now >= self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT
+        move_fast = now >= self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT
 
-            if not (move_fast or move_normal):
-                return
+        if not (move_normal or move_fast):
+            return
 
-            # Update movement timers
-            if move_normal:
-                self.last_normal_snake_move_time = now
-            else:
-                self.last_fast_snake_move_time = now
+        # Update movement timers
+        if move_normal:
+            self.last_normal_snake_move_time = now
+        if move_fast:
+            self.last_fast_snake_move_time = now
 
-            # Process movement for each snake
+        # Process movement for each snake
+        for player_id, snake in list(self.snakes.items()):
             if not snake.alive:
                 continue
 
-            if not ((snake.is_fast and move_fast) or (not snake.is_fast and move_normal)):
+            # Check if this snake should move now
+            should_move = (snake.is_fast and move_fast) or (not snake.is_fast and move_normal)
+            if not should_move:
                 continue
 
             # Calculate new head position
             head = snake.body[0]
             new_head = Point(head.x, head.y)
 
-            # Update position based on direction
             direction_offsets = {
                 'up': (0, -1),
                 'down': (0, 1),
@@ -293,18 +294,17 @@ class Server:
 
             # Check wall collision
             walls = self.get_map_rect()
-            if not (walls[0] <= new_head.x <= walls[2] and
-                    walls[1] <= new_head.y <= walls[3]):
-                await self.player_death(sn_id, "Crashed into the border")
+            if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
+                await self.player_death(player_id, "Crashed into the border")
                 continue
 
             # Check snake collisions
-            for other_snake in self.snakes.values():
-                if (other_snake is not snake and
-                        other_snake.alive and
-                        new_head in other_snake.body):
-                    await self.player_death(sn_id, f'Crashed into {other_snake.name}')
-                    self.players[other_snake.id].kills += 1
+            for other_id, other_snake in self.snakes.items():
+                if other_id == player_id:
+                    continue
+                if other_snake.alive and new_head in other_snake.body:
+                    await self.player_death(player_id, f'Crashed into {other_snake.name}')
+                    self.players[other_id].kills += 1
                     break
             else:  # No collision occurred
                 # Check food collision
@@ -334,6 +334,7 @@ class Server:
                 'size': s.size,
                 'max_size': s.max_size,
                 'alive': s.alive,
+                'direction': s.direction,
             }
 
         for f in self.food:
@@ -355,8 +356,11 @@ class Server:
         to_send = json.dumps(data)
         self.logger.debug(f"Broadcast data: {data}")
 
-        for plaier_id, ws in connections_.items():
+        for player_id, ws in connections_.items():
+
+
             await ws.send(to_send)
+
 
     async def get_stilizate_name_color(self, player_id, text=None):
 
@@ -412,12 +416,13 @@ class Server:
         )
 
         sn.add_segment(lenght )
+        self.logger.info(f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})")
 
 
         # self.players[player_id].alive = True
 
     async def respawn(self, player_id):
-        self.logger.info(f"Respawn {self.get_player(player_id)} ({self.players[player_id].name})")
+
         await self.spawn(player_id)
 
     async def handle_connection(self, websocket):
@@ -474,11 +479,13 @@ class Server:
         finally:
 
             await websocket.close()
-            del self.connections[player_id]
             await self.remove_player(player_id)
 
     async def steal_body(self, player_id):
+
         snake = self.snakes[player_id]
+        if not snake.alive:
+            return
         if random.random() < self.stealing_chance:
             current_length = len(snake.body)
             if current_length > self.min_steling_snake_size:
@@ -557,9 +564,9 @@ async def run_server():
     parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
     parser.add_argument('--server_desc', type=str, help='Description of server', default=None)
     parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
-    parser.add_argument('--map_width', type=int, help='Width of server map', default=60)
-    parser.add_argument('--map_height', type=int, help='Height of server map', default=30)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %%', default=10)
+    parser.add_argument('--map_width', "--width", "--w","--x_size", type=int, help='Width of server map', default=120)
+    parser.add_argument('--map_height',"--height", "--h","--y_size", type=int, help='Height of server map', default=60)
+    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %%', default=3)
     parser.add_argument('--move_timeout', type=int, help='Timeout move snake', default=0.1)
     parser.add_argument('--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Level of logging', default="INFO")

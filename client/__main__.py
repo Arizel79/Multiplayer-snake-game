@@ -1,3 +1,4 @@
-import client
+from client import main
 
-client.main()
+if __name__ == "__main__":
+    main()

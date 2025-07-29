@@ -278,7 +278,7 @@ class ClientBase(ABC):
             self.logger.warning("KeyboardInterrupt received, shutting down...")
         finally:
 
-            self.screen.quit()
+
             self.running = False
             self.input_thread_running = False
 
