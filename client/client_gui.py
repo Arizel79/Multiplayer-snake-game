@@ -1,4 +1,6 @@
 # client_gui.py
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import asyncio
 import json
 import sys
@@ -36,15 +38,15 @@ class ClientGUI(ClientBase):
         self.TEXT_COLOR = (255, 255, 255)
 
         # Fonts
-        self.font_small = pygame.font.SysFont('Arial', 14)
-        self.font_medium = pygame.font.SysFont('Arial', 18)
+        self.font_small = pygame.font.SysFont('Arial', 18)
+        self.font_medium = pygame.font.SysFont('Arial', 20)
         self.font_large = pygame.font.SysFont('Arial', 24)
 
         # UI elements
         self.chat_active = False
         self.chat_input = ""
         self.chat_messages = []
-        self.MAX_CHAT_MESSAGES = 10
+        self.MAX_CHAT_MESSAGES = 150
         self.show_debug = False
         self.show_tablist = False
 
@@ -57,35 +59,36 @@ class ClientGUI(ClientBase):
     def render_chat_messages(self):
         """Render chat messages on screen"""
         width, height = self.screen.get_size()
-        chat_y = height - 100 if self.chat_active else height - 40
-        max_messages = 5 if self.chat_active else 3
+        chat_y = height - 40 if self.chat_active else height - 40
+        max_messages = 8 if self.chat_active else 3
 
         # Chat background
         if len(self.chat_messages) > 0:
+            bg_width = min(width // 3, width - 10) # width - 10
             pygame.draw.rect(self.screen, (0, 0, 0, 150),
-                             (5, chat_y - (max_messages * 20) - 5,
-                              width - 10, (max_messages * 20) + 5))
+                             (5, chat_y - (max_messages * 20) - 5, bg_width, (max_messages * 20) + 5))
 
-        # Render messages
-        for i, message in enumerate(self.chat_messages[-max_messages:]):
-            # Simple HTML-like tag parsing for colors
-            color = self.TEXT_COLOR
-            text = message
-            if "<red>" in message:
-                color = (255, 50, 50)
-                text = text.replace("<red>", "").replace("</red>", "")
-            elif "<green>" in message:
-                color = (50, 255, 50)
-                text = text.replace("<green>", "").replace("</green>", "")
-            elif "<cyan>" in message:
-                color = (50, 255, 255)
-                text = text.replace("<cyan>", "").replace("</cyan>", "")
-            elif "<yellow>" in message:
-                color = (255, 255, 50)
-                text = text.replace("<yellow>", "").replace("</yellow>", "")
+            # Render messages
+            for n, message in enumerate(self.chat_messages[-max_messages:][::-1]):
+                # Simple HTML-like tag parsing for colors
+                color = self.TEXT_COLOR
+                text = message
+                # if "<red>" in message:
+                #     color = (255, 50, 50)
+                #     text = text.replace("<red>", "").replace("</red>", "")
+                # elif "<green>" in message:
+                #     color = (50, 255, 50)
+                #     text = text.replace("<green>", "").replace("</green>", "")
+                # elif "<cyan>" in message:
+                #     color = (50, 255, 255)
+                #     text = text.replace("<cyan>", "").replace("</cyan>", "")
+                # elif "<yellow>" in message:
+                #     color = (255, 255, 50)
+                #     text = text.replace("<yellow>", "").replace("</yellow>", "")
+                text = remove_html_tags(text)
 
-            msg_text = self.font_small.render(text, True, color)
-            self.screen.blit(msg_text, (10, chat_y - (max_messages - i) * 20))
+                msg_text = self.font_small.render(text, True, color) # BUG: текст выходит за пределы фона
+                self.screen.blit(msg_text, (10, chat_y - (n * 20) - 25))
 
     def render_chat_input(self):
         """Render chat input box"""
@@ -151,9 +154,7 @@ class ClientGUI(ClientBase):
     async def handle_input(self):
         for event in pygame.event.get():
             if event.type == QUIT:
-                self.running = False
-                pygame.quit()
-                sys.exit()
+                self.quit()
 
             elif event.type == VIDEORESIZE:
                 # Handle window resize
@@ -483,27 +484,20 @@ class ClientGUI(ClientBase):
         # Title
         title = self.font_large.render("Debug Info", True, (50, 255, 255))
         self.screen.blit(title, (debug_x + 10, debug_y + 10))
-
-        # State info
-        state_text = self.font_medium.render(f"State: {self.state}", True, self.TEXT_COLOR)
-        self.screen.blit(state_text, (debug_x + 10, debug_y + 40))
-
-        # Player ID
-        id_text = self.font_medium.render(f"Player ID: {self.player_id}", True, self.TEXT_COLOR)
-        self.screen.blit(id_text, (debug_x + 10, debug_y + 70))
-
+        debug_text = f"""Player ID: {self.player_id}
+"""
         # Game state info
         if self.game_state:
             snakes_count = len(self.game_state.get("snakes", {}))
             players_count = len(self.game_state.get("players", {}))
             food_count = len(self.game_state.get("food", []))
 
-            stats_text = self.font_medium.render(
-                f"Snakes: {snakes_count} | Players: {players_count} | Food: {food_count}",
-                True,
-                self.TEXT_COLOR
-            )
-            self.screen.blit(stats_text, (debug_x + 10, debug_y + 100))
+            debug_text += f"Snakes: {snakes_count} | Players: {players_count} | Food: {food_count}"
+
+        for n, ln, in enumerate(debug_text.splitlines()):
+            state_text = self.font_medium.render(ln, True, self.TEXT_COLOR)
+            self.screen.blit(state_text, (debug_x + 10, debug_y + 40 + (30 * n)))
+
 
     async def send_chat(self):
         if self.chat_input.strip():
@@ -514,9 +508,10 @@ class ClientGUI(ClientBase):
             self.chat_input = ""
 
     def quit(self):
+        print("Quit.")
         self.running = False
-        pygame.quit()
-        sys.exit()
+        # pygame.quit()
+        # sys.exit()
 
 
 if __name__ == '__main__':

@@ -169,7 +169,7 @@ class Server:
 
         await self.spawn(player_id)
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
-                                           "data": f"<yellow>[</yellow><green>-</green><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>joined the game</yellow>"})
+                                           "data": f"<yellow>[</yellow><green>+</green><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>joined the game</yellow>"})
         self.logger.info(
             f"Connection {self.get_addres_from_ws(self.connections[player_id])} registred as {self.get_player(player_id)}")
         return True
