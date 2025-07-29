@@ -253,21 +253,19 @@ class ClientBase(ABC):
             except websockets.exceptions.ConnectionClosedOK:
                 self.alert("<red>Disconnected</red>", "<b>Server closed</b>\n\nYou can try reconnect later")
                 await self.wait_for_end()
-            except ConnectionRefusedError as e:
+
+
+            except (OSError, gaierror, ConnectionRefusedError) as e:
                 self.logger.error(f"{type(e).__name__}: {e}")
                 self.alert(f"<red>Error connecting to {self.server_address}</red>",
-                           f"<b>ConnectionRefusedError</b>\n\n{e}")
-                await self.wait_for_end()
-            except gaierror as e:
-                self.logger.error(f"{type(e).__name__}: {e}")
-                self.alert(f"<red>Error connecting to {self.server_address}</red>",
-                           f"<b>gaierror</b>\n\n{e}")
+                           f"<b>{type(e).__name__}</b>\n\n{e}")
                 await self.wait_for_end()
 
             except ConnectionError as e:
                 self.logger.warning(f"{type(e).__name__}: {e}")
                 self.alert("<red>Server send error</red>", e)
                 await self.wait_for_end()
+
             except Exception as e:
                 if type(e) == KeyboardInterrupt:
                     raise KeyboardInterrupt
