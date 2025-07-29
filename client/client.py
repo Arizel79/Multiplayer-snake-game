@@ -120,7 +120,7 @@ Total deaths: {pl["deaths"]}
             x_, y_ = self.get_my_coords()
             self.screen.set_text(0, 0, "<bold>Multiplayer snake game</bold>\n"
                                        f"xy: {x_}, {y_}\n"
-                                       f"size: <bold><cyan>{str(self.game_state['snakes'][self.player_id]['size'])}</cyan></bold>",
+                                       f"size: <bold><cyan>{str(self.game_state.get('snakes', {}).get(self.player_id, {}).get('size'))}</cyan></bold>",
                                  TextStyle(Colors.WHITE, Colors.BLACK), parse_html=True)
 
             self.screen.set_text(
