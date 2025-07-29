@@ -1,1 +1,1 @@
-python server --food_perc 5 --map_width 60 --map_height 30 --log_lvl DEBUG --server_name "test serv"
+python server --food_perc 5 --map_width 60 --map_height 30 --log_lvl DEBUG --server_name "test server"

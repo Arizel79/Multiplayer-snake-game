@@ -80,7 +80,7 @@ class Server:
             self.server_desc = server_desc
 
         self.old_tick_time = time()
-        self.tick = 0.05  # sec
+        self.tick = 0.02  # sec
 
         self.last_normal_snake_move_time = time()
         self.last_fast_snake_move_time = time()
@@ -216,13 +216,13 @@ class Server:
 
     def is_name_valid(self, name: str):
         if len(name) > 16:
-            return "Nickname is too long"
+            return f'Nickname "{name}" is too long'
         elif len(name) < 4:
-            return "Nickname is too short"
+            return f'Nickname "{name}" is too short'
 
         for i in name:
             if i.lower() not in self.VALID_NAME_CHARS:
-                return "Nickname contain invalid characters"
+                return f'Nickname "{name}" contain invalid characters'
 
         return True
     async def add_segment(self, player_id):

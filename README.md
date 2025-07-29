@@ -10,6 +10,7 @@ https://github.com/Arizel79/Multiplayer-snake-game.git
 ```
 cd Multiplayer-snake-game
 python -m venv .venv
+source .venv/bin/activate # on Windows: .\.venv\Scripts\activate.bat
 ```
 3. Run server
 ```
