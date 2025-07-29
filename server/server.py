@@ -4,6 +4,7 @@ import json
 import random
 from collections import deque
 from dataclasses import dataclass, asdict
+from pprint import pprint
 from random import randint
 import websockets
 from string import ascii_letters, digits
@@ -12,7 +13,9 @@ import argparse
 import logging
 import sys
 import traceback
+
 prnt = print
+
 
 @dataclass
 class Point:
@@ -27,10 +30,26 @@ class Snake:
     next_direction: str
     color: str
     name: str
-    score: int = 1
+    size: int = 0
+    max_size: int = size
     alive: bool = True
     is_fast: str = False
-    immortal: bool = False # бессмерный
+    immortal: bool = False  # бессмерный
+
+    def remove_segment(self, n=1, min_pop_size=2):
+        for i in range(n):
+            if len(self.body) > min_pop_size:
+                self.body.pop()
+                self.size = len(self.body)
+
+    def add_segment(self, n=1):
+        if n < 0:
+            raise ValueError("Argument 'n' must be natural integer. ")
+        for i in range(n):
+            self.body.append(copy.copy(self.body[-1]))
+        self.size = len(self.body)
+        if len(self.body) > self.max_size:
+            self.max_size = len(self.body)
 
 
 @dataclass
@@ -48,11 +67,11 @@ class Player:
 class Server:
     VALID_NAME_CHARS = ascii_letters + digits + "_"
 
-    DEFAULT_SNAKE_LENGHT = 5
+    DEFAULT_SNAKE_LENGHT = 1
     SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
+    DIRECTIONS = ["right", "down", "left", "up"]
 
-      # каждые 0.3 сек двигаемся
-
+    # каждые 0.3 сек двигаемся
 
     def __init__(self, address, port, map_width=80, map_height=40, max_players=20, max_food=50,
                  server_name="Test Server", server_desc=None, logging_level="debug",
@@ -68,17 +87,19 @@ class Server:
         self.food = []
         self.players = {}
         self.max_players = max_players
-
-        self.game_speed = 0.0002
-        self.max_food_relative = max_food_perc / 100
-        self.max_food = (self.width * self.height) * self.max_food_relative
-        self.stealing_chance = 0.01
-        self.stealing_value = 0.1
         self.connections = {}
         if server_desc is None:
             self.server_desc = f"<green>Welcome to our Server {server_name}!</green>"
         else:
             self.server_desc = server_desc
+
+        self.game_speed = 0.002
+        self.max_food_relative = max_food_perc / 100
+        self.max_food = (self.width * self.height) * self.max_food_relative
+
+        self.min_steling_snake_size = 5
+        self.stealing_chance = 0.01
+        self.steal_percentage = 0.1  # 5%
 
         self.old_tick_time = time()
         self.tick = 0.02  # sec
@@ -191,8 +212,6 @@ class Server:
         if self.snakes[player_id].immortal and not if_immortal:
             return False
 
-
-
         self.snakes[player_id].alive = False
         body = self.snakes[player_id].body
         # del self.snakes[player_id]
@@ -226,131 +245,94 @@ class Server:
                 return f'Nickname "{name}" contain invalid characters'
 
         return True
-    async def add_segment(self, player_id):
-        sn = self.snakes.get(player_id)
-        if sn is None:
-            return
-        sn.body.append(copy.copy(sn.body[-1]))
-    async def update(self):
 
+    async def update(self):
         self.generate_food()
 
-        for snake in self.snakes.values():
+            # Update directions first
+        for sn_id, snake in self.snakes.items():
             snake.direction = snake.next_direction
 
-        # Move snakes
-        now = time()
-        move_fast, move_normal = False, False
+            # Determine movement timing
+            now = time()
+            move_fast = (snake.is_fast and
+                         self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT <= now)
+            move_normal = (not snake.is_fast and
+                           self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT <= now)
 
-        if self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT <= now:
-            #print(f"{self.last_normal_snake_move_time=} + {self.NORMAL_MOVE_TIMEOUT=} = ",
-            #      self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT, now)
-            self.last_normal_snake_move_time = now
-            move_normal = True
+            if not (move_fast or move_normal):
+                return
 
+            # Update movement timers
+            if move_normal:
+                self.last_normal_snake_move_time = now
+            else:
+                self.last_fast_snake_move_time = now
 
-        elif self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT <= now:
-            self.last_fast_snake_move_time = now
-            move_fast = True
-
-        if move_fast or move_normal:
-            #print("move!")
-            for player_id, snake in list(self.snakes.items()):
-                if not snake.alive:
-                    continue
-                move = False
-                if snake.is_fast and move_fast:
-                    move = True
-
-
-                elif (not snake.is_fast) and move_normal:
-                    move = True
-                else:
-                    continue
-
-                if move:
-                    head = snake.body[0]
-                    new_head = Point(head.x, head.y)
-
-                    if snake.direction == 'up':
-                        new_head.y -= 1
-                    elif snake.direction == 'down':
-                        new_head.y += 1
-                    elif snake.direction == 'left':
-                        new_head.x -= 1
-                    elif snake.direction == 'right':
-                        new_head.x += 1
-
-                walls = self.get_map_rect()
-
-                if (new_head.x < walls[0] or new_head.x > walls[2] or
-                        new_head.y < walls[1] or new_head.y > walls[3]):
-                    await self.player_death(player_id, "Сrashed into the border of the world (really?)")
-                    continue
-
-                # Check collisions with other snakes
-                snakes = copy.copy(self.snakes)
-                for other_snake_id, other_snake in snakes.items():
-                    if new_head in other_snake.body and (not other_snake is snake) and other_snake.alive:
-                        await self.player_death(player_id, f'Crashed into "{other_snake.name}" snake')
-                        self.players[other_snake_id].kills += 1
-                        continue
-
-                if not snake.alive:
-                    continue
-
-                for i, food in enumerate(self.food):
-                    if new_head.x == food.x and new_head.y == food.y:
-                        eaten = i
-                        snake.score += 1
-
-                        if eaten is not None:
-                            self.food.pop(eaten)
-                            await self.add_segment(player_id)
-
-                snake.body.appendleft(new_head)
-                snake.body.pop()
-        else:
-            return
-
-        for player_id, snake in list(self.snakes.items()):
+            # Process movement for each snake
             if not snake.alive:
                 continue
 
+            if not ((snake.is_fast and move_fast) or (not snake.is_fast and move_normal)):
+                continue
+
+            # Calculate new head position
+            head = snake.body[0]
+            new_head = Point(head.x, head.y)
+
+            # Update position based on direction
+            direction_offsets = {
+                'up': (0, -1),
+                'down': (0, 1),
+                'left': (-1, 0),
+                'right': (1, 0)
+            }
+            dx, dy = direction_offsets[snake.direction]
+            new_head.x += dx
+            new_head.y += dy
+
+            # Check wall collision
+            walls = self.get_map_rect()
+            if not (walls[0] <= new_head.x <= walls[2] and
+                    walls[1] <= new_head.y <= walls[3]):
+                await self.player_death(sn_id, "Crashed into the border")
+                continue
+
+            # Check snake collisions
+            for other_snake in self.snakes.values():
+                if (other_snake is not snake and
+                        other_snake.alive and
+                        new_head in other_snake.body):
+                    await self.player_death(sn_id, f'Crashed into {other_snake.name}')
+                    self.players[other_snake.id].kills += 1
+                    break
+            else:  # No collision occurred
+                # Check food collision
+                for i, food in enumerate(self.food):
+                    if new_head.x == food.x and new_head.y == food.y:
+                        self.food.pop(i)
+                        snake.add_segment()
+                        break
+
+                # Move snake
+                snake.body.appendleft(new_head)
+                snake.remove_segment()
+
     def to_dict(self):
-        # return {
-        #     'type': "game_state",
-        #     'map_borders': [i for i in self.get_map_rect()],
-        #     'snakes': {pid: {
-        #         'body': [asdict(p) for p in s.body],
-        #         'color': s.color,
-        #         'name': s.name,
-        #         'score': s.score,
-        #         'alive': s.alive,
-        #
-        #     } for pid, s in self.snakes.items()},
-        #     'food': [asdict(f) for f in self.food],
-        #     'players': {pid: {"name": pl.name,
-        #                       "color": pl.color,
-        #                       "alive": pl.alive,
-        #                       "kills": pl.kills,
-        #                       "deaths": pl.deaths,
-        #                       "score": 0
-        #                       # "score": pl.score
-        #                       } for pid, pl in self.players.items()}
-        # }
         dict_ = {
             'type': "game_state",
             'map_borders': [i for i in self.get_map_rect()],
             "snakes": {},
             "players": {},
             "food": []}
+
         for pid, s in self.snakes.items():
             dict_["snakes"][pid] = {
                 'body': [asdict(p) for p in s.body],
                 'color': s.color,
                 'name': s.name,
-                'score': s.score,
+                'size': s.size,
+                'max_size': s.max_size,
                 'alive': s.alive,
             }
 
@@ -359,18 +341,13 @@ class Server:
 
         for pid, pl in self.players.items():
             sn = self.snakes.get(pid, None)
-            score = 0
-            if not sn is None:
-                score = sn.score
-
             dict_['players'][pid] = {"name": pl.name,
                                      "color": pl.color,
                                      "alive": pl.alive,
                                      "kills": pl.kills,
-                                     "deaths": pl.deaths,
-                                     "score": score,
-
+                                     "deaths": pl.deaths
                                      }
+
         return dict_
 
     async def broadcast_chat_message(self, data):
@@ -422,12 +399,9 @@ class Server:
 
     async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
         x, y = self.get_avalible_coords()
-        # Create snake body
-        body = deque([Point(x, y)])
-        for i in range(1, lenght):
-            body.append(Point(x - i, y))
 
-        self.snakes[player_id] = Snake(
+        body = deque([Point(x, y)])
+        sn = self.snakes[player_id] = Snake(
             body=body,
             direction='right',
             next_direction='right',
@@ -436,7 +410,11 @@ class Server:
             alive=True,
 
         )
-        self.players[player_id].alive = True
+
+        sn.add_segment(lenght )
+
+
+        # self.players[player_id].alive = True
 
     async def respawn(self, player_id):
         self.logger.info(f"Respawn {self.get_player(player_id)} ({self.players[player_id].name})")
@@ -499,14 +477,16 @@ class Server:
             del self.connections[player_id]
             await self.remove_player(player_id)
 
-
     async def steal_body(self, player_id):
-
         snake = self.snakes[player_id]
         if random.random() < self.stealing_chance:
-            self.logger.debug(f"Stealed body from {self.get_player(player_id)}")
-            if len(snake.body) > 5:
-                snake.body.pop()
+            current_length = len(snake.body)
+            if current_length > self.min_steling_snake_size:
+                segments_to_remove = max(1, int(current_length * self.steal_percentage))
+                self.logger.debug(
+                    f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
+
+                snake.remove_segment(segments_to_remove, min_pop_size=self.min_steling_snake_size)
 
     async def on_tick(self):
         for player_id, pl in self.players.items():
@@ -536,7 +516,6 @@ class Server:
                 self.old_tick_time = now
                 await self.on_tick()
 
-
             await asyncio.sleep(self.game_speed)
 
     async def run(self):
@@ -563,16 +542,18 @@ class Server:
 def get_random_id():
     return hex(random.randint(0, 131_072))
 
+
 def positive_int(value):
     ivalue = int(value)
     if ivalue <= 0:
         raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
     return ivalue
 
+
 async def run_server():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
     parser.add_argument('--address', "--ip", type=str, help='Server port (default: 8090)', default="0.0.0.0")
-    parser.add_argument('--port',"--p", type=int, help='Server port (default: 8090)', default=8090)
+    parser.add_argument('--port', "--p", type=int, help='Server port (default: 8090)', default=8090)
     parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
     parser.add_argument('--server_desc', type=str, help='Description of server', default=None)
     parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
@@ -591,8 +572,8 @@ async def run_server():
         await game_state.run()
     except asyncio.CancelledError:
         pass  # Игнорируем CancelledError при нормальном завершении
-
-
+    finally:
+        pass
 
 
 def main():

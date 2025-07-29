@@ -12,11 +12,12 @@ class ClientCLI(ClientBase):
 
     def __init__(self, *args, interactive=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.version = f"{self.version} (CLI)"
         if interactive:
             self.logger.info("Interactive prompting enabled")
             self.nickname = input("Nickname: ")
             self.color = input("Color: ")
-            self.server = input("Server IP: ")
+            self.server_address = input("Server IP: ")
 
     def input_output_thread_worker(self):
 
@@ -25,12 +26,12 @@ class ClientCLI(ClientBase):
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
             while self.input_thread_running:
                 self.render()
-                key = self.screen.get_key(.01)  # Блокирующий вызов с небольшим таймаутом
+                key = self.screen.get_key(.001)  # Блокирующий вызов с небольшим таймаутом
                 if key is not None:
                     self.input_queue.put(key)
 
         finally:
-            self.state = None
+            self.quit()
             self.screen.quit()
 
     async def handle_input(self):
@@ -88,7 +89,8 @@ class ClientCLI(ClientBase):
             pass  # Очередь пуста, новых клавиш нет
 
         except KeyboardInterrupt:
-            assert False, "in handle inpt"
+            self.quit()
+
 
     def get_params(self, player_id, with_header=True):
         sn = self.game_state["snakes"][player_id]
@@ -96,7 +98,8 @@ class ClientCLI(ClientBase):
         header = ""
         if with_header:
             header = f"-----[{self.get_stilizate_name_color(player_id)}]-----\n"
-        out = f"""{header}Score: {sn["score"]}
+        out = f"""{header}Size: {sn["size"]}
+Max size: {sn["max_size"]}
 Total kills: {pl["kills"]}
 Total deaths: {pl["deaths"]}
 {'-' * len(remove_html_tags(header))}"""
@@ -114,11 +117,15 @@ Total deaths: {pl["deaths"]}
         self.screen.clear()
         if self.state == "game":
             self.render_game_world()
-            self.screen.set_text(0, 0, "Snake game by @Ariel79", TextStyle(Colors.YELLOW))
             x_, y_ = self.get_my_coords()
+            self.screen.set_text(0, 0, "<bold>Multiplayer snake game</bold>\n"
+                                       f"xy: {x_}, {y_}\n"
+                                       f"size: <bold><cyan>{str(self.game_state['snakes'][self.player_id]['size'])}</cyan></bold>",
+                                 TextStyle(Colors.WHITE, Colors.BLACK), parse_html=True)
+
             self.screen.set_text(
                 x, y,
-                f"XY: {x_} {y_}", parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR,
+                f"^C to quit; h to help", parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR,
                 anchor_y=Anchors.DOWN_ANCHOR)
 
             self.render_chat()
@@ -181,15 +188,17 @@ Total deaths: {pl["deaths"]}
             tablist = f"\n<yellow>Server {self.server_address}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])})\n(<green>Alive: {alive_count}</green> | <red>Dead: {dead_count}</red>):\n"
 
             for player_id, player in self.game_state["players"].items():
+                sn = self.game_state["snakes"][player_id]
                 death_flag = ""
+                params = f"[S: {sn['size']}; MAX: {sn['max_size']}; D: {player['deaths']}; K: {player['kills']}]"
                 if not player["alive"]:
                     death_flag = "<red>[DEATH]</red> "
                 if player_id == self.player_id:
-                    tablist += f"<cyan>[ME]</cyan> {death_flag}{self.get_stilizate_name_color(player_id)} [S: {player['score']}; D: {player['deaths']}; K: {player['kills']}]\n"
+                    tablist += f"<cyan>[ME]</cyan> {death_flag}{self.get_stilizate_name_color(player_id)} {params}"
                 else:
-                    tablist += f"{death_flag}{self.get_stilizate_name_color(player_id)}  [S: {player['score']}; D: {player['deaths']}; K: {player['kills']}]\n"
+                    tablist += f"{death_flag}{self.get_stilizate_name_color(player_id)} {params}"
+                tablist += "\n"
             max_str = 0
-            print(tablist)
             tablist = tablist.splitlines()
             for i in tablist:
                 if len(i) > max_str:
@@ -227,6 +236,14 @@ Total deaths: {pl["deaths"]}
                     *self.calc_coords(segment['x'], segment['y']),
                     death_symbol
                 )
+
+        # Food
+        for food in self.game_state['food']:
+            self.screen.setSymbol(
+                *self.calc_coords(food['x'], food['y']),
+                '*',
+                TextStyle("red", "black", "bold")
+            )
         # Alive snakes
         for snake_id, snake in self.game_state['snakes'].items():
             if not snake["alive"]:
@@ -240,13 +257,7 @@ Total deaths: {pl["deaths"]}
                     *self.calc_coords(segment['x'], segment['y']),
                     smbl
                 )
-        # Food
-        for food in self.game_state['food']:
-            self.screen.setSymbol(
-                *self.calc_coords(food['x'], food['y']),
-                '*',
-                TextStyle("red", "black", "bold")
-            )
+
 
     def render_chat(self):
         x, y = self.screen.get_sizes()
@@ -313,14 +324,13 @@ def render_alert(scr: ConsoleScreen, full_text):
 
 
 async def run_client():
-    parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79")
+    parser = argparse.ArgumentParser(description="Multiplayer Snake game")
     parser.add_argument('--name', "--n", type=str, help='Snake name', default=f"player_{randint(0, 99999)}")
     parser.add_argument('--color', "--c", type=str, help='Snake color', default=choice(ClientCLI.SNAKE_COLORS))
     parser.add_argument('--server', "--s", type=str, help='Server address', default="localhost:8090")
     parser.add_argument('--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Level of logging', default="INFO")
-    parser.add_argument("--interactive", '--i', type=bool,
-                        help='Enable interactive prompting', default=False)
+    parser.add_argument("--interactive", "--i", action="store_true", help = "Enable interactive prompting (default: False)")
     args = parser.parse_args()
 
     g = ClientCLI(args.server, args.name, args.color, logging_level=args.log_lvl, interactive=args.interactive)

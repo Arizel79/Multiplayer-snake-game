@@ -2,12 +2,14 @@ import asyncio
 from queue import Queue, Empty
 import threading
 import websockets
+from socket import gaierror
+
 import json
 from sys import stdout
 import traceback
 import logging
 from abc import ABC, abstractmethod
-
+from colorama import init, Fore, Back, Style
 
 class Disconnected(Exception):
     pass
@@ -20,8 +22,11 @@ class ServerConnectionError(Exception):
 class ClientBase(ABC):
     MAX_SHOWN_MESSAGES_CHAT_OFF = 5
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
+    VERSION_NUMBER = "v0.1, client"
 
     def __init__(self, server_address=None, nickname=None, color=None, logging_level="debug"):
+        self.version = self.VERSION_NUMBER
+
         self.show_debug = False
         self.server_address = server_address
         self.nickname = nickname
@@ -41,6 +46,7 @@ class ClientBase(ABC):
         self.to_send = Queue()
         self.new_direction = None
         self.is_open_tablist = False
+        self.is_open_help = False
         self.server_desc = "Welcome to server!"
 
         self.state = None
@@ -129,8 +135,10 @@ class ClientBase(ABC):
 
     def quit(self):
         self.logger.debug("(in self.quit) Quiting...")
+        print("Quit.")
         self.state = None
         self.running = False
+        self.input_thread_running = False
 
     async def send_chat(self):
         message = self.chat_prompt.lstrip()
@@ -228,8 +236,10 @@ class ClientBase(ABC):
         """Бесконечно ожидаем, пока программа не завершится (self.state == None)"""
 
     async def run_game(self):
-        print(f"* Welcome to Multiplayer Snake by @Arizel79 (github.com/Arizel79)")
-        print(f"* Server: {self.server_address}")
+        print(f"{Fore.LIGHTBLACK_EX}* {Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}")
+        print(f"{Fore.LIGHTBLACK_EX}* Powered by Arizel79 (https://github.com/Arizel79)")
+        print(f"* Source: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
+        print(f"Server: {self.server_address}; name: {self.nickname}; color: {self.color}")
         print("")
         self.logger.info(f"Logging level: {self.logging_level}")
         try:
@@ -247,16 +257,13 @@ class ClientBase(ABC):
                 self.logger.error(f"{type(e).__name__}: {e}")
                 self.alert(f"<red>Error connecting to {self.server_address}</red>",
                            f"<b>ConnectionRefusedError</b>\n\n{e}")
-
                 await self.wait_for_end()
-            # except ConnectionRefusedError as e:
-            #     self.alert(f"<red>Cannot connect to the server</red>", f"<b>ConnectionRefusedError</b>\n\n{e}")
-            #     await self.wait_for_end()
-            #
-            # except Disconnected as e:
-            #     self.alert("<red>DEATH</red>", f"You are death")
-            #     await self.wait_for_end()
-            #
+            except gaierror as e:
+                self.logger.error(f"{type(e).__name__}: {e}")
+                self.alert(f"<red>Error connecting to {self.server_address}</red>",
+                           f"<b>gaierror</b>\n\n{e}")
+                await self.wait_for_end()
+
             except ConnectionError as e:
                 self.logger.warning(f"{type(e).__name__}: {e}")
                 self.alert("<red>Server send error</red>", e)
