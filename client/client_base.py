@@ -139,7 +139,11 @@ class ClientBase(ABC):
         self.state = None
         self.running = False
         self.input_thread_running = False
+    async def send(self, data: dict):
+        if type(data) != dict:
+            raise ValueError("data must be a dict")
 
+        await self.websocket.send(json.dumps(dict))
     async def send_chat(self):
         message = self.chat_prompt.lstrip()
         if message != "":
@@ -153,7 +157,8 @@ class ClientBase(ABC):
                     self.quit()
                     return
             if self.is_message_for_send(message):
-                self.to_send.put({"type": "chat_message", "data": message})
+                # self.to_send.put({"type": "chat_message", "data": message})
+                await self.websocket.send(json.dumps({"type": "chat_message", "data": message}))
 
             else:
                 if message == "/kill":
@@ -174,38 +179,81 @@ class ClientBase(ABC):
             return False
 
         return bool(self.game_state) and snake["alive"]
+    @abstractmethod
+    async def handlerr_input(self):
+        """Тут цикл с обработкой ввода"""
+
+    async def on_connect(self):
+        await self.websocket.send(json.dumps({
+            'name': self.nickname,
+            'color': self.color
+        }))
+        self.state = "game"
+
+        message = await asyncio.wait_for(self.websocket.recv(), timeout=0.1)
+        data = json.loads(message)
+        if data["type"] == "connection_error":
+            raise ConnectionError(data["data"])
+
+        self.player_id = data["player_id"]
+    async def handle_websocket(self):
+        try:
+            message = await asyncio.wait_for(self.websocket.recv(), timeout=0.01)
+            data = json.loads(message)
+            await self.handle_data(data)
+        except asyncio.TimeoutError:
+            pass
 
     async def connect(self, uri):
-        async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
-            self.logger.info(f"Connected to {self.server_address}")
-            self.state = "game"
-            self.websocket = websocket
-            await websocket.send(json.dumps({
-                'name': self.nickname,
-                'color': self.color
-            }))
 
-            message = await asyncio.wait_for(websocket.recv(), timeout=0.1)
-            data = json.loads(message)
-            if data["type"] == "connection_error":
-                raise ConnectionError(data["data"])
-            self.player_id = data["player_id"]
+        try:
+            self.logger.info(f"start connecting to {self.server_address}")
+            async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
+                self.logger.info(f"connected to {self.server_address}")
 
-            while self.running:
-                if self.is_me_alive() and self.state == "died":
-                    self.state = "game"
+                self.websocket = websocket
+                await self.on_connect()
 
-                try:
-                    message = await asyncio.wait_for(websocket.recv(), timeout=0.1)
-                    data = json.loads(message)
-                    await self.handle_data(data)
-                except asyncio.TimeoutError:
-                    pass
+                while self.running:
+                    if self.is_me_alive() and self.state == "died":
+                        self.state = "game"
 
-                await self.handle_input()
+                    await self.handle_websocket()
 
-                while not self.to_send.empty():
-                    await websocket.send(json.dumps(self.to_send.get()))
+                    await self.handle_input()
+
+                    while not self.to_send.empty():
+                        await websocket.send(json.dumps(self.to_send.get()))
+                # else:
+
+
+        except asyncio.CancelledError:
+            self.logger.debug("async task connect() cancelled")
+            raise
+
+        finally:
+            self.logger.debug("connection closed")
+
+    async def run_together(self, uri):
+        connect_task = asyncio.create_task(self.connect(uri))
+        input_task = asyncio.create_task(self.handlerr_input())
+
+        done, pending = await asyncio.wait(
+            {connect_task, input_task},
+            return_when=asyncio.FIRST_COMPLETED
+        )
+
+        # Отменяем оставшуюся задачу
+        for task in pending:
+            task.cancel()
+            try:
+                await task  # Даем задаче обработать отмену
+            except asyncio.CancelledError:
+                pass
+        #
+        # # Возвращаем результат завершившейся задачи
+        # for task in done:
+        #     return task.result()
 
     def get_follow(self) -> (int, int):
         try:
@@ -239,8 +287,7 @@ class ClientBase(ABC):
         print(f"{Fore.LIGHTBLACK_EX}* {Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}")
         print(f"{Fore.LIGHTBLACK_EX}* Powered by Arizel79 (https://github.com/Arizel79)")
         print(f"* Source: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
-        print(f"Server: {self.server_address}; name: {self.nickname}; color: {self.color}")
-        print("")
+        self.logger.info(f"Server: {self.server_address}; name: {self.nickname}; color: {self.color}")
         self.logger.info(f"Logging level: {self.logging_level}")
         try:
             self.input_thread.start()

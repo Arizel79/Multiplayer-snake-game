@@ -34,7 +34,7 @@ class Snake:
     max_size: int = size
     alive: bool = True
     is_fast: str = False
-    immortal: bool = True  # бессмерный
+    immortal: bool = False  # бессмерный
 
     def remove_segment(self, n=1, min_pop_size=2):
         for i in range(n):
@@ -68,7 +68,7 @@ class Server:
     VALID_NAME_CHARS = ascii_letters + digits + "_"
 
     DEFAULT_SNAKE_LENGHT = 1
-    SNAKE_COLORS = ["red", "green", "blue", "yellow", "magenta", "cyan"]
+
     DIRECTIONS = ["right", "down", "left", "up"]
 
     # каждые 0.3 сек двигаемся
@@ -81,13 +81,19 @@ class Server:
 
         self.width = map_width
         self.height = map_height
+
+        self.snake_colors = ["red", "green", "blue", "yellow", "magenta", "cyan", "white", "orange"]
+
         self.NORMAL_MOVE_TIMEOUT = normal_move_timeout
         self.FAST_MOVE_TIMEOUT = self.NORMAL_MOVE_TIMEOUT / 2
+
         self.snakes = {}
         self.food = []
         self.players = {}
         self.max_players = max_players
         self.connections = {}
+
+
         if server_desc is None:
             self.server_desc = f"<green>Welcome to our Server {server_name}!</green>"
         else:
@@ -358,8 +364,10 @@ class Server:
 
         for player_id, ws in connections_.items():
 
-
-            await ws.send(to_send)
+            try:
+                await ws.send(to_send)
+            except websockets.exceptions.ConnectionClosedOK as e:
+                self.logger.error(f"{traceback.format_exc()}")
 
 
     async def get_stilizate_name_color(self, player_id, text=None):
@@ -368,7 +376,7 @@ class Server:
         if text == None:
             text = self.players.get(player_id).name
 
-        if color in self.SNAKE_COLORS:
+        if color in self.snake_colors:
             pass
         else:
             color = "white"
@@ -424,20 +432,61 @@ class Server:
     async def respawn(self, player_id):
 
         await self.spawn(player_id)
+    def get_pretty_address(self, websocket):
+        if len(websocket.remote_address) == 2:
+            return ":".join(str(i) for i in websocket.remote_address)
+        else:
+            return str(websocket.remote_address)
+
+    def is_single_color_valid(self, color):
+        if color in self.snake_colors:
+            return True
+        return False
+    def is_color_valid(self, color):
+        list_head_body = color.split(";", maxsplit=2)
+
+        if len(list_head_body) == 2:
+            head_str = list_head_body[0]
+            body_str = list_head_body[1]
+        elif len(list_head_body) == 1:
+            head_str = None
+            body_str = list_head_body[0]
+        else:
+            raise ValueError("Invalid head. Too many ';'")
+
+        ls = body_str.split(",")
+
+        if len(ls) > 20:
+            raise ValueError("Color is too big")
+
+        if (not head_str is None) and (not self.is_single_color_valid(head_str)):
+            raise ValueError(f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}")
+
+        for n, i in enumerate(ls):
+            if not self.is_single_color_valid(i):
+                raise ValueError(f"Color option № {n+1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
+        if len(ls) == 1:
+            ls = ls[0]
+        out =  {"body": ls}
+        if not head_str is None:
+            out["head"] = head_str
+            out["name_color"] = "white"
+        return out
+
 
     async def handle_connection(self, websocket):
 
         if len(self.players) >= self.max_players:
-            self.logger.info(f"{websocket.remote_address} is trying to connect, but the server is full")
+            self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
             await websocket.send(json.dumps({"type": "connection_error",
                                              "data": f"Server is full ({len(self.players)} / {self.max_players})"}))
             return
         else:
-            self.logger.debug(f"{websocket.remote_address} is trying to connect to the server")
+            self.logger.debug(f"{self.get_pretty_address(websocket)} is trying to connect to the server")
         while True:
             player_id = get_random_id()
             if not (player_id in self.players.keys()):
-                self.logger.debug(f"{websocket.remote_address}`s player_id={player_id}")
+                self.logger.debug(f"{self.get_pretty_address(websocket)}`s player_id={player_id}")
                 break
         self.connections[player_id] = websocket
         await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
@@ -453,11 +502,14 @@ class Server:
                                                      "data": f"Invalid name: {name_valid}"}))
                     return
 
-                color = player_info.get('color', 'green')
-                if not color in self.SNAKE_COLORS:
-                    self.logger.debug(f"{websocket.remote_address} choosen invalid color")
+                color_str = player_info.get('color', None)
+                try:
+                    color = self.is_color_valid(color_str)
+
+                except ValueError as e:
+                    self.logger.debug(f"{websocket.remote_address} choosen invalid color: {e}")
                     await websocket.send(json.dumps({"type": "connection_error",
-                                                     "data": f"Invalid snake color\nValid colors: {', '.join(self.SNAKE_COLORS)}"}))
+                                                     "data": f"Invalid snake color '{color_str}'\n{e}"}))
                     return
 
                 await self.add_player(player_id, name, color)

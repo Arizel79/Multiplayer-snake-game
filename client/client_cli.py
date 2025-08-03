@@ -33,6 +33,64 @@ class ClientCLI(ClientBase):
         finally:
             self.quit()
             self.screen.quit()
+    async def handlerr_input(self):
+        while True:
+            try:
+                key = self.input_queue.get_nowait()
+                key_ = key.lower()
+                if self.state == "game":
+                    if self.is_open_chat:
+                        if key == "\x1b":
+                            self.is_open_chat = False
+                        elif key == "\x08":
+                            if len(self.chat_prompt) > 0:
+                                self.chat_prompt = self.chat_prompt[:-1]
+
+                        elif key == "\n":
+                            await self.send_chat()
+                        else:
+                            if len(key) == 1:
+                                self.chat_prompt += key
+                    else:
+                        self.new_direction = None
+                        if key_ in ["w", "ц"]:
+                            self.new_direction = 'up'
+                        elif key_ in ["s", "ы"]:
+                            self.new_direction = 'down'
+                        elif key_ in ["a", "ф"]:
+                            self.new_direction = 'left'
+                        elif key_ in ["d", "в"]:
+                            self.new_direction = 'right'
+                        elif key in ["Q"]:
+                            self.logger.info("Received Q, exiting...")
+                            self.running = False
+                        elif key == "\t":
+                            self.is_open_tablist = not self.is_open_tablist
+                        elif key == "`":
+                            self.show_debug = not self.show_debug
+
+                        elif key_ in ['t', "е"]:
+                            self.is_open_chat = True
+
+                        if self.new_direction is not None and self.new_direction != self.direction:
+                            # self.add_chat_message(str({"type": 'direction', "data": self.new_direction}))
+                            await self.websocket.send(json.dumps({"type": 'direction', "data": self.new_direction}))
+                            self.direction = self.new_direction
+                            self.new_direction = None
+                elif self.state == "alert":
+                    if key == " ":
+                        self.state = None
+
+                elif self.state == "died":
+                    if key == " ":
+                        await self.websocket.send(json.dumps({"type": 'respawn', "data": "lol"}))
+            except Empty:
+                pass  # Очередь пуста, новых клавиш нет
+            except asyncio.CancelledError:
+                print("#1f63gd^ Обработка ввода отменена")
+                raise
+            except KeyboardInterrupt:
+                self.quit()
 
     async def handle_input(self):
         try:
@@ -211,11 +269,33 @@ Total deaths: {pl["deaths"]}
                                  parse_html=True,
                                  anchor_x=Anchors.CENTER_X_ANCHOR, anchor_y=Anchors.UP_ANCHOR)
 
-    def get_snake_color_segment(self, color, segment_n):
-        if segment_n == 0:
-            return Symbol("0", color, Colors.BLACK, Styles.DIM)
+    def get_snake_color_segment(self, color:dict, segment_n):
+        n = segment_n
+        head = color.get("head")
+        body = color.get("body")
+
+        if type(body) == list:
+            if segment_n == 0 and (not head is None):
+                color_str = head
+            else:
+                if head is None:
+                    index = (segment_n) % len(body)
+                else:
+                    index = (segment_n - 1) % len(body)
+
+                color_str = body[index]
+
         else:
-            return Symbol("o", color, Colors.BLACK)
+            raise ValueError(
+                f"Snake color must be a str or list, but is is {type(color)} with type {type(color)}")
+
+        if not color_str in self.SNAKE_COLORS:
+            color_str = "white"
+
+        if segment_n == 0:
+            return Symbol("0", color_str, Colors.BLACK, Styles.DIM)
+        else:
+            return Symbol("o", color_str, Colors.BLACK)
 
     def render_game_world(self):
         if self.game_state is None:
