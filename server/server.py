@@ -114,7 +114,7 @@ class Server:
         self.last_fast_snake_move_time = time()
 
         self.logging_level = logging_level
-        self.setup_logger(__name__, "../server.log", getattr(logging, self.logging_level))
+        self.setup_logger(__name__, "server.log", getattr(logging, self.logging_level))
         self.logger.info(f"Logging level: {self.logging_level}")
 
     async def set_server_desc(self, server_desc):
@@ -301,7 +301,7 @@ class Server:
             # Check wall collision
             walls = self.get_map_rect()
             if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
-                await self.player_death(player_id, "Crashed into the border")
+                await self.player_death(player_id, "%NAME% crashed into the border")
                 continue
 
             # Check snake collisions
@@ -309,7 +309,7 @@ class Server:
                 if other_id == player_id:
                     continue
                 if other_snake.alive and new_head in other_snake.body:
-                    await self.player_death(player_id, f'Crashed into {other_snake.name}')
+                    await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
                     self.players[other_id].kills += 1
                     break
             else:  # No collision occurred
@@ -367,7 +367,7 @@ class Server:
             try:
                 await ws.send(to_send)
             except websockets.exceptions.ConnectionClosedOK as e:
-                self.logger.error(f"{traceback.format_exc()}")
+                pass
 
 
     async def get_stilizate_name_color(self, player_id, text=None):
@@ -391,7 +391,7 @@ class Server:
                 await con.send(json.dumps({"type": "chat_message",
                                            "data": f"Help mesaage here?"}))
             elif lst[0] == "/kill":
-                await self.player_death(player_id, "%NAME% used /kill command", if_immortal=True)
+                await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
         else:
             name = self.players[player_id].name
             await self.broadcast_chat_message(
@@ -399,15 +399,17 @@ class Server:
                  "from_user": f"{await self.get_stilizate_name_color(player_id)}"})
 
     async def handle_client_data(self, player_id: str, data: dict):
-        self.logger.debug(f"Recieved data from {self.get_player(player_id)}: {data}")
+        self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
         if data["type"] == "direction":
             self.change_direction(player_id, data['data'])
         elif data["type"] == "chat_message":
             await self.handle_client_chat_message(player_id, data["data"])
-        elif data["type"] == "kill_me":
-            await self.player_death(player_id)
+        # elif data["type"] == "kill_me":
+        #     await self.player_death(player_id, "%NAME% committed suicide")
         elif data["type"] == "respawn":
             await self.respawn(player_id)
+        else:
+            self.logger.warning(f"Unknown data type received from {self.get_player(player_id)}: {data}")
 
     async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
         x, y = self.get_avalible_coords()

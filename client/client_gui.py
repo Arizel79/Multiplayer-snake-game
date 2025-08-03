@@ -235,8 +235,8 @@ class ClientGUI(ClientBase):
         # Chat background
         if len(self.chat_messages) > 0:
             bg_width = min(width // 3, width - 10)  # width - 10
-            pygame.draw.rect(self.screen, (0, 0, 0, 150),
-                             (5, chat_y - (max_messages * 20) - 5, bg_width, (max_messages * 20) + 5))
+            # pygame.draw.rect(self.screen, (0, 0, 0, 150),
+            #                  (5, chat_y - (max_messages * 20) - 5, bg_width, (max_messages * 20) + 5))
 
             # Render messages
             for n, message in enumerate(self.chat_messages[-max_messages:][::-1]):
@@ -503,7 +503,8 @@ class ClientGUI(ClientBase):
         self.screen.blit(title, title_rect)
 
         # Reason
-        reason = self.font_medium.render(self.alert_message, True, self.TEXT_COLOR)
+        text = strip_html_tags(self.alert_message)
+        reason = self.font_medium.render(text, True, self.TEXT_COLOR)
         reason_rect = reason.get_rect(center=(width // 2, height // 2))
         self.screen.blit(reason, reason_rect)
 
