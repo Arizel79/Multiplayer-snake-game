@@ -35,11 +35,11 @@ usage: server [-h] [--address ADDRESS] [--port PORT] [--server_name SERVER_NAME]
 ### Run client
 GUI mode:
 ```
-python client --name TestPlayer --color white;red,green --server --mode gui
+python client --name TestPlayer --color white;red,green,blue --mode gui
 ```
 Console mode:
 ```
-python client --name TestPlayer --color green --server --mode cli
+python client --name TestPlayer --color white;red,green,blue --server --mode cli
 ```
 Running client options:
 ```commandline
