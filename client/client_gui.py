@@ -38,13 +38,18 @@ class ClientGUI(ClientBase):
         border = (100, 100, 100)
         snake_colors_map = {
             "white": (255, 255, 255),
-            "orange": (255, 165, 0),
             "red": (255, 50, 50),
-            "green": (50, 255, 50),
-            "blue": (50, 50, 255),
+            "orange": "#fc8105",
             "yellow": (255, 255, 50),
+            "green": (50, 255, 50),
+            "lime": "#adf542",
+            "turquoise": "#05fc9d",
+            "cyan": "#00FFFF",
+            "light_blue": "#1999ff",
+            "blue": "#3232FF",
+            "violet": "#7F00FE",
             "magenta": (255, 50, 255),
-            "cyan": (50, 255, 255)
+
         }
         snake_colors = snake_colors_map.keys()
 
@@ -118,7 +123,7 @@ class ClientGUI(ClientBase):
         finally:
             self.quit()
             pygame.quit()
-            self.logger.info("input_output_thread_worker finally")
+            self.logger.debug("input_output_thread_worker finally")
 
     async def handle_event(self, event):
         # self.logger.debug(f"{self.state=} ; Async handling {event}")
@@ -602,7 +607,7 @@ class ClientGUI(ClientBase):
         for player_id, player in self.game_state["players"].items():
             snake = self.game_state["snakes"].get(player_id, {})
 
-            color = self.Color.snake_colors_map.get(snake["color"], (200, 200, 200))
+            color = self.Color.snake_colors_map.get(snake["color"].get("head"), (200, 200, 200))
 
             # Player info
             status = "Alive" if player["alive"] else "Dead"

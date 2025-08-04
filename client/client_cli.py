@@ -287,7 +287,7 @@ Total deaths: {pl["deaths"]}
 
         else:
             raise ValueError(
-                f"Snake color must be a str or list, but is is {type(color)} with type {type(color)}")
+                f"Snake color must be a str or list, but is is {color} with type {type(color)}")
 
         if not color_str in self.SNAKE_COLORS:
             color_str = "white"

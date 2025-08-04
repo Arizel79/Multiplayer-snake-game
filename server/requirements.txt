@@ -1,0 +1,3 @@
+# server requirements
+
+websockets==15.0.1

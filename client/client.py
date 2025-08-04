@@ -1,6 +1,8 @@
 import argparse
-from client_cli import *
-from client_gui import *
+from client_cli import ClientCLI
+from client_gui import ClientGUI
+import asyncio
+from random import randint, choice
 
 async def run_client():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game CLI/GUI edition")
@@ -18,6 +20,8 @@ async def run_client():
         g = ClientCLI(args.server, args.name, args.color, logging_level=args.log_lvl, interactive=args.interactive)
     elif args.mode == "gui":
         g = ClientGUI(args.server, args.name, args.color, logging_level=args.log_lvl, interactive=args.interactive)
+    else:
+        raise ValueError("argument mode must be cli/gui")
     await g.run_game()
     # await run_game(args.address, args.name, args.skin)
 

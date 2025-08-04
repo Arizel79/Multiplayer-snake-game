@@ -57,9 +57,9 @@ class ClientBase(ABC):
         self.input_thread = threading.Thread(target=self.input_output_thread_worker, daemon=True)
 
         self.logging_level = logging_level.upper()
-        self.setup_logger(__name__, "server.log", self.logging_level)
+        self.setup_logger(__name__, "client/client.log", self.logging_level)
 
-    def setup_logger(self, name, log_file='client.log', level=logging.INFO):
+    def setup_logger(self, name, log_file, level=logging.INFO):
         """Настройка логгера"""
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
@@ -205,9 +205,8 @@ class ClientBase(ABC):
             pass
 
     async def connect(self, uri):
-
         try:
-            self.logger.info(f"start connecting to {self.server_address}")
+            # self.logger.info(f"start connecting to {self.server_address}")
             async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
                 self.logger.info(f"connected to {self.server_address}")
 
@@ -299,6 +298,7 @@ class ClientBase(ABC):
 
             except websockets.exceptions.ConnectionClosedOK:
                 self.alert("<red>Disconnected</red>", "<b>Server closed</b>\n\nYou can try reconnect later")
+                self.logger.warning("Disconnected, server closed")
                 await self.wait_for_end()
 
 

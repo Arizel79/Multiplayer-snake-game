@@ -75,17 +75,18 @@ class Server:
 
     def __init__(self, address, port, map_width=80, map_height=40, max_players=20, max_food=50,
                  server_name="Test Server", server_desc=None, logging_level="debug",
-                 max_food_perc=10, normal_move_timeout=0.3):
+                 max_food_perc=10, default_move_timeout=0.3):
         self.port = port
         self.address = address
 
         self.width = map_width
         self.height = map_height
 
-        self.snake_colors = ["red", "green", "blue", "yellow", "magenta", "cyan", "white", "orange"]
+        self.snake_colors = ["red", "green", "lime", "blue", "yellow", "magenta", "cyan", "white", "orange",
+                             "violet", "turquoise", "light_blue"]
 
-        self.NORMAL_MOVE_TIMEOUT = normal_move_timeout
-        self.FAST_MOVE_TIMEOUT = self.NORMAL_MOVE_TIMEOUT / 2
+        self.DEFAULT_MOVE_TIMEOUT = default_move_timeout
+        self.FAST_MOVE_TIMEOUT = self.DEFAULT_MOVE_TIMEOUT / 2
 
         self.snakes = {}
         self.food = []
@@ -104,7 +105,7 @@ class Server:
         self.max_food = (self.width * self.height) * self.max_food_relative
 
         self.min_steling_snake_size = 5
-        self.stealing_chance = 0.01
+        self.stealing_chance = 0.005
         self.steal_percentage = 0.1  # 5%
 
         self.old_tick_time = time()
@@ -114,7 +115,7 @@ class Server:
         self.last_fast_snake_move_time = time()
 
         self.logging_level = logging_level
-        self.setup_logger(__name__, "server.log", getattr(logging, self.logging_level))
+        self.setup_logger(__name__, "server/server.log", getattr(logging, self.logging_level))
         self.logger.info(f"Logging level: {self.logging_level}")
 
     async def set_server_desc(self, server_desc):
@@ -122,7 +123,7 @@ class Server:
         await self.broadcast_chat_message({"type": "set_server_desc",
                                            "data": self.server_desc})
 
-    def setup_logger(self, name, log_file='server.log', level=logging.INFO):
+    def setup_logger(self, name, log_file, level=logging.INFO):
         """Настройка логгера с выводом в консоль и файл."""
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
@@ -183,8 +184,8 @@ class Server:
     async def remove_player(self, player_id):
         if player_id not in self.players.keys():
             return True
-        del self.connections[player_id]
         self.logger.info(f"Player {self.get_player(player_id)} disconnected")
+        del self.connections[player_id]
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
                                            "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
 
@@ -213,7 +214,12 @@ class Server:
                 self.food.append(Point(x, y))
 
     def get_player(self, player_id):
-        return f"@{self.players[player_id].name}#{player_id}"
+
+        try:
+            address = "@" + self.get_addres_from_ws(self.connections[player_id])
+        except KeyError:
+            address = ""
+        return f"{self.players[player_id].name}{address}"
 
     async def player_death(self, player_id, reason: str = "No reason", if_immortal=False):
         if self.snakes[player_id].immortal and not if_immortal:
@@ -262,7 +268,7 @@ class Server:
 
         # Determine movement timing
         now = time()
-        move_normal = now >= self.last_normal_snake_move_time + self.NORMAL_MOVE_TIMEOUT
+        move_normal = now >= self.last_normal_snake_move_time + self.DEFAULT_MOVE_TIMEOUT
         move_fast = now >= self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT
 
         if not (move_normal or move_fast):
@@ -467,8 +473,7 @@ class Server:
         for n, i in enumerate(ls):
             if not self.is_single_color_valid(i):
                 raise ValueError(f"Color option № {n+1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
-        if len(ls) == 1:
-            ls = ls[0]
+
         out =  {"body": ls}
         if not head_str is None:
             out["head"] = head_str
@@ -532,8 +537,9 @@ class Server:
 
         finally:
 
-            await websocket.close()
+
             await self.remove_player(player_id)
+            await websocket.close()
 
     async def steal_body(self, player_id):
 
@@ -605,30 +611,31 @@ def get_random_id():
 
 
 def positive_int(value):
-    ivalue = int(value)
-    if ivalue <= 0:
+    val = int(value)
+    if val <= 0:
         raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
-    return ivalue
+    return val
 
 
 async def run_server():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
-    parser.add_argument('--address', "--ip", type=str, help='Server port (default: 8090)', default="0.0.0.0")
+    parser.add_argument('--address', "--ip", type=str, help='Server address (default: 0.0.0.0)', default="0.0.0.0")
     parser.add_argument('--port', "--p", type=int, help='Server port (default: 8090)', default=8090)
     parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
-    parser.add_argument('--server_desc', type=str, help='Description of server', default=None)
+    parser.add_argument('--server_desc', type=str, help='Description of server', default="This is server")
     parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
-    parser.add_argument('--map_width', "--width", "--w","--x_size", type=int, help='Width of server map', default=120)
-    parser.add_argument('--map_height',"--height", "--h","--y_size", type=int, help='Height of server map', default=60)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %%', default=3)
-    parser.add_argument('--move_timeout', type=int, help='Timeout move snake', default=0.1)
-    parser.add_argument('--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+    parser.add_argument('--map_width', "--width", "--w","--x_size", type=int, help='Width of server map', default=100)
+    parser.add_argument('--map_height',"--height", "--h","--y_size", type=int, help='Height of server map', default=100)
+    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %', default=4)
+    parser.add_argument('--default_move_timeout','--move_timeout', type=float, help='Timeout move snake (sec)', default=0.1)
+    parser.add_argument('--logging_level','--log_lvl', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Level of logging', default="INFO")
     args = parser.parse_args()
 
     game_state = Server(address=args.address, port=args.port, map_width=args.map_width, map_height=args.map_height,
                         max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
-                        max_food_perc=args.food_perc, logging_level=args.log_lvl, normal_move_timeout=args.move_timeout)
+                        logging_level=args.logging_level, max_food_perc=args.food_perc,
+                        default_move_timeout=args.default_move_timeout)
     try:
         await game_state.run()
     except asyncio.CancelledError:
