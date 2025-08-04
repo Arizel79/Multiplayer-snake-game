@@ -1,6 +1,6 @@
 # Multiplayer snake game
 Multiplayer snake game on websockets with support for two client modes: console (cli) and pygame (gui)
-<img width="960" height="1030" alt="image" src="https://github.com/user-attachments/assets/d2c518b2-3367-42f4-b9f5-d4a54ed92396" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/d2c518b2-3367-42f4-b9f5-d4a54ed92396" />
 
 # How to
 ### Clone repository & create virtual envelopment
