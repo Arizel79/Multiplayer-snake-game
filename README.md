@@ -39,7 +39,7 @@ python client --name TestPlayer --color white;red,green,blue --mode gui
 ```
 Console mode:
 ```
-python client --name TestPlayer --color white;red,green,blue --server --mode cli
+python client --name TestPlayer --color white;red,green,blue --mode cli
 ```
 Running client options:
 ```commandline
