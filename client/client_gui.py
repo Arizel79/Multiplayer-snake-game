@@ -7,12 +7,14 @@ import random
 # from pyAsciiEngine import *
 import pygame
 from pygame.locals import *
+import pygame_gui
 
 pygame.init()
 
 from html.parser import HTMLParser
 from html import unescape
-from enum import  Enum
+from enum import Enum
+
 
 class HTMLTagStripper(HTMLParser):
     def __init__(self):
@@ -31,6 +33,7 @@ def strip_html_tags(html_string):
     parser.feed(html_string)
     parser.close()
     return parser.get_text()
+
 
 class ClientGUI(ClientBase):
     class Color:
@@ -53,18 +56,9 @@ class ClientGUI(ClientBase):
         }
         snake_colors = snake_colors_map.keys()
 
-
-
-
-
-    def __init__(self, *args, interactive=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.version = f"{self.version} (GUI-test)"
-        if interactive:
-            self.logger.info("Interactive prompting enabled")
-            self.nickname = input("Nickname: ")
-            self.color = input("Color: ")
-            self.server_address = input("Server IP: ")
+        self.version = f"{self.version} (GUI)"
 
         self.default_width = 800
         self.default_height = 600
@@ -86,42 +80,208 @@ class ClientGUI(ClientBase):
         self.show_debug = False
         self.show_tablist = False
 
-
-
-    def quit(self):
-        self.logger.debug("Exiting...")
+    def quit_session(self):
+        self.logger.debug("Exiting session...")
         # print("Quit.")
-        self.state = None
+        self.finish_game_session()
+        # self.input_thread_running = False
+
+    def quit_all(self):
+        self.logger.debug("Exiting all...")
+        # print("Quit.")
+        self.state = "exit"
         self.running = False
+        self.is_game_session_now = False
         self.input_thread_running = False
 
-    def input_output_thread_worker(self):
+    def finish_game_session(self):
+        self.logger.info("Game session finished.")
+        self.is_game_session_now = False
+        if self.use_main_menu:
+            self.state = "main_menu"
+        else:
+            self.quit_all()
 
+    def first_handle_event(self, event):
+
+        self.manager_main_menu.process_events(event)
+
+        if event.type == QUIT:
+            self.logger.debug(f"Event quit received: {event}")
+            self.quit_all()
+            raise KeyboardInterrupt
+        # # Обработка нажатия кнопки
+        # elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+        #         if event.ui_element == button:
+        #             entered_text = text_input.get_text()
+        #             print(f"Submitted: {entered_text}")
+        #             # Здесь ваша логика обработки текста
+
+        elif event.type == VIDEORESIZE:
+            # Handle window resize
+            name_input = self.ui_elements_main_menu['name_input'].get_text()
+            ip_input = self.ui_elements_main_menu['ip_input'].text
+
+            self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+            self.manager_main_menu.set_window_resolution((event.w, event.h))
+            for element in self.ui_elements_main_menu.values():
+                element.kill()
+            self.ui_elements_main_menu = self.create_centered_elements_main_menu(event.w, name_input, ip_input)
+
+        else:
+            # self.logger.debug(f"Add to event queue: {event}")
+            # Обработка ввода текста (Enter)
+
+            if event.type == KEYDOWN:
+                if event.mod & pygame.KMOD_CTRL:
+                    # Если в момент нажатия клавиши был зажат Ctrl
+                    # Также можно проверить, какая именно клавиша была нажата, например, 'c'
+                    if event.key == pygame.K_c:
+                        self.logger.debug(f"Event quit received: {event}")
+                        self.quit_session()
+                        raise KeyboardInterrupt
+
+                elif self.state == "game":
+
+                    if self.is_open_chat:
+                        if event.key == K_RETURN:
+                            self.input_queue.put_nowait(event)
+
+                        elif event.key == K_BACKSPACE:
+                            self.chat_input = self.chat_input[:-1]
+
+                        elif event.key == K_ESCAPE:
+                            self.is_open_chat = False
+                        else:
+                            self.chat_input += event.unicode
+                    else:
+
+                        if event.key == K_t:
+                            self.is_open_chat = True
+                        elif event.key == K_TAB:
+                            self.is_open_tablist = not self.is_open_tablist
+                        elif event.key == K_F3:
+                            self.show_debug = not self.show_debug
+                        elif event.key in [K_w, K_UP] + [K_s, K_DOWN] + [K_a, K_LEFT] + [K_d, K_RIGHT]:
+                            self.input_queue.put_nowait(event)
+
+                elif self.state == "died" and event.key == K_SPACE:
+                    self.input_queue.put_nowait(event)
+                elif self.state == "connection_error" and event.key == K_SPACE:
+                    self.finish_game_session()
+                elif self.state == "alert" and event.key == K_SPACE:
+                    self.finish_game_session()
+                elif self.state == "connecting" and event.key == K_SPACE:
+                    self.finish_game_session()
+            elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+                if event.ui_element == self.ui_elements_main_menu['name_input']:
+                    self.player_name = self.ui_elements_main_menu['name_input'].get_text()
+                    # self.ui_elements['output'].set_text(f"Entered: {entered_text}")
+                    # output_text = f"Entered: {entered_text}"  # Сохраняем состояние
+                    # print(f"Player: {self.player_name}")
+                elif event.ui_element == self.ui_elements_main_menu['ip_input']:
+                    self.server = self.ui_elements_main_menu['ip_input'].get_text()
+                    # self.ui_elements['output'].set_text(f"Entered: {entered_text}")
+                    # output_text = f"Entered: {entered_text}"  # Сохраняем состояние
+                    # print(f"IP: {self.server}")
+
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == self.ui_elements_main_menu['play_button']:
+                    self.player_name = self.ui_elements_main_menu['name_input'].get_text()
+                    self.server = self.ui_elements_main_menu['ip_input'].get_text()
+
+                    self.start_game_session()
+
+                    # entered_text = self.ui_elements['text_input'].get_text()
+                    # self.ui_elements['output'].set_text(f"Hello, {entered_text}!")
+                    # output_text = f"Hello, {entered_text}!"  # Сохраняем состояние
+    def start_game_session(self):
+        self.is_game_session_now = True
+        self.state = "start_session"
+
+    def create_centered_elements_main_menu(self, screen_width, name_text=None, ip_text=None, info_text="Welcome!"):
+        manager = self.manager_main_menu
+        elements = {}
+
+        # Поле ввода (центрированное)
+        input_width = min(400, screen_width - 100)
+        elements['name_input'] = pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect(
+                (screen_width - input_width) // 2,
+                150,
+                input_width,
+                50
+            ), placeholder_text="player name", initial_text=self.player_name,
+            manager=manager
+
+        )
+        if not name_text is None:
+            elements['name_input'].set_text(name_text)  # Восстанавливаем текст
+
+        elements['ip_input'] = pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect(
+                (screen_width - input_width) // 2,
+                220,
+                input_width,
+                50
+            ), placeholder_text="server ip", initial_text=self.server,
+            manager=manager
+
+        )
+        if not ip_text is None:
+            elements['ip_input'].set_text(ip_text)  # Восстанавливаем текст
+
+        # Кнопка (центрированная)
+        elements['play_button'] = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(
+                (screen_width - input_width) // 2,
+                290,
+                input_width,
+                50
+            ),
+            text="play",
+            manager=manager
+        )
+
+        # Метка для вывода (центрированная)
+        elements['info'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(
+                (screen_width - input_width) // 2,
+                400,
+                input_width,
+                50
+            ),
+            text=info_text,
+            manager=manager
+        )
+
+        return elements
+
+    def input_output_thread_worker(self):
+        """Рабочая функция потока ввода, считывает клавиши и обрабатывает/помещает их в очередь"""
         try:
             pygame.init()
+            self.clock = pygame.time.Clock()
             pygame.display.set_caption("Multiplayer Snake Game")
             self.screen = pygame.display.set_mode((self.default_width, self.default_height), pygame.RESIZABLE)
+            self.manager_main_menu = pygame_gui.UIManager((self.default_width, self.default_height))
+            self.ui_elements_main_menu = self.create_centered_elements_main_menu(self.default_width)
+
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
             while self.input_thread_running:
+                time_delta = self.clock.tick(60) / 1000.0
                 self.render()
                 for event in pygame.event.get():  # Блокирующий вызов с небольшим таймаутом
+                    try:
 
-                    if event.type == QUIT or (event.type == KEYDOWN and event.key == K_q):
-                        self.logger.debug(f"Event quit received: {event}")
-                        self.quit()
+                        self.first_handle_event(event)
+                    except KeyboardInterrupt:
                         break
-
-                    elif event.type == VIDEORESIZE:
-                        # Handle window resize
-                        self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                    else:
-                        # self.logger.debug(f"Add to event queue: {event}")
-                        self.input_queue.put_nowait(event)
-
+                self.manager_main_menu.update(time_delta)
                 # if event.type ==
 
         finally:
-            self.quit()
+            self.quit_all()
             pygame.quit()
             self.logger.debug("input_output_thread_worker finally")
 
@@ -163,12 +323,13 @@ class ClientGUI(ClientBase):
 
             elif self.state == "died" and event.key == K_SPACE:
                 await self.websocket.send(json.dumps({"type": "respawn"}))
+            elif self.state == "connecting" and event.key == K_SPACE:
+                self.quit_session()
 
             elif self.state == "alert" and event.key == K_SPACE:
-                self.state = None
+                self.quit_session()
 
     async def handle_input(self):
-
         try:
             event = self.input_queue.get_nowait()
             await self.handle_event(event)
@@ -176,35 +337,22 @@ class ClientGUI(ClientBase):
             pass  # Очередь пуста, новых клавиш нет
 
         except KeyboardInterrupt:
-            self.quit()
+            self.quit_session()
 
-    async def handlerr_input(self):
-        try:
-            self.logger.info("start handlerr_input")
-
-            while True:
-                try:
-                    event = self.input_queue.get_nowait()
-                    await self.handle_event(event)
-                except Empty:
-                    pass  # Очередь пуста, новых клавиш нет
-
-                except KeyboardInterrupt:
-                    self.quit()
-
-        except asyncio.CancelledError:
-            self.logger.debug("#1 Обработка ввода отменена")
-            raise
-        finally:
-            self.logger.debug("FINN")
-            # pygame.quit()
-
-    async def wait_for_end(self):
+    async def wait_for_quit(self):
         while self.running == True:
             await asyncio.sleep(.01)
             # print("state", self.state)
             # await self.input_handler()
-        self.logger.debug("Wait_for_end finished")
+        self.logger.debug("Wait_for_quit finished")
+
+    async def wait_for_end_session(self):
+        self.logger.debug("waiting session end start")
+        while self.is_game_session_now and self.running:
+            await asyncio.sleep(.01)
+            # self.logger.debug("waiting session finished")
+            # await self.handle_input()
+        self.logger.debug("wait_for_end_session finished")
 
     def get_stilizate_name_color(self, player_id, text=None):
         color = self.game_state["players"].get(player_id, {})["color"]
@@ -265,18 +413,29 @@ class ClientGUI(ClientBase):
                 msg_text = self.font_small.render(text, True, color)  # BUG: текст выходит за пределы фона
                 self.screen.blit(msg_text, (10, chat_y - (n * 20) - 25))
 
+    def render_main_menu(self):
+        self.manager_main_menu.draw_ui(self.screen)
+
     def render(self):
+        # self.logger.debug(f"State: {self.state}")
         self.screen.fill(self.BG_COLOR)
         if self.state == "game" and self.game_state:
             self.render_game()
+        elif self.state == "main_menu":
+            self.render_main_menu()
         elif self.state == "died":
             self.render_death_screen()
         elif self.state == "alert":
-            self.render_alert()
+            self.render_message(*self.alert_message)
+        elif self.state == "connecting":
+            self.render_message("Connecting", self.view_message, "Wait...")
+        elif self.state == "connection_error":
+            self.render_message(*self.view_message)
 
         if self.show_debug:
             self.render_debug_info()
-
+        #text = self.font_large.render(f"state: {self.state}; sesion: {self.is_game_session_now}", True, (255, 50, 50))
+        #self.screen.blit(text, (0, 0))
         pygame.display.flip()
         # self.clock.tick(self.FPS)
 
@@ -295,12 +454,13 @@ class ClientGUI(ClientBase):
 
         # Render chat messages above input
         self.render_chat_messages()
+
     def render_snake(self, snake):
+        if snake is None:
+            return
         cell_size = self.get_cell_size()
         center_x, center_y = self.get_visible_area_center()
         width, height = self.screen.get_size()
-
-
 
         for n, segment in enumerate(snake["body"]):
             if snake["alive"]:
@@ -357,7 +517,6 @@ class ClientGUI(ClientBase):
         head = color.get("head")
         body = color.get("body")
 
-
         if type(body) == list:
             if segment_n == 0 and (not head is None):
                 color_str = head
@@ -370,14 +529,16 @@ class ClientGUI(ClientBase):
                 color_str = body[index]
 
         else:
-            raise ValueError(f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}")
+            raise ValueError(
+                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}")
 
         out_color = self.Color.snake_colors_map.get(color_str)
         if out_color is None:
             self.logger.warning(f"Unknown color: {color_str}; snake color: {snake['color']} ")
-            out_color = (255,255,255)
+            out_color = (255, 255, 255)
 
         return out_color
+
     def render_snakes(self):
         # Draw snakes
         cell_size = self.get_cell_size()
@@ -389,7 +550,7 @@ class ClientGUI(ClientBase):
                 continue
             self.render_snake(snake)
 
-        self.render_snake(self.game_state["snakes"][self.player_id])
+        self.render_snake(self.game_state["snakes"].get(self.player_id))
 
     def get_cell_size(self):
         return self.cell_size
@@ -460,7 +621,6 @@ class ClientGUI(ClientBase):
         center_x, center_y = self.get_visible_area_center()
         width, height = self.screen.get_size()
 
-
         min_x, min_y, max_x, max_y = self.game_state["map_borders"]
         for x in [min_x - 1, max_x + 1]:
             for y in range(min_y - 1, max_y + 2):
@@ -491,7 +651,6 @@ class ClientGUI(ClientBase):
         self.render_snakes()
         self.render_food()
 
-
         self.render_ui()
 
     def render_death_screen(self):
@@ -508,7 +667,7 @@ class ClientGUI(ClientBase):
         self.screen.blit(title, title_rect)
 
         # Reason
-        text = strip_html_tags(self.alert_message)
+        text = strip_html_tags(self.view_message)
         reason = self.font_medium.render(text, True, self.TEXT_COLOR)
         reason_rect = reason.get_rect(center=(width // 2, height // 2))
         self.screen.blit(reason, reason_rect)
@@ -537,7 +696,7 @@ class ClientGUI(ClientBase):
 
     def render_alert(self):
         width, height = self.screen.get_size()
-        text = strip_html_tags(self.alert_message)
+        text = strip_html_tags(self.view_message)
         # Dark overlay
         overlay = pygame.Surface((width, height), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
@@ -569,6 +728,40 @@ class ClientGUI(ClientBase):
         instructions_rect = instructions.get_rect(center=(width // 2, box_y + box_height - 50))
         self.screen.blit(instructions, instructions_rect)
 
+    def render_message(self, title="Title here", text="", instructions="instructions"):
+        width, height = self.screen.get_size()
+        text = strip_html_tags(text)
+        # Dark overlay
+        overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        self.screen.blit(overlay, (0, 0))
+
+        # Alert box
+        box_width = min(width - 40, 600)
+        box_height = min(height - 40, 400)
+        box_x = (width - box_width) // 2
+        box_y = (height - box_height) // 2
+
+        pygame.draw.rect(self.screen, (50, 50, 50), (box_x, box_y, box_width, box_height))
+        pygame.draw.rect(self.screen, (100, 100, 100), (box_x, box_y, box_width, box_height), 2)
+
+        # Title
+        title = self.font_large.render(title, True, (255, 50, 50))
+        title_rect = title.get_rect(center=(width // 2, box_y + 30))
+        self.screen.blit(title, title_rect)
+
+        # Message
+        message_lines = text.split('\n')
+        for i, line in enumerate(message_lines):
+            line_text = self.font_medium.render(line, True, self.TEXT_COLOR)
+            line_rect = line_text.get_rect(center=(width // 2, box_y + 80 + i * 30))
+            self.screen.blit(line_text, line_rect)
+
+        # Instructions
+        instructions = self.font_medium.render(instructions, True, self.TEXT_COLOR)
+        instructions_rect = instructions.get_rect(center=(width // 2, box_y + box_height - 50))
+        self.screen.blit(instructions, instructions_rect)
+
     def render_tablist(self):
         width, height = self.screen.get_size()
 
@@ -587,7 +780,7 @@ class ClientGUI(ClientBase):
         self.screen.blit(title, title_rect)
 
         # Server info
-        server_info = self.font_small.render(f"Server: {self.server_address}", True, self.TEXT_COLOR)
+        server_info = self.font_small.render(f"Server: {self.server}", True, self.TEXT_COLOR)
         self.screen.blit(server_info, (tablist_x + 10, tablist_y + 60))
 
         server_desc = self.font_small.render(self.server_desc, True, self.TEXT_COLOR)

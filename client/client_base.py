@@ -24,19 +24,31 @@ class ClientBase(ABC):
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
     VERSION_NUMBER = "v0.1, client"
 
-    def __init__(self, server_address=None, nickname=None, color=None, logging_level="debug"):
+    def __init__(self, game_config_filename="client/.game_config.json",server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug"):
         self.version = self.VERSION_NUMBER
 
+        self.logging_level = logging_level.upper()
+        self.setup_logger(__name__, "client/client.log", self.logging_level)
+
+        self.use_main_menu = use_main_menu
+
+        if self.use_main_menu:
+            self.state = "main_menu"
+        else:
+            self.state = None
+
         self.show_debug = False
-        self.server_address = server_address
-        self.nickname = nickname
+        self.server = server
+        self.player_name = nickname
         self.color = color
         self.screen = None
         self.player_id = None
         self.player_color = "green"
         self.game_state = None
         self.last_key = None
+
         self.running = True
+        self.is_game_session_now = False
         self.chat_messages = []
         self.max_chat_messages = 10
         self.is_open_chat = False
@@ -49,15 +61,24 @@ class ClientBase(ABC):
         self.is_open_help = False
         self.server_desc = "Welcome to server!"
 
-        self.state = None
 
+        self.game_config_filename = game_config_filename
+        self.save_game_configs()
+        self.view_message = None
         self.alert_message = None
         self.input_queue = Queue()  # Очередь для хранения нажатых клавиш
         self.input_thread_running = True
         self.input_thread = threading.Thread(target=self.input_output_thread_worker, daemon=True)
 
-        self.logging_level = logging_level.upper()
-        self.setup_logger(__name__, "client/client.log", self.logging_level)
+
+    def save_game_configs(self, filename=None):
+        if filename is None:
+            filename = self.game_config_filename
+        with open(self.game_config_filename, "w+") as f:
+            data = {"player_name": self.player_name,
+                    "server": self.server,
+                    "color": self.color}
+            json.dump(data, f)
 
     def setup_logger(self, name, log_file, level=logging.INFO):
         """Настройка логгера"""
@@ -106,7 +127,7 @@ class ClientBase(ABC):
         self.chat_prompt = ""
 
         self.direction = None
-        self.alert_message = data.get("data", "no died message recived")
+        self.view_message = data.get("data", "no died message recived")
 
     async def handle_data(self, data):
         # self.logger.debug(f"Recieved data: {data}")
@@ -132,13 +153,14 @@ class ClientBase(ABC):
             return False
 
         return True
-
-    def quit(self):
-        self.logger.debug("(in self.quit) Quiting...")
-        print("Quit.")
-        self.state = None
-        self.running = False
-        self.input_thread_running = False
+    @abstractmethod
+    def quit_session(self):
+        pass
+        # self.logger.debug("(in self.quit) Quiting...")
+        # print("Quit.")
+        # self.state = None
+        # self.running = False
+        # self.input_thread_running = False
     async def send(self, data: dict):
         if type(data) != dict:
             raise ValueError("data must be a dict")
@@ -154,7 +176,7 @@ class ClientBase(ABC):
                     return
                 elif ls[0] in [".q", ".quit"]:
                     self.logger.info("User-side quit...")
-                    self.quit()
+                    self.quit_session()
                     return
             if self.is_message_for_send(message):
                 # self.to_send.put({"type": "chat_message", "data": message})
@@ -179,13 +201,10 @@ class ClientBase(ABC):
             return False
 
         return bool(self.game_state) and snake["alive"]
-    @abstractmethod
-    async def handlerr_input(self):
-        """Тут цикл с обработкой ввода"""
 
     async def on_connect(self):
         await self.websocket.send(json.dumps({
-            'name': self.nickname,
+            'name': self.player_name,
             'color': self.color
         }))
         self.state = "game"
@@ -208,12 +227,12 @@ class ClientBase(ABC):
         try:
             # self.logger.info(f"start connecting to {self.server_address}")
             async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
-                self.logger.info(f"connected to {self.server_address}")
+                self.logger.info(f"connected to {self.server}")
 
                 self.websocket = websocket
                 await self.on_connect()
 
-                while self.running:
+                while self.is_game_session_now and self.running:
                     if self.is_me_alive() and self.state == "died":
                         self.state = "game"
 
@@ -232,27 +251,6 @@ class ClientBase(ABC):
 
         finally:
             self.logger.debug("connection closed")
-
-    async def run_together(self, uri):
-        connect_task = asyncio.create_task(self.connect(uri))
-        input_task = asyncio.create_task(self.handlerr_input())
-
-        done, pending = await asyncio.wait(
-            {connect_task, input_task},
-            return_when=asyncio.FIRST_COMPLETED
-        )
-
-        # Отменяем оставшуюся задачу
-        for task in pending:
-            task.cancel()
-            try:
-                await task  # Даем задаче обработать отмену
-            except asyncio.CancelledError:
-                pass
-        #
-        # # Возвращаем результат завершившейся задачи
-        # for task in done:
-        #     return task.result()
 
     def get_follow(self) -> (int, int):
         try:
@@ -274,53 +272,76 @@ class ClientBase(ABC):
         """Отрисовка"""
         pass
 
-    def alert(self, title, message):
+    def alert(self, title, message, instructions="....."):
         self.state = "alert"
-        self.alert_message = f"<bold>{title}</bold>\n\n{message}"
+        self.alert_message = (title, message, instructions)
 
     @abstractmethod
-    async def wait_for_end(self):
+    async def wait_for_quit(self):
         """Бесконечно ожидаем, пока программа не завершится (self.state == None)"""
+
+    @abstractmethod
+    async def wait_for_end_session(self):
+        pass
+    async def connect_to_server(self):
+        self.is_game_session_now = True
+        try:
+
+            self.logger.info(f"Trying connecting to {self.server}...")
+            self.state = "connecting"
+            self.view_message = f"Connecting to {self.server}"
+            await self.connect(f"ws://{self.server}")
+
+
+        except websockets.exceptions.ConnectionClosedOK:
+            self.alert("Disconnected", "Server closed\nYou can try reconnect later")
+            self.logger.warning("Disconnected, server closed")
+            await self.wait_for_end_session()
+
+
+        except (OSError, gaierror, ConnectionRefusedError, ConnectionError, websockets.exceptions.InvalidURI) as e:
+            self.logger.error(f"{type(e).__name__}: {e}")
+            self.state = "connection_error"
+            self.view_message = (f"Connection error",
+                       f"Error connecting to {self.server}\n{type(e).__name__}\n{e}", "press space")
+            await self.wait_for_end_session()
+
+        except ServerConnectionError as e:
+            self.logger.warning(f"{type(e).__name__}: {e}")
+            self.alert("Server send error", f"{type(e).__name__}: {e}", "press space")
+            await self.wait_for_end_session()
+
+        except Exception as e:
+            if type(e) == KeyboardInterrupt:
+                raise KeyboardInterrupt
+            traceback_str = traceback.format_exc()
+            self.logger.critical(traceback_str)
+            self.logger.critical(f"Game crashed. Error: {type(e).__name__}: {e}")
+        finally:
+            self.quit_session()
+            self.logger.info("Session finished. Finally")
 
     async def run_game(self):
         print(f"{Fore.LIGHTBLACK_EX}* {Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}")
         print(f"{Fore.LIGHTBLACK_EX}* Powered by Arizel79 (https://github.com/Arizel79)")
         print(f"* Source: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
-        self.logger.info(f"Server: {self.server_address}; name: {self.nickname}; color: {self.color}")
+
+        self.logger.info(f"main menu? {'true' if self.use_main_menu else 'false'}")
         self.logger.info(f"Logging level: {self.logging_level}")
         try:
             self.input_thread.start()
-            try:
-                self.logger.info(f"Trying connecting to {self.server_address}...")
-                self.alert(f"Connecting to {self.server_address}", "<b>Please, wait...<b/>")
-                await self.connect(f"ws://{self.server_address}")
-
-
-            except websockets.exceptions.ConnectionClosedOK:
-                self.alert("<red>Disconnected</red>", "<b>Server closed</b>\n\nYou can try reconnect later")
-                self.logger.warning("Disconnected, server closed")
-                await self.wait_for_end()
-
-
-            except (OSError, gaierror, ConnectionRefusedError) as e:
-                self.logger.error(f"{type(e).__name__}: {e}")
-                self.alert(f"<red>Error connecting to {self.server_address}</red>",
-                           f"<b>{type(e).__name__}</b>\n\n{e}")
-                await self.wait_for_end()
-
-            except ConnectionError as e:
-                self.logger.warning(f"{type(e).__name__}: {e}")
-                self.alert("<red>Server send error</red>", e)
-                await self.wait_for_end()
-
-            except Exception as e:
-                if type(e) == KeyboardInterrupt:
-                    raise KeyboardInterrupt
-                traceback_str = traceback.format_exc()
-                self.logger.critical(traceback_str)
-                self.logger.critical(f"Game crashed. Error: {type(e).__name__}: {e}")
-
-
+            if self.use_main_menu:
+                while self.running:
+                    # self.server_address = input("Enter server IP: ")
+                    while self.state == "main_menu" and self.running:
+                        # print("main menu open...")
+                        await asyncio.sleep(.01)
+                    if self.state == "start_session":
+                        self.logger.info(f"Server: {self.server}; name: {self.player_name}; color: {self.color}")
+                        await self.connect_to_server()
+                        self.logger.info("Disconnected, backing to main menu...")
+            else:
+                await self.connect_to_server()
         except KeyboardInterrupt:
             self.logger.warning("KeyboardInterrupt received, shutting down...")
         finally:

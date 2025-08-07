@@ -529,7 +529,7 @@ class Server:
                     except:
                         pass
 
-            except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError) as e:
+            except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK) as e:
                 self.logger.warning(f"{type(e).__name__}: {e}")
                 await websocket.close()
                 return

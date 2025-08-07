@@ -15,9 +15,20 @@ class ClientCLI(ClientBase):
         self.version = f"{self.version} (CLI)"
         if interactive:
             self.logger.info("Interactive prompting enabled")
-            self.nickname = input("Nickname: ")
+            self.player_name = input("Nickname: ")
             self.color = input("Color: ")
-            self.server_address = input("Server IP: ")
+            self.server = input("Server IP: ")
+
+        self.ascii_art = r"""
+  █████████                       █████              
+ ███░░░░░███                     ░░███               
+░███    ░░░  ████████    ██████   ░███ █████  ██████ 
+░░█████████ ░░███░░███  ░░░░░███  ░███░░███  ███░░███
+ ░░░░░░░░███ ░███ ░███   ███████  ░██████░  ░███████ 
+ ███    ░███ ░███ ░███  ███░░███  ░███░░███ ░███░░░  
+░░█████████  ████ █████░░████████ ████ █████░░██████ 
+ ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░░░ ░░░░ ░░░░░  ░░░░░░ 
+"""
 
     def input_output_thread_worker(self):
 
@@ -28,76 +39,100 @@ class ClientCLI(ClientBase):
                 self.render()
                 key = self.screen.get_key(.001)  # Блокирующий вызов с небольшим таймаутом
                 if key is not None:
-                    self.input_queue.put(key)
+                    self.first_nandle_input(key)
 
         finally:
-            self.quit()
+            self.quit_session()
             self.screen.quit()
-    async def handlerr_input(self):
-        while True:
-            try:
-                key = self.input_queue.get_nowait()
-                key_ = key.lower()
-                if self.state == "game":
-                    if self.is_open_chat:
-                        if key == "\x1b":
-                            self.is_open_chat = False
-                        elif key == "\x08":
-                            if len(self.chat_prompt) > 0:
-                                self.chat_prompt = self.chat_prompt[:-1]
 
-                        elif key == "\n":
-                            await self.send_chat()
-                        else:
-                            if len(key) == 1:
-                                self.chat_prompt += key
-                    else:
-                        self.new_direction = None
-                        if key_ in ["w", "ц"]:
-                            self.new_direction = 'up'
-                        elif key_ in ["s", "ы"]:
-                            self.new_direction = 'down'
-                        elif key_ in ["a", "ф"]:
-                            self.new_direction = 'left'
-                        elif key_ in ["d", "в"]:
-                            self.new_direction = 'right'
-                        elif key in ["Q"]:
-                            self.logger.info("Received Q, exiting...")
-                            self.running = False
-                        elif key == "\t":
-                            self.is_open_tablist = not self.is_open_tablist
-                        elif key == "`":
-                            self.show_debug = not self.show_debug
+    def first_nandle_input(self, key):
+        key_ = key.lower()
+        if self.state == "game":
 
-                        elif key_ in ['t', "е"]:
-                            self.is_open_chat = True
+            if self.is_open_chat:
+                if key == "\x1b":
+                    self.is_open_chat = False
+                elif key == "\x08":
+                    if len(self.chat_prompt) > 0:
+                        self.chat_prompt = self.chat_prompt[:-1]
 
-                        if self.new_direction is not None and self.new_direction != self.direction:
-                            # self.add_chat_message(str({"type": 'direction', "data": self.new_direction}))
-                            await self.websocket.send(json.dumps({"type": 'direction', "data": self.new_direction}))
-                            self.direction = self.new_direction
-                            self.new_direction = None
-                elif self.state == "alert":
-                    if key == " ":
-                        self.state = None
+                elif key == "\n":
+                    self.input_queue.put_nowait(key)
+                else:
+                    if len(key) == 1:
+                        self.chat_prompt += key
+            else:
+                self.new_direction = None
+                if key_ in ["w", "ц"]:
+                    self.input_queue.put_nowait(key)
+                elif key_ in ["s", "ы"]:
+                    self.input_queue.put_nowait(key)
+                elif key_ in ["a", "ф"]:
+                    self.input_queue.put_nowait(key)
+                elif key_ in ["d", "в"]:
+                    self.input_queue.put_nowait(key)
+                elif key in ["Q"]:
+                    self.logger.info("Received Q, exiting...")
+                    self.running = False
+                elif key == "\t":
+                    self.is_open_tablist = not self.is_open_tablist
+                elif key == "`":
+                    self.show_debug = not self.show_debug
 
-                elif self.state == "died":
-                    if key == " ":
-                        await self.websocket.send(json.dumps({"type": 'respawn', "data": "lol"}))
-            except Empty:
-                pass  # Очередь пуста, новых клавиш нет
-            except asyncio.CancelledError:
-                print("#1f63gd^ Обработка ввода отменена")
-                raise
-            except KeyboardInterrupt:
-                self.quit()
+                elif key_ in ['t', "е"]:
+                    self.is_open_chat = True
 
+                if self.new_direction is not None and self.new_direction != self.direction:
+                    # self.add_chat_message(str({"type": 'direction', "data": self.new_direction}))
+                    self.input_queue.put_nowait(key)
+                    self.direction = self.new_direction
+                    self.new_direction = None
+
+        elif self.state == "alert":
+            if key == " ":
+                self.state = None
+        elif self.state == "main_menu":
+            if key == " ":
+                self.start_game_session()
+
+        elif self.state == "died":
+            if key == " ":
+                self.input_queue.put_nowait(key)
+
+    def quit_session(self):
+        self.logger.debug("Exiting session...")
+        # print("Quit.")
+        self.finish_game_session()
+        # self.input_thread_running = False
+
+    def finish_game_session(self):
+        self.logger.info("Game session finished.")
+        self.is_game_session_now = False
+        if self.use_main_menu:
+            self.state = "main_menu"
+        else:
+            self.quit_all()
+
+    def start_game_session(self):
+        self.is_game_session_now = True
+        self.state = "start_session"
+
+    def quit_all(self):
+        self.logger.debug("Exiting all...")
+        # print("Quit.")
+        self.state = None
+        self.running = False
+        self.is_game_session_now = False
+        self.input_thread_running = False
     async def handle_input(self):
+        # lf.state)
         try:
             while True:
                 key = self.input_queue.get_nowait()
                 key_ = key.lower()
+
                 if self.state == "game":
+
                     if self.is_open_chat:
                         if key == "\x1b":
                             self.is_open_chat = False
@@ -139,6 +174,9 @@ class ClientCLI(ClientBase):
                 elif self.state == "alert":
                     if key == " ":
                         self.state = None
+                elif self.state == "main_menu":
+                    if key == " ":
+                        self.start_game_session()
 
                 elif self.state == "died":
                     if key == " ":
@@ -147,7 +185,7 @@ class ClientCLI(ClientBase):
             pass  # Очередь пуста, новых клавиш нет
 
         except KeyboardInterrupt:
-            self.quit()
+            self.quit_session()
 
 
     def get_params(self, player_id, with_header=True):
@@ -163,10 +201,17 @@ Total deaths: {pl["deaths"]}
 {'-' * len(remove_html_tags(header))}"""
         return out
 
-    async def wait_for_end(self):
+    async def wait_for_quit(self):
         while self.state != None:
             await asyncio.sleep(.01)
             await self.handle_input()
+        self.logger.debug("Wait_for_quit finished")
+
+    async def wait_for_end_session(self):
+        while self.is_game_session_now:
+            await asyncio.sleep(.01)
+            await self.handle_input()
+        self.logger.debug("wait_for_end_session finished")
 
     def render(self):
         x, y = self.screen.get_sizes()
@@ -190,22 +235,52 @@ Total deaths: {pl["deaths"]}
 
             self.render_tablist()
         elif self.state == "alert":
-            render_alert(self.screen, self.alert_message)
+            text = f"""<red><bold>{self.alert_message[0]}</bold></red>
+
+            {self.alert_message[1]}
+
+            <b>{self.alert_message[2]}</b>"""
+            render_alert(self.screen, text)
+
+        elif self.state == "connecting":
+            text = f"""<red><bold>Connecting</bold></red>
+
+{self.view_message}
+
+<b>Wait...</b>"""
+            render_alert(self.screen, text)
         elif self.state == "died":
             text = f"""<red><bold>You died</bold></red>
 
-{self.alert_message}
+{self.view_message}
 
 {self.get_params(self.player_id)}
 
 <b>Prees SPACE to respawn</b>"""
             render_alert(self.screen, text)
+        elif self.state  == "main_menu":
+            text = f"""<green>{html.escape(self.ascii_art)}</green>
+<green><dim>Multiplayer snake game</dim></green>
+<b>https://github.com/Arizel79/Multiplayer-snake-game</b>
+
+
+<b>Player name:</b> {self.player_name}
+
+<b>Server:</b> {self.server}
+
+
+<b>Prees space to start</b>"""
+            render_alert(self.screen, text)
+        else:
+            render_alert(self.screen, f"Unknown state: {self.state}")
         if self.show_debug:
             pretty_str = self.game_state
             text = f"<cyan>DEBUG</cyan>\n{self.state}\n{pretty_str}\n\n{self.chat_messages}"
             self.screen.set_text(x, 0, text, parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR,
                                  anchor_y=Anchors.UP_ANCHOR)
+        # self.screen.set_str(0,0, f"State: {self.state}; {self.alert_message}")
         self.screen.update()
+
 
     def get_stilizate_name_color(self, player_id, text=None):
         color = self.game_state["players"].get(player_id, {})["color"]
@@ -243,7 +318,7 @@ Total deaths: {pl["deaths"]}
                     alive_count += 1
                 else:
                     dead_count += 1
-            tablist = f"\n<yellow>Server {self.server_address}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])})\n(<green>Alive: {alive_count}</green> | <red>Dead: {dead_count}</red>):\n"
+            tablist = f"\n<yellow>Server {self.server}</yellow>\n{self.server_desc}\n\nPlayers ({len(self.game_state['players'])})\n(<green>Alive: {alive_count}</green> | <red>Dead: {dead_count}</red>):\n"
 
             for player_id, player in self.game_state["players"].items():
                 sn = self.game_state["snakes"][player_id]

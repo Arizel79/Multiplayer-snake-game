@@ -1,5 +1,5 @@
 # server and client requirements
 websockets==15.0.1
-pygame==2.6.1
+
 pyAsciiEngine==0.0.13
 colorama==0.4.6
