@@ -19,7 +19,7 @@ class ClientCLI(ClientBase):
             self.color = input("Color: ")
             self.server = input("Server IP: ")
 
-        self.ascii_art = r"""
+        self.ascii_art_in_menu = r"""
   █████████                       █████              
  ███░░░░░███                     ░░███               
 ░███    ░░░  ████████    ██████   ░███ █████  ██████ 
@@ -42,6 +42,7 @@ class ClientCLI(ClientBase):
                     self.first_nandle_input(key)
 
         finally:
+            print("EXIT!!")
             self.quit_session()
             self.screen.quit()
 
@@ -73,7 +74,7 @@ class ClientCLI(ClientBase):
                     self.input_queue.put_nowait(key)
                 elif key in ["Q"]:
                     self.logger.info("Received Q, exiting...")
-                    self.running = False
+                    self.quit_session()
                 elif key == "\t":
                     self.is_open_tablist = not self.is_open_tablist
                 elif key == "`":
@@ -99,6 +100,7 @@ class ClientCLI(ClientBase):
             if key == " ":
                 self.input_queue.put_nowait(key)
 
+
     def quit_session(self):
         self.logger.debug("Exiting session...")
         # print("Quit.")
@@ -106,11 +108,13 @@ class ClientCLI(ClientBase):
         # self.input_thread_running = False
 
     def finish_game_session(self):
-        self.logger.info("Game session finished.")
+        self.logger.info("Game session finished. 134232")
         self.is_game_session_now = False
         if self.use_main_menu:
+            print("state = main_menu")
             self.state = "main_menu"
         else:
+            print("main_menu off. ALL QUITING")
             self.quit_all()
 
     def start_game_session(self):
@@ -185,7 +189,8 @@ class ClientCLI(ClientBase):
             pass  # Очередь пуста, новых клавиш нет
 
         except KeyboardInterrupt:
-            self.quit_session()
+            self.logger.warning("KeyboardInterrupt!")
+            # self.quit_session()
 
 
     def get_params(self, player_id, with_header=True):
@@ -237,9 +242,17 @@ Total deaths: {pl["deaths"]}
         elif self.state == "alert":
             text = f"""<red><bold>{self.alert_message[0]}</bold></red>
 
-            {self.alert_message[1]}
+{self.alert_message[1]}
 
-            <b>{self.alert_message[2]}</b>"""
+<b>{self.alert_message[2]}</b>"""
+            render_alert(self.screen, text)
+
+        elif self.state == "connection_error":
+            text = f"""<red><bold>{self.view_message[0]}</bold></red>
+
+{self.view_message[1]}
+
+<b>{self.view_message[2]}</b>"""
             render_alert(self.screen, text)
 
         elif self.state == "connecting":
@@ -259,7 +272,7 @@ Total deaths: {pl["deaths"]}
 <b>Prees SPACE to respawn</b>"""
             render_alert(self.screen, text)
         elif self.state  == "main_menu":
-            text = f"""<green>{html.escape(self.ascii_art)}</green>
+            text = f"""<green>{html.escape(self.ascii_art_in_menu)}</green>
 <green><dim>Multiplayer snake game</dim></green>
 <b>https://github.com/Arizel79/Multiplayer-snake-game</b>
 

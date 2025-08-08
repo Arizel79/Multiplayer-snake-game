@@ -26,7 +26,15 @@ class ClientBase(ABC):
 
     def __init__(self, game_config_filename="client/.game_config.json",server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug"):
         self.version = self.VERSION_NUMBER
-
+        self.ascii_logo = """  █████████                       █████              
+ ███░░░░░███                     ░░███               
+░███    ░░░  ████████    ██████   ░███ █████  ██████ 
+░░█████████ ░░███░░███  ░░░░░███  ░███░░███  ███░░███
+ ░░░░░░░░███ ░███ ░███   ███████  ░██████░  ░███████ 
+ ███    ░███ ░███ ░███  ███░░███  ░███░░███ ░███░░░  
+░░█████████  ████ █████░░████████ ████ █████░░██████ 
+ ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░░░ ░░░░ ░░░░░  ░░░░░░ 
+"""
         self.logging_level = logging_level.upper()
         self.setup_logger(__name__, "client/client.log", self.logging_level)
 
@@ -245,9 +253,9 @@ class ClientBase(ABC):
                 # else:
 
 
-        except asyncio.CancelledError:
-            self.logger.debug("async task connect() cancelled")
-            raise
+        # except asyncio.CancelledError:
+        #     self.logger.debug("async task connect() cancelled")
+        #     raise
 
         finally:
             self.logger.debug("connection closed")
@@ -303,7 +311,7 @@ class ClientBase(ABC):
             self.logger.error(f"{type(e).__name__}: {e}")
             self.state = "connection_error"
             self.view_message = (f"Connection error",
-                       f"Error connecting to {self.server}\n{type(e).__name__}\n{e}", "press space")
+                       f"Error connecting to {self.server}\n\n{type(e).__name__}\n\n{e}", "press space")
             await self.wait_for_end_session()
 
         except ServerConnectionError as e:
@@ -322,6 +330,8 @@ class ClientBase(ABC):
             self.logger.info("Session finished. Finally")
 
     async def run_game(self):
+        print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
+
         print(f"{Fore.LIGHTBLACK_EX}* {Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}")
         print(f"{Fore.LIGHTBLACK_EX}* Powered by Arizel79 (https://github.com/Arizel79)")
         print(f"* Source: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
@@ -332,21 +342,18 @@ class ClientBase(ABC):
             self.input_thread.start()
             if self.use_main_menu:
                 while self.running:
-                    # self.server_address = input("Enter server IP: ")
                     while self.state == "main_menu" and self.running:
-                        # print("main menu open...")
                         await asyncio.sleep(.01)
                     if self.state == "start_session":
                         self.logger.info(f"Server: {self.server}; name: {self.player_name}; color: {self.color}")
                         await self.connect_to_server()
                         self.logger.info("Disconnected, backing to main menu...")
+
             else:
                 await self.connect_to_server()
         except KeyboardInterrupt:
             self.logger.warning("KeyboardInterrupt received, shutting down...")
         finally:
-
-
             self.running = False
             self.input_thread_running = False
 

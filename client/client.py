@@ -19,7 +19,7 @@ async def run_client():
             pass
 
 
-    parser.add_argument('--mode', "-m", type=str, choices=['cli', "gui"],
+    parser.add_argument('--mode', "--m", type=str, choices=['cli', "gui"],
                         help='Game mode', default="cli")
     parser.add_argument('--name', "--n", type=str, help='Snake name', default=f"player_{randint(0, 99999)}")
     parser.add_argument('--color', "--c", type=str, help='Snake color', default=choice(ClientCLI.SNAKE_COLORS))

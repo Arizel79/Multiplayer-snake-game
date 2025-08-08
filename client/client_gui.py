@@ -126,7 +126,7 @@ class ClientGUI(ClientBase):
             self.manager_main_menu.set_window_resolution((event.w, event.h))
             for element in self.ui_elements_main_menu.values():
                 element.kill()
-            self.ui_elements_main_menu = self.create_centered_elements_main_menu(event.w, name_input, ip_input)
+            self.ui_elements_main_menu = self.create_centered_elements_main_menu(name_input, ip_input)
 
         else:
             # self.logger.debug(f"Add to event queue: {event}")
@@ -199,15 +199,17 @@ class ClientGUI(ClientBase):
         self.is_game_session_now = True
         self.state = "start_session"
 
-    def create_centered_elements_main_menu(self, screen_width, name_text=None, ip_text=None, info_text="Welcome!"):
+    def create_centered_elements_main_menu(self,  name_text=None, ip_text=None, info_text=""):
         manager = self.manager_main_menu
         elements = {}
 
+        width, height = self.screen.get_size()
+
         # Поле ввода (центрированное)
-        input_width = min(400, screen_width - 100)
+        input_width = min(400, width - 100)
         elements['name_input'] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
-                (screen_width - input_width) // 2,
+                (width - input_width) // 2,
                 150,
                 input_width,
                 50
@@ -220,7 +222,7 @@ class ClientGUI(ClientBase):
 
         elements['ip_input'] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
-                (screen_width - input_width) // 2,
+                (width - input_width) // 2,
                 220,
                 input_width,
                 50
@@ -234,7 +236,7 @@ class ClientGUI(ClientBase):
         # Кнопка (центрированная)
         elements['play_button'] = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(
-                (screen_width - input_width) // 2,
+                (width - input_width) // 2,
                 290,
                 input_width,
                 50
@@ -246,8 +248,8 @@ class ClientGUI(ClientBase):
         # Метка для вывода (центрированная)
         elements['info'] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(
-                (screen_width - input_width) // 2,
-                400,
+                (width - input_width) // 2,
+                height - 60,
                 input_width,
                 50
             ),
@@ -265,7 +267,7 @@ class ClientGUI(ClientBase):
             pygame.display.set_caption("Multiplayer Snake Game")
             self.screen = pygame.display.set_mode((self.default_width, self.default_height), pygame.RESIZABLE)
             self.manager_main_menu = pygame_gui.UIManager((self.default_width, self.default_height))
-            self.ui_elements_main_menu = self.create_centered_elements_main_menu(self.default_width)
+            self.ui_elements_main_menu = self.create_centered_elements_main_menu()
 
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
             while self.input_thread_running:
