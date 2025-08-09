@@ -26,6 +26,7 @@ class ClientBase(ABC):
 
     def __init__(self, game_config_filename="client/.game_config.json",server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug"):
         self.version = self.VERSION_NUMBER
+        self.run_mode = "base"
         self.ascii_logo = """  █████████                       █████              
  ███░░░░░███                     ░░███               
 ░███    ░░░  ████████    ██████   ░███ █████  ██████ 
@@ -71,7 +72,6 @@ class ClientBase(ABC):
 
 
         self.game_config_filename = game_config_filename
-        self.save_game_configs()
         self.view_message = None
         self.alert_message = None
         self.input_queue = Queue()  # Очередь для хранения нажатых клавиш
@@ -80,12 +80,17 @@ class ClientBase(ABC):
 
 
     def save_game_configs(self, filename=None):
+        assert self.run_mode != "base"
         if filename is None:
             filename = self.game_config_filename
+
         with open(self.game_config_filename, "w+") as f:
-            data = {"player_name": self.player_name,
+            data = {"player": self.player_name,
                     "server": self.server,
-                    "color": self.color}
+                    "color": self.color,
+                    "run_mode": self.run_mode,
+                    "use_main_menu": self.use_main_menu}
+            self.logger.debug(f"Saving game configs to {filename}:\n{data}")
             json.dump(data, f)
 
     def setup_logger(self, name, log_file, level=logging.INFO):
@@ -332,11 +337,11 @@ class ClientBase(ABC):
     async def run_game(self):
         print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
 
-        print(f"{Fore.LIGHTBLACK_EX}* {Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}")
-        print(f"{Fore.LIGHTBLACK_EX}* Powered by Arizel79 (https://github.com/Arizel79)")
-        print(f"* Source: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
+        self.logger.info(f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}")
+        self.logger.info(f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}")
+        self.logger.info(f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
 
-        self.logger.info(f"main menu? {'true' if self.use_main_menu else 'false'}")
+        self.logger.debug(f"main menu? {'true' if self.use_main_menu else 'false'}")
         self.logger.info(f"Logging level: {self.logging_level}")
         try:
             self.input_thread.start()
@@ -359,3 +364,5 @@ class ClientBase(ABC):
 
             if hasattr(self, 'input_thread') and self.input_thread.is_alive():
                 self.input_thread.join(timeout=0.5)
+
+            self.save_game_configs()

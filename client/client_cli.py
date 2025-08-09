@@ -12,6 +12,7 @@ class ClientCLI(ClientBase):
 
     def __init__(self, *args, interactive=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.run_mode = "cli"
         self.version = f"{self.version} (CLI)"
         if interactive:
             self.logger.info("Interactive prompting enabled")

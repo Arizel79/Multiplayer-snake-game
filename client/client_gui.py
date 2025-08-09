@@ -58,7 +58,14 @@ class ClientGUI(ClientBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.run_mode = "gui"
         self.version = f"{self.version} (GUI)"
+
+        self.ascii_art_in_menu = """
+Multiplayer snake game
+
+github.com/Arizel79/Multiplayer-snake-game
+"""
 
         self.default_width = 800
         self.default_height = 600
@@ -81,10 +88,7 @@ class ClientGUI(ClientBase):
         self.show_tablist = False
 
     def quit_session(self):
-        self.logger.debug("Exiting session...")
-        # print("Quit.")
         self.finish_game_session()
-        # self.input_thread_running = False
 
     def quit_all(self):
         self.logger.debug("Exiting all...")
@@ -95,7 +99,7 @@ class ClientGUI(ClientBase):
         self.input_thread_running = False
 
     def finish_game_session(self):
-        self.logger.info("Game session finished.")
+        self.logger.debug("Game session finished.")
         self.is_game_session_now = False
         if self.use_main_menu:
             self.state = "main_menu"
@@ -103,19 +107,11 @@ class ClientGUI(ClientBase):
             self.quit_all()
 
     def first_handle_event(self, event):
-
         self.manager_main_menu.process_events(event)
 
         if event.type == QUIT:
-            self.logger.debug(f"Event quit received: {event}")
             self.quit_all()
             raise KeyboardInterrupt
-        # # Обработка нажатия кнопки
-        # elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-        #         if event.ui_element == button:
-        #             entered_text = text_input.get_text()
-        #             print(f"Submitted: {entered_text}")
-        #             # Здесь ваша логика обработки текста
 
         elif event.type == VIDEORESIZE:
             # Handle window resize
@@ -136,7 +132,7 @@ class ClientGUI(ClientBase):
                 if event.mod & pygame.KMOD_CTRL:
                     # Если в момент нажатия клавиши был зажат Ctrl
                     # Также можно проверить, какая именно клавиша была нажата, например, 'c'
-                    if event.key == pygame.K_c:
+                    if event.key == pygame.K_c and self.is_game_session_now:
                         self.logger.debug(f"Event quit received: {event}")
                         self.quit_session()
                         raise KeyboardInterrupt
@@ -199,63 +195,90 @@ class ClientGUI(ClientBase):
         self.is_game_session_now = True
         self.state = "start_session"
 
-    def create_centered_elements_main_menu(self,  name_text=None, ip_text=None, info_text=""):
+    def create_centered_elements_main_menu(self, name_text=None, ip_text=None, info_text="Welcome!"):
+        width, height = self.screen.get_size()
         manager = self.manager_main_menu
         elements = {}
+        padding = 20
+        element_height = 40
+        input_width = min(600, width - 2 * padding)
 
-        width, height = self.screen.get_size()
+        # Добавляем ASCII логотип (зеленый)
+        logo = self.ascii_art_in_menu.splitlines()
 
-        # Поле ввода (центрированное)
-        input_width = min(400, width - 100)
+        # Создаем элементы логотипа
+        y_offset = padding
+        for i, line in enumerate(logo):
+            label = pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect(
+                    (width - input_width) // 2,
+                    y_offset,
+                    input_width,
+                    element_height
+                ),
+                text=line,
+                manager=manager,
+                object_id="#logo"
+            )
+            elements[f'logo_{i}'] = label
+            y_offset += element_height // 2  # Уменьшаем вертикальный отступ для лого
+
+        # Центрируем основную группу элементов
+        start_y = y_offset + padding
+
+        # Поля ввода
         elements['name_input'] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
-                150,
+                start_y,
                 input_width,
-                50
-            ), placeholder_text="player name", initial_text=self.player_name,
+                element_height
+            ),
+            placeholder_text="Player name",
+            initial_text=self.player_name,
             manager=manager
-
         )
-        if not name_text is None:
-            elements['name_input'].set_text(name_text)  # Восстанавливаем текст
+        if name_text is not None:
+            elements['name_input'].set_text(name_text)
 
         elements['ip_input'] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
-                220,
+                start_y + element_height + padding // 2,
                 input_width,
-                50
-            ), placeholder_text="server ip", initial_text=self.server,
+                element_height
+            ),
+            placeholder_text="Server IP",
+            initial_text=self.server,
             manager=manager
-
         )
-        if not ip_text is None:
-            elements['ip_input'].set_text(ip_text)  # Восстанавливаем текст
+        if ip_text is not None:
+            elements['ip_input'].set_text(ip_text)
 
-        # Кнопка (центрированная)
+        # Кнопка
         elements['play_button'] = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
-                290,
+                start_y + 2 * (element_height + padding // 2),
                 input_width,
-                50
+                element_height
             ),
-            text="play",
+            text="PLAY",
             manager=manager
         )
 
-        # Метка для вывода (центрированная)
+        # Информационная метка
         elements['info'] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
-                height - 60,
+                start_y + 3 * (element_height + padding // 2),
                 input_width,
-                50
+                element_height
             ),
             text=info_text,
             manager=manager
         )
+
 
         return elements
 
@@ -267,6 +290,7 @@ class ClientGUI(ClientBase):
             pygame.display.set_caption("Multiplayer Snake Game")
             self.screen = pygame.display.set_mode((self.default_width, self.default_height), pygame.RESIZABLE)
             self.manager_main_menu = pygame_gui.UIManager((self.default_width, self.default_height))
+            self.manager_main_menu.get_theme().load_theme(r"client\theme.json")
             self.ui_elements_main_menu = self.create_centered_elements_main_menu()
 
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""

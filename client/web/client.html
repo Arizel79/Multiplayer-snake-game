@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiplayer Snake Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <div id="main-menu">
+            <div class="menu-title">MULTIPLAYER SNAKE GAME</div>
+            <input type="text" id="name-input" class="menu-input" placeholder="Player Name">
+            <input type="text" id="server-input" class="menu-input" placeholder="Server Address (ws://host:port)">
+            <button id="play-button" class="menu-button">PLAY</button>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-messages"></div>
+            <input type="text" id="chat-input" placeholder="Type message...">
+        </div>
+
+        <div id="death-screen">
+            <div class="death-title">YOU DIED</div>
+            <div class="death-message" id="death-message"></div>
+            <div class="death-stats" id="death-stats"></div>
+            <div class="death-instruction">Press SPACE to respawn</div>
+        </div>
+
+        <div id="alert-screen">
+            <div class="alert-title" id="alert-title"></div>
+            <div class="alert-message" id="alert-message"></div>
+            <div class="alert-instruction" id="alert-instruction"></div>
+        </div>
+
+        <div id="tablist">
+            <div class="tablist-title">PLAYER LIST</div>
+            <div id="server-info"></div>
+            <div id="player-count"></div>
+            <div id="players-list"></div>
+        </div>
+
+        <div id="debug-info"></div>
+
+        <div class="controls-info">
+            WASD: Move | T: Chat | TAB: Player list | F3: Debug
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
