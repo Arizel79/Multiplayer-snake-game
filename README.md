@@ -11,17 +11,8 @@ python -m venv .venv
 source .venv/bin/activate # on Windows: .\.venv\Scripts\activate
 ```
 ### Install dependencies
-All:
 ```
 python pip install -r requirements.txt
-```
-Only server dependencies:
-```
-python pip install -r server/requirements.txt
-```
-Only client dependencies:
-```
-python pip install -r client/requirements.txt
 ```
 ### Run server
 ```
