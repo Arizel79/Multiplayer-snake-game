@@ -1,0 +1,88 @@
+:root {
+  --font: 18px Arial, sans-serif;
+  --input-font: 18px monospace, Arial, sans-serif;
+
+  --text-color: white;
+  --bg-color: black;
+
+  --second-text-color: green;
+  --second-bg-color: gray;
+
+  --button-text-color: white;
+  --button-bg-color: rgba(40, 40, 40, .8);
+  --button-bg-color-hover: rgba(80, 80, 80, 1);
+  --button-border-color: white;
+
+  --input-text-color: white;
+  --input-bg-color: black;
+  --input-border-color: #aaa;
+  --input-border-color-focus: #fff;
+
+  --menu-input-text-color: white;
+  --menu-input-bg-color: black;
+  --menu-input-border-color: #0a0;
+  --menu-input-border-color-focus: #0f0;
+
+  --highlight-text-color: #ff0000;
+
+  --pad-text-color: rgba(200, 200, 200, 1);
+  --pad-bg-color: rgba(50, 50, 50, .9);
+  --pad-border-color: rgba(100, 100, 100, .7);
+
+  --title-text-color: #00ff00;
+
+  --border-radius: 5px;
+
+  --link-text-color: #00ff00;
+  --link-text-color-hover: #99ff00;
+
+
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font: var(--font);
+
+    overflow: hidden;
+}
+
+a {
+    color: var(--link-text-color);
+}
+a:hover {
+    color: var(--link-text-color-hover);
+}
+
+button {
+   color: var(--button-text-color);
+   background-color: var(--button-bg-color);
+   border: 1px solid var(--button-border-color);
+   border-radius: var(--border-radius);
+
+   cursor: pointer;
+
+   min-width: 250px;
+   font: var(--font);
+
+   padding: 10px;
+   margin: 5%;
+
+
+}
+
+input {
+    font:var( --input-font);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: 1px solid var(--input-border-color);
+    outline: none;
+}
+
+input:focus {
+      border: 1px solid var(--input-border-color-focus);
+}
+
+

@@ -1,0 +1,258 @@
+
+
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+#game-canvas {
+    display: block;
+
+}
+
+#main-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 10;
+}
+
+.menu-title {
+    margin: 10px;
+    color: var(--title-text-color);
+    text-align: center;
+}
+
+.menu-subtitle {
+    margin: 2%;
+    color: var(second-text-color);
+    text-align: center;
+}
+
+
+
+
+.menu-input {
+    width: 300px;
+    padding: 10px;
+    margin: 10px 0;
+    color: var(--menu-input-text-color);
+    background-color: var(--menu-input-bg-color);
+    border: 1px solid  var(--menu-input-border-color);
+    border-radius: var(--border-radius);
+}
+
+input:focus {
+      border: 1px solid var(--menu-input-border-color-focus);
+}
+
+
+.button-container {
+  display: flex;
+  flex-direction: column; /* Располагаем элементы вертикально */
+  align-items: center; /* Центрируем по горизонтали */
+  gap: 8px; /* Расстояние между кнопками */
+}
+
+.small-button {
+    width: 90%;
+
+    min-width: 250px;
+
+    margin: 1%;
+
+}
+
+.small-button:hover {
+    background-color: var(--button-bg-color-hover);
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 500px;
+    background-color: var(--pad-bg-color);
+    border: 1px solid var(--pad-border-color);
+    display: none;
+}
+
+#chat-messages {
+    height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+#chat-input {
+    width: 100%;
+    padding: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: none;
+    border-top: 1px solid var(--pad-border-color);
+}
+
+.chat-message {
+    margin: 3px 0;
+    word-wrap: break-word;
+}
+
+
+
+#death-screen, #alert-screen, #error-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+#death-screen {
+    background-color: rgba(150, 0, 0, 0.3);
+}
+
+#error-screen {
+    background-color: rgba(50, 0, 0, 0.5);
+}
+
+#alert-screen {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.title {
+    color: var(--highlight-text-color);
+    margin: 20px;
+    font-size: 230%;
+}
+
+.message {
+    text-align: center;
+    margin: 3%;
+}
+#death-screen .title {
+    color: var(--highlight-text-color);
+}
+
+#alert-screen .title {
+    color: var(--text-color);
+}
+
+.table-player-stats {
+    width: 90%;
+    border-collapse: collapse;
+    border-radius: var(--border-radius);
+    background-color: var(--pad-bg-color);
+    /*color: #e0e0e0;*/
+    padding: 50px;
+    margin: 5%;
+    display: table;
+}
+
+.table-player-stats thead {
+    display: table-header-group;
+    width: 100%;
+}
+
+.table-player-stats td, .table-player-stats thead th{
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--pad-border-color);
+    vertical-align: middle;
+}
+
+.table-player-stats tr:last-child td {
+    border-bottom: none;
+}
+
+.table-player-stats tr:hover td {
+}
+
+
+
+.info-message {
+    margin: 30px;
+    max-width: 600px;
+    text-align: center;
+}
+
+.instruction {
+    margin: 30px;
+    color: var(--text-color);
+}
+
+#tablist {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: var(--pad-bg-color);
+    border: 1px solid var(--pad-border-color);
+    padding: 20px;
+    display: none;
+    z-index: 5;
+}
+
+.tablist-title {
+    margin-bottom: 15px;
+    color: var(--second-text-color);
+}
+
+.player-entry {
+    margin: 10px 0;
+    padding: 5px;
+    border-bottom: 1px solid var(--pad-border-color);
+}
+
+.player-name {
+    font-weight: bold;
+}
+
+.tablist-player-stats {
+    color: var(--pad-text-color)
+}
+
+#debug-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color:var(--pad-bg-color);
+    padding: 10px;
+    display: none;
+}
+
+.controls-info {
+    position: absolute;
+    top: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--pad-text-color);
+    background-color: var(--pad-bg-color);
+    padding: 5px 10px;
+    font-size: 60%
+}
+
+
+#about {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--pad-text-color);
+    background-color: var(--pad-bg-color);
+    padding: 5px 10px;
+}
+

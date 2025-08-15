@@ -23,6 +23,8 @@ class Point:
     y: int
 
 
+
+
 @dataclass
 class Snake:
     body: deque
@@ -198,12 +200,18 @@ class Server:
     def change_direction(self, player_id, direction):
         if player_id in self.snakes:
             snake = self.snakes[player_id]
-            # Prevent 180-degree turns
-            if (direction == 'up' and snake.direction != 'down') or \
-                    (direction == 'down' and snake.direction != 'up') or \
-                    (direction == 'left' and snake.direction != 'right') or \
-                    (direction == 'right' and snake.direction != 'left'):
+            print(f"Snake trying move {direction}. Current dir: {snake.direction}; Next: {snake.next_direction}")
+            # Проверяем, не было ли уже изменения направления для этого шага
+
+            # Запрещаем поворот на 180 градусов
+            if (direction == 'up' and snake.direction != 'down' and snake.next_direction != 'down') or \
+                    (direction == 'down' and snake.direction != 'up' and snake.next_direction != 'up') or \
+                    (direction == 'left' and snake.direction != 'right' and snake.next_direction != 'right') or \
+                    (
+                            direction == 'right' and snake.direction != 'left' and snake.next_direction != 'left'):  # Исправлена опечатка
+
                 snake.next_direction = direction
+            # print(f"AFTER) Snake trying move {direction}. Current dir: {snake.direction}; Next: {snake.next_direction}")
 
     def generate_food(self):
         if self.get_all_food_count() < self.max_food:
@@ -237,7 +245,7 @@ class Server:
         self.logger.info(f"Player {self.get_player(player_id)} death ({text})")
         await self.connections[player_id].send(json.dumps({"type": "you_died", "data": text}))
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "death_message",
-                                           "data": text})
+                                           "data": text, "player_id": player_id})
         for i in body:
             self.food.append(i)
 
@@ -246,7 +254,11 @@ class Server:
     def get_map_rect(self):
         x1, y1, x2, y2 = -(self.width // 2), -(self.height // 2), self.width // 2, self.height // 2
         return x1, y1, x2, y2
-
+    def get_all_player_names(self):
+        lst = []
+        for k, v in self.players.items():
+            lst.append(v.name)
+        return lst
     def is_name_valid(self, name: str):
         if len(name) > 16:
             return f'Nickname "{name}" is too long'
@@ -257,14 +269,16 @@ class Server:
             if i.lower() not in self.VALID_NAME_CHARS:
                 return f'Nickname "{name}" contain invalid characters'
 
+        if name.lower() in [i.lower() for i in self.get_all_player_names()]:
+            return f'Nickname "{name}" already in use'
+
         return True
 
     async def update(self):
         self.generate_food()
 
         # Update directions for all snakes first
-        for snake in self.snakes.values():
-            snake.direction = snake.next_direction
+
 
         # Determine movement timing
         now = time()
@@ -289,7 +303,7 @@ class Server:
             should_move = (snake.is_fast and move_fast) or (not snake.is_fast and move_normal)
             if not should_move:
                 continue
-
+            snake.direction = snake.next_direction
             # Calculate new head position
             head = snake.body[0]
             new_head = Point(head.x, head.y)
@@ -318,17 +332,18 @@ class Server:
                     await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
                     self.players[other_id].kills += 1
                     break
-            else:  # No collision occurred
-                # Check food collision
-                for i, food in enumerate(self.food):
-                    if new_head.x == food.x and new_head.y == food.y:
-                        self.food.pop(i)
-                        snake.add_segment()
-                        break
+            for i in self.snakes[player_id].body:
+                if new_head == i:
+                    await self.player_death(player_id, f'%NAME% сrashed into his/her tail')
+            for i, food in enumerate(self.food):
+                if new_head.x == food.x and new_head.y == food.y:
+                    self.food.pop(i)
+                    snake.add_segment()
+                    break
 
-                # Move snake
-                snake.body.appendleft(new_head)
-                snake.remove_segment()
+            # Move snake
+            snake.body.appendleft(new_head)
+            snake.remove_segment()
 
     def to_dict(self):
         dict_ = {
@@ -391,7 +406,9 @@ class Server:
 
     async def handle_client_chat_message(self, player_id, message: str):
         con = self.connections[player_id]
+
         if message.startswith("/"):
+            self.logger.info(f"{self.get_player(player_id)} issued server command: {message}")
             lst = message.split()
             if lst[0] == "/help":
                 await con.send(json.dumps({"type": "chat_message",
@@ -399,6 +416,7 @@ class Server:
             elif lst[0] == "/kill":
                 await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
         else:
+            self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")
             name = self.players[player_id].name
             await self.broadcast_chat_message(
                 {"type": "chat_message", "data": f"{message}",

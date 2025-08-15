@@ -122,5 +122,10 @@ function convertCustomTagsToHtml(input) {
     }
 
     const rootNode = parseToTree(input);
-    return generateHtml(rootNode);
+
+    let out = generateHtml(rootNode);
+    out = '<span class="gray-text">'+ out +'</span>'
+    console.log(input + "\n =>>> \n"+ out )
+    console.log("-")
+    return out
 }
