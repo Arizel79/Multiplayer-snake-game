@@ -125,7 +125,5 @@ function convertCustomTagsToHtml(input) {
 
     let out = generateHtml(rootNode);
     out = '<span class="gray-text">'+ out +'</span>'
-    console.log(input + "\n =>>> \n"+ out )
-    console.log("-")
     return out
 }

@@ -200,18 +200,13 @@ class Server:
     def change_direction(self, player_id, direction):
         if player_id in self.snakes:
             snake = self.snakes[player_id]
-            print(f"Snake trying move {direction}. Current dir: {snake.direction}; Next: {snake.next_direction}")
-            # Проверяем, не было ли уже изменения направления для этого шага
 
-            # Запрещаем поворот на 180 градусов
             if (direction == 'up' and snake.direction != 'down' and snake.next_direction != 'down') or \
                     (direction == 'down' and snake.direction != 'up' and snake.next_direction != 'up') or \
                     (direction == 'left' and snake.direction != 'right' and snake.next_direction != 'right') or \
-                    (
-                            direction == 'right' and snake.direction != 'left' and snake.next_direction != 'left'):  # Исправлена опечатка
+                    (direction == 'right' and snake.direction != 'left' and snake.next_direction != 'left'):
 
                 snake.next_direction = direction
-            # print(f"AFTER) Snake trying move {direction}. Current dir: {snake.direction}; Next: {snake.next_direction}")
 
     def generate_food(self):
         if self.get_all_food_count() < self.max_food:
@@ -334,7 +329,7 @@ class Server:
                     break
             for i in self.snakes[player_id].body:
                 if new_head == i:
-                    await self.player_death(player_id, f'%NAME% сrashed into his/her tail')
+                    await self.player_death(player_id, f'%NAME% сrashed into his tail')
             for i, food in enumerate(self.food):
                 if new_head.x == food.x and new_head.y == food.y:
                     self.food.pop(i)

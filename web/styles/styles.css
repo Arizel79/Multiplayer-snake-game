@@ -11,7 +11,7 @@
   --button-text-color: white;
   --button-bg-color: rgba(40, 40, 40, .8);
   --button-bg-color-hover: rgba(80, 80, 80, 1);
-  --button-border-color: white;
+  --button-border-color: rgba(100, 100, 100, .8);
 
   --input-text-color: white;
   --input-bg-color: black;
@@ -36,7 +36,7 @@
   --link-text-color: #00ff00;
   --link-text-color-hover: #99ff00;
 
-
+  --menu-bg-color: rgba(17, 17, 17, .5);
 }
 
 body {

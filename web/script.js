@@ -36,6 +36,11 @@ const gameState = {
     chatInput: "",
     chatMessages: [],
     gameState: null,
+    lastMessages: {
+        visible: false,
+        timeout: null,
+        fadeDuration: 300
+    },
     lastDirection: null,
     keysPressed: {},
     deathMessage: "",
@@ -110,12 +115,15 @@ function startGame() {
 
     // Подключаемся к серверу
     connectToServer();
+    showLastMessages();
 }
 
 function closeAll() {
     closeAlert();
     closeError();
     closeDeath();
+    closeTablist();
+    closeChat();
 }
 
 function connectToServer() {
@@ -262,7 +270,7 @@ switch (gameState.state) {
             toggleTablist();
         } else if (event.key == "Escape") {
             if (gameState.showChat) {
-                closeChat();
+                toggleChat();
             } else if (gameState.showTablist) {
                 closeTablist();
             }
@@ -360,26 +368,91 @@ function handleChatInput(event) {
     if (event.key === "Enter") {
         sendChatMessage();
     } else if (event.key === "Escape") {
-        closeChat();
+        toggleChat();
     }
 }
 
-function toggleChat() {
-    gameState.showChat = !gameState.showChat;
-    const chatContainer = document.getElementById("chat-container");
-    chatContainer.style.display = gameState.showChat ? "block" : "none";
 
-    if (gameState.showChat) {
-        document.getElementById("chat-input").focus();
-    }
-    document.getElementById("chat-input").value = "";
+
+// Функции для управления мини-чатом
+function showLastMessages() {
+    clearTimeout(gameState.lastMessages.timeout);
+    const el = document.getElementById('last-messages');
+    el.style.display = 'block';
+    el.style.opacity = '1';
+    gameState.lastMessages.visible = true;
+
+}
+
+function hideLastMessages() {
+    const el = document.getElementById('last-messages');
+    el.style.opacity = '0';
+    gameState.lastMessages.visible = false;
+
+    setTimeout(() => {
+        if (!gameState.lastMessages.visible) {
+            el.style.display = 'none';
+        }
+    }, gameState.lastMessages.fadeDuration);
 }
 
 function closeChat() {
     gameState.showChat = false;
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("chat-input").value = "";
+    showLastMessages();
 
+}
+
+function updateChatDisplay() {
+    const chatMessagesDiv = document.getElementById("chat-messages");
+    chatMessagesDiv.innerHTML = gameState.chatMessages.map(msg =>
+        `<div class="chat-message">${msg}</div>`
+    ).join("");
+    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+
+    // Обновляем мини-чат
+    updateLastMessages();
+}
+
+
+
+
+function toggleChat() {
+    gameState.showChat = !gameState.showChat;
+    const chatContainer = document.getElementById('chat-container');
+    const chatMessages = document.getElementById('chat-messages');
+
+    if (gameState.showChat) {
+        // Открытие чата - плавное появление
+        chatContainer.style.display = 'block';
+        chatContainer.style.opacity = '0';
+        chatContainer.style.transition = 'opacity 0.1s ease';
+
+        setTimeout(() => {
+            chatContainer.style.opacity = '1';
+        }, 100);
+
+        hideLastMessages();
+
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            document.getElementById('chat-input').focus();
+        }, 50);
+    } else {
+        // Закрытие чата - плавное исчезновение
+        chatContainer.style.opacity = '1';
+        chatContainer.style.transition = 'opacity 0.1s ease';
+
+        // Запускаем анимацию исчезновения
+        chatContainer.style.opacity = '0';
+
+        // Ждем завершения анимации перед скрытием
+        setTimeout(() => {
+            chatContainer.style.display = 'none';
+            showLastMessages();
+        }, 100); // Должно соответствовать времени анимации (0.3s)
+    }
 }
 
 function sendChatMessage() {
@@ -419,7 +492,7 @@ function addChatMessage(data) {
         message = convertCustomTagsToHtml(data.data);
     } else if (data.from_user) {
         const color = getPlayerColor(data.from_user);
-        message = convertCustomTagsToHtml(`Player ${data.from_user} : ${data.data}`);
+        message = convertCustomTagsToHtml(`[${data.from_user}] ${data.data}`);
     } else {
         message = convertCustomTagsToHtml(data.data);
     }
@@ -431,6 +504,7 @@ function addChatMessage(data) {
     }
 
     updateChatDisplay();
+    updateLastMessages();
 }
 
 function updateChatDisplay() {
@@ -438,7 +512,26 @@ function updateChatDisplay() {
     chatMessagesDiv.innerHTML = gameState.chatMessages.map(msg =>
         `<div class="chat-message">${msg}</div>`
     ).join("");
-    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+
+}
+
+function updateLastMessages() {
+    console.log("last msg upd");
+    if (!gameState.chatMessages.length) return;
+
+    const container = document.getElementById('last-messages-content');
+    const messagesToShow = gameState.chatMessages.slice(-5);
+
+    container.innerHTML = messagesToShow.map(msg =>
+        `<div class="chat-message">${msg}</div>`
+    ).join('');
+
+    // Показываем мини-чат, если чат закрыт
+    if (!gameState.showChat) {
+        showLastMessages();
+    }
+
+    container.scrollIntoView(false);
 }
 
 function toggleTablist() {
@@ -474,33 +567,58 @@ function updateTablist() {
         Players (${Object.keys(players).length}): Alive: ${aliveCount} | Dead: ${deadCount}
     `;
 
-    // Список игроков
-    const playersList = document.getElementById("players-list");
-    playersList.innerHTML = "";
+    // Создаем таблицу
+    const table = document.createElement("table");
+    table.className = "players-table";
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Status</th>
+                <th>Size</th>
+                <th>Max Size</th>
+                <th>Kills</th>
+                <th>Deaths</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
 
+    const tbody = table.querySelector("tbody");
+
+    // Добавляем строки для каждого игрока
     Object.entries(players).forEach(([id, player]) => {
         const snake = snakes[id] || {};
         const color = getPlayerColor(id);
+        const isCurrentPlayer = id === gameState.playerId;
 
-        const playerEntry = document.createElement("div");
-        playerEntry.className = "player-entry";
-        if (id === gameState.playerId) {
-            playerEntry.style.border = "2px solid #6464ff";
-            playerEntry.style.padding = "3px";
+        const row = document.createElement("tr");
+        if (isCurrentPlayer) {
+            row.classList.add("current-player");
         }
 
-        playerEntry.innerHTML = `
-            <div class="player-name" style="color: ${color}">
-                ${escapeHtml(player.name)} (${player.alive ? "Alive" : "Dead"})
-            </div>
-            <div class="tablist-player-stats">
-                Size: ${snake.size || 0} | Max: ${snake.max_size || 0} |
-                Kills: ${player.kills || 0} | Deaths: ${player.deaths || 0}
-            </div>
+        row.innerHTML = `
+            <td style="color: ${color}; font-weight: ${isCurrentPlayer ? "bold" : "normal"}">
+                ${escapeHtml(player.name)}
+            </td>
+            <td>
+                <span class="status-badge ${player.alive ? "alive" : "dead"}">
+                    ${player.alive}
+                </span>
+            </td>
+            <td>${snake.size || 0}</td>
+            <td>${snake.max_size || 0}</td>
+            <td>${player.kills || 0}</td>
+            <td>${player.deaths || 0}</td>
         `;
 
-        playersList.appendChild(playerEntry);
+        tbody.appendChild(row);
     });
+
+    // Обновляем контейнер
+    const container = document.getElementById("players-list");
+    container.innerHTML = "";
+    container.appendChild(table);
 }
 
 function toggleDebugInfo() {
@@ -524,19 +642,14 @@ function updateDebugInfo() {
 }
 
 function showDeathScreen(data) {
+    closeAll();
     document.querySelector('#death-screen').style.display = "flex";
 
-    closeChat()
 
-    // Статистика
     if (gameState.gameState && gameState.playerId) {
         const player = gameState.gameState.players[gameState.playerId] || {};
         const snake = gameState.gameState.snakes[gameState.playerId] || {};
 
-//        let statsText = `<div id='player-stats'>Size: ${snake.size || 0}`;
-//        statsText += `: ${snake.max_size || 0}\n`;
-//        statsText += `Kills: ${player.kills || 0}\n`;
-//        statsText += `Deaths: ${player.deaths || 1}</div>`;
         let statsText = `
 <div class="player-stats">
     <table class="table-player-stats">
@@ -631,6 +744,7 @@ function returnToMenu() {
     document.getElementById("tablist").style.display = "none";
     document.getElementById("chat-container").style.display = "none";
     gameState.state = "main_menu";
+    document.getElementById("last-messages").style.display = "none";
     console.log("Back to main menu")
 }
 
