@@ -959,12 +959,13 @@ function renderSnake(snake, center, isMe) {
     const height = canvas.height;
     const cellSize = CELL_SIZE;
 
-    // Получаем цвета из конфигурации змеи
+    // Получаем цвета
     const headColor = snake.color?.head;
     const bodyColors = snake.color?.body || [];
     const hasCustomColors = bodyColors.length > 0 || headColor;
     const defaultColor = getSnakeColor(snake);
 
+    // 1. Сначала рисуем ВСЕ сегменты тела (включая голову)
     snake.body.forEach((segment, index) => {
         const screenX = width / 2 + (segment.x - center.x) * cellSize;
         const screenY = height / 2 + (segment.y - center.y) * cellSize;
@@ -977,11 +978,9 @@ function renderSnake(snake, center, isMe) {
                 ctx.fillStyle = COLORS.dead;
             } else if (hasCustomColors) {
                 if (index === 0) {
-                    // Цвет головы (если задан, иначе первый цвет из body)
                     const colorName = headColor || bodyColors[0] || defaultColor;
                     ctx.fillStyle = getColorValue(colorName);
                 } else {
-                    // Циклический выбор цвета тела
                     const colorIndex = (index - (headColor ? 1 : 0)) % bodyColors.length;
                     const colorName = bodyColors[colorIndex] || defaultColor;
                     ctx.fillStyle = getColorValue(colorName);
@@ -993,12 +992,42 @@ function renderSnake(snake, center, isMe) {
             // Рисуем сегмент
             ctx.fillRect(screenX, screenY, cellSize, cellSize);
 
-            // Рисуем глаза на живой голове
+            // Глаза рисуем сразу (они часть головы)
             if (index === 0 && snake.alive) {
                 drawSnakeEyes(ctx, screenX, screenY, cellSize, snake.direction);
             }
         }
     });
+
+    // 2. Только после отрисовки тела рисуем никнейм ПОВЕРХ всего
+    if (snake.name && snake.alive && snake.body.length > 0) {
+        const head = snake.body[0];
+        const screenX = width / 2 + (head.x - center.x) * cellSize;
+        const screenY = height / 2 + (head.y - center.y) * cellSize;
+
+        if (screenX >= -cellSize && screenX <= width + cellSize &&
+            screenY >= -cellSize && screenY <= height + cellSize) {
+
+            // Настройки текста
+            const textColor = headColor || defaultColor;
+            ctx.fillStyle = getColorValue(textColor);
+            ctx.font = `bold ${Math.max(12, cellSize * 0.7)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+
+            // Позиция текста (над головой)
+            const textX = screenX + cellSize / 2;
+            const textY = screenY - 5;
+
+            // Чёрная обводка для читаемости
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeText(snake.name, textX, textY);
+
+            // Сам текст
+            ctx.fillText(snake.name, textX, textY);
+        }
+    }
 }
 function drawSnakeEyes(ctx, x, y, size, direction) {
     const eyeSize = size / 8;
