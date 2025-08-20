@@ -1,10 +1,14 @@
 # Multiplayer snake game
-Multiplayer snake game on websockets with support for 3 clients: web, console (cli) and pygame (gui)
+Multiplayer snake game writen on python with support for 3 clients: web, console (cli) and pygame (gui)
 
-Web client:
+#### Web client:
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/81801295-ee96-4db3-b9d6-70d0ce11ce7d" />
 
-Pygame (GUI) client:
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/d2c518b2-3367-42f4-b9f5-d4a54ed92396" />
+#### Pygame (GUI) client:
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/d2c518b2-3367-42f4-b9f5-d4a54ed92396" />
+
+#### Console (CLI) client:
+
 
 # How to
 ### Clone repository & create virtual envelopment
@@ -15,6 +19,7 @@ python -m venv .venv
 source .venv/bin/activate # on Windows: .\.venv\Scripts\activate
 ```
 ### Install dependencies
+Tested on python 3.11
 ```
 python pip install -r requirements.txt
 ```
@@ -28,6 +33,8 @@ usage: server [-h] [--address ADDRESS] [--port PORT] [--server_name SERVER_NAME]
               [--map_height MAP_HEIGHT] [--food_perc FOOD_PERC] [--default_move_timeout DEFAULT_MOVE_TIMEOUT] [--logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 ```
 ### Run client
+Web client:
+open `web/game.html` in browser
 GUI mode:
 ```
 python client --name TestPlayer --color white;red,green,blue --mode gui
