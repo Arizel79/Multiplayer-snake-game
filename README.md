@@ -1,9 +1,10 @@
 # Multiplayer snake game
 Multiplayer snake game writen on python with support for 3 clients: web, console (cli) and pygame (gui)
 
-[*] Console client (ascii graphics)
-[*] GUI client (pygame library)
-[*] Web client (writen on JS)
+- [x] Console client (ascii graphics)
+- [x] GUI client (pygame library)
+- [x] Web client (writen on JS)
+- [x] Mobile web client (optimize for mobile devices)
 
 See [screenshots](#Screenshots)
 
