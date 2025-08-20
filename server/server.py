@@ -432,7 +432,7 @@ class Server:
 
     async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
         x, y = self.get_avalible_coords()
-
+        self.players[player_id].alive = True
         body = deque([Point(x, y)])
         sn = self.snakes[player_id] = Snake(
             body=body,

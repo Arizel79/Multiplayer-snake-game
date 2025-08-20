@@ -4,49 +4,88 @@
     <title>Multiplayer Snake Game</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="styles/game.css">
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta name="mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=0.7, minimum-scale=0.7, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 </head>
 <body>
-<div id="game-container">
-    <canvas id="game-canvas">Element not supported</canvas>
+<div id="main-menu">
+        <div class="toggle-fullscreen">
+            <button id="fullscreen-button" onclick="toggleFullscreen()"><img alt="fullscreen" src="https://static.vecteezy.com/system/resources/previews/019/858/696/non_2x/maximize-flat-color-outline-icon-free-png.png"></button>
 
-    <div id="main-menu">
+        </div>
         <div class="controls-info">
             WASD: Move | T: Chat | TAB: Player list
         </div>
-        <div class="menu-title"><h1>Multiplayer snake game</h1></div>
+        <div class="menu-title">Multiplayer snake game</div>
         <div class="menu-subtitle">Hello!</div>
         <input type="text" id="name-input" class="menu-input" placeholder="Player Name">
         <input type="text" id="color-input" class="menu-input" placeholder="Color">
         <input type="text" id="server-input" class="menu-input" placeholder="Server Address (host:port)">
-        <button id="play-button" class="menu-button">Play</button>
+        <button id="play-button" class="default-btn menu-button">Play</button>
+
         <div id="about"><a href="https://github.com/Arizel79/Multiplayer-snake-game">GitHub</a></div>
     </div>
+<div id="game-container">
+    <canvas id="game-canvas">Element not supported</canvas>
 
-    <div id="chat-container">
+
+
+    <div id="chat-container" class="chat-top">
         <div id="chat-messages"></div>
-        <input type="text" id="chat-input" placeholder="Type message...">
+        <input type="text" id="chat-input" placeholder="This is chat...">
     </div>
 
-    <div id="last-messages">
-        <div id="last-messages-content"></div>
+    <div id="mini-chat" class="chat-top">
+        <div id="mini-chat-messages"></div>
+    </div>
+
+    <div id="mobile-controls">
+        <!-- WASD панель -->
+        <div class="wasd-panel">
+            <div>
+                <button id="btn-up" class="wasd-btn">↑</button>
+                <button id="btn-left" class="wasd-btn">←</button>
+                <button id="btn-down" class="wasd-btn">↓</button>
+                <button id="btn-right" class="wasd-btn">→</button>
+            </div>
+        </div>
+
+        <!-- Action панель -->
+        <div class="action-panel">
+            <button id="btn-chat" class="action-btn">💬</button>
+            <button id="btn-tab" class="action-btn">👥</button>
+        </div>
     </div>
 
     <div id="death-screen">
-        <div class="title">YOU DIED!</div>
+        <div class="title">You died</div>
         <div class="message"></div>
-        <div class="button-container"><button class="small-button" onclick="respawn()">Respawn</button><button  class="small-button" onclick="returnToMenu()">Back to main menu</button></div>
+        <div class="button-container">
+            <button class="default-btn info-button" onclick="respawn()">Respawn</button>
+            <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+        </div>
     </div>
 
     <div id="alert-screen">
         <div class="title"></div>
-        <div class="message gray-text"></div>
-        <div class="button-container"><button  class="small-button" onclick="returnToMenu()">Back to main menu</button></div>
+        <div class="message"></div>
+        <div class="button-container">
+            <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+        </div>
     </div>
 
     <div id="error-screen">
         <div class="title"></div>
-        <div class="message gray-text"></div>
-        <div class="button-container"><button  class="small-button"  onclick="returnToMenu()">Back to main menu</button></div>
+        <div class="message"></div>
+        <div class="button-container">
+            <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+        </div>
     </div>
 
     <div id="tablist">
@@ -58,10 +97,12 @@
 
     <div id="debug-info"></div>
 
-
 </div>
 
-<script src="script.js"></script>
-<script src="utils.js"></script>
+</div>
+<script src="scripts/config.js"></script>
+<script src="scripts/script.js"></script>
+<script src="scripts/mobile.js"></script>
+<script src="scripts/utils.js"></script>
 </body>
 </html>

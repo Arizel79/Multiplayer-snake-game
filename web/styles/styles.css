@@ -10,7 +10,7 @@
 
   --button-text-color: white;
   --button-bg-color: rgba(40, 40, 40, .8);
-  --button-bg-color-hover: rgba(80, 80, 80, 1);
+  --button-bg-color-hover: rgba(60, 60, 60, .8);
   --button-border-color: rgba(100, 100, 100, .8);
 
   --input-text-color: white;
@@ -36,7 +36,7 @@
   --link-text-color: #00ff00;
   --link-text-color-hover: #99ff00;
 
-  --menu-bg-color: rgba(17, 17, 17, .5);
+  --menu-bg-color: rgba(17, 17, 17, .7);
 }
 
 body {
@@ -49,6 +49,14 @@ body {
     overflow: hidden;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 a {
     color: var(--link-text-color);
 }
@@ -56,21 +64,28 @@ a:hover {
     color: var(--link-text-color-hover);
 }
 
-button {
+button.default-btn {
    color: var(--button-text-color);
    background-color: var(--button-bg-color);
    border: 1px solid var(--button-border-color);
    border-radius: var(--border-radius);
 
    cursor: pointer;
-
-   min-width: 250px;
+   min-width: 200px;
    font: var(--font);
 
-   padding: 10px;
-   margin: 5%;
+   padding: 5px;
+   margin: 5px;
+}
+button.default-btn:hover {
+    background-color: var(--button-bg-color-hover);
+}
 
-
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
 }
 
 input {
@@ -84,5 +99,11 @@ input {
 input:focus {
       border: 1px solid var(--input-border-color-focus);
 }
+
+
+
+
+
+
 
 

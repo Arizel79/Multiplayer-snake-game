@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Скрытие адресной строки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin: 30px 0 15px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #f8f8f8;
+            line-height: 1.6;
+        }
+        
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .method {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .method h3 {
+            color: #6e8efb;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .code {
+            background-color: #2d2d2d;
+            color: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .btn {
+            background-color: #6e8efb;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background-color: #5a7de0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+        
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #6e8efb;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 999;
+        }
+        
+        @media (max-height: 600px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 20px 0 10px;
+            }
+            
+            p {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+        }
+        
+        /* Стили для демонстрации полноэкранного режима */
+        :fullscreen {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <span>Адресная строка: <span id="address-bar-status">Видима</span></span>
+        <span>Высота окна: <span id="window-height">0</span>px</span>
+    </div>
+
+    <div class="container">
+        <h1>Скрытие адресной строки в Chrome на Android</h1>
+        <p>Используйте эти методы для создания более иммерсивного веб-опыта</p>
+        
+        <div class="card">
+            <div class="method">
+                <h3>Метод 1: Мета-тег viewport</h3>
+                <p>Добавьте этот мета-тег в секцию head вашего HTML:</p>
+                <div class="code">
+                    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;
+                </div>
+                <button class="btn" onclick="applyViewport()">Применить мета-тег</button>
+            </div>
+            
+            <div class="method">
+                <h3>Метод 2: Fullscreen API</h3>
+                <p>Используйте JavaScript Fullscreen API для перехода в полноэкранный режим:</p>
+                <div class="code">
+                    function requestFullscreen() {<br>
+                    &nbsp;&nbsp;if (document.documentElement.requestFullscreen) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;document.documentElement.requestFullscreen();<br>
+                    &nbsp;&nbsp;} else if (document.documentElement.webkitRequestFullscreen) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;document.documentElement.webkitRequestFullscreen();<br>
+                    &nbsp;&nbsp;} else if (document.documentElement.msRequestFullscreen) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;document.documentElement.msRequestFullscreen();<br>
+                    &nbsp;&nbsp;}<br>
+                    }
+                </div>
+                <button class="btn" onclick="requestFullscreen()">Перейти в полноэкранный режим</button>
+            </div>
+            
+            <div class="method">
+                <h3>Метод 3: Прокрутка страницы</h3>
+                <p>Адресная строка автоматически скрывается при прокрутке страницы вниз.</p>
+                <div class="code">
+                    window.addEventListener('scroll', function() {<br>
+                    &nbsp;&nbsp;// Адресная строка скроется автоматически при прокрутке<br>
+                    &nbsp;&nbsp;updateAddressBarStatus();<br>
+                    });
+                </div>
+                <button class="btn" onclick="scrollDown()">Прокрутить вниз</button>
+            </div>
+            
+            <div class="method">
+                <h3>Метод 4: Установка высоты окна</h3>
+                <p>Используйте CSS, чтобы установить высоту 100vh для элементов:</p>
+                <div class="code">
+                    body, html {<br>
+                    &nbsp;&nbsp;height: 100%;<br>
+                    &nbsp;&nbsp;min-height: 100vh;<br>
+                    &nbsp;&nbsp;/* Мобильные браузеры */<br>
+                    &nbsp;&nbsp;min-height: -webkit-fill-available;<br>
+                    }
+                </div>
+                <button class="btn" onclick="applyFullHeight()">Применить стили</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Дополнительная информация</h2>
+            <p>Для достижения лучшего результата комбинируйте эти методы. Помните, что некоторые методы (например, Fullscreen API) требуют действия пользователя для активации.</p>
+            <p>Текущая высота области просмотра: <span id="viewport-height">0</span>px</p>
+            <button class="btn" onclick="checkViewport()">Обновить данные</button>
+        </div>
+        
+        <div style="height: 1000px; padding: 20px; color: white; text-align: center;">
+            <p>Прокрутите вниз, чтобы увидеть, как адресная строка скрывается автоматически</p>
+            <p style="margin-top: 500px;">Продолжайте прокручивать...</p>
+        </div>
+    </div>
+
+    <div class="fullscreen-btn" onclick="requestFullscreen()">⛶</div>
+
+    <script>
+        // Функция для применения мета-тега viewport
+        function applyViewport() {
+            const metaViewport = document.querySelector('meta[name="viewport"]');
+            if (metaViewport) {
+                metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                alert('Мета-тег viewport применен!');
+            }
+        }
+        
+        // Функция для запроса полноэкранного режима
+        function requestFullscreen() {
+            const elem = document.documentElement;
+            
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+        
+        // Функция для прокрутки вниз
+        function scrollDown() {
+            window.scrollTo(0, 300);
+        }
+        
+        // Функция для применения полной высоты
+        function applyFullHeight() {
+            document.body.style.minHeight = '100vh';
+            document.body.style.minHeight = '-webkit-fill-available';
+            document.documentElement.style.height = '100%';
+            alert('Стили полной высоты применены!');
+        }
+        
+        // Функция для проверки размеров viewport
+        function checkViewport() {
+            const vh = window.innerHeight;
+            document.getElementById('viewport-height').textContent = vh;
+            document.getElementById('window-height').textContent = vh;
+            updateAddressBarStatus();
+        }
+        
+        // Обновление статуса адресной строки
+        function updateAddressBarStatus() {
+            // Это приблизительная проверка - в реальности мы не можем напрямую определить видимость адресной строки
+            const windowHeight = window.innerHeight;
+            const screenHeight = window.screen.height;
+            const statusElement = document.getElementById('address-bar-status');
+            
+            // Если высота окна значительно меньше высоты экрана, 
+            // вероятно, адресная строка видима
+            if (screenHeight - windowHeight > 100) {
+                statusElement.textContent = "Видима";
+                statusElement.style.color = "#ff5555";
+            } else {
+                statusElement.textContent = "Скрыта";
+                statusElement.style.color = "#55ff55";
+            }
+            
+            document.getElementById('window-height').textContent = windowHeight;
+        }
+        
+        // Инициализация при загрузке
+        window.addEventListener('load', function() {
+            checkViewport();
+            
+            // Пытаемся скрыть адресную строку при загрузке
+            setTimeout(function() {
+                window.scrollTo(0, 1);
+            }, 500);
+        });
+        
+        // Обновление при изменении размера окна
+        window.addEventListener('resize', checkViewport);
+        
+        // Обновление при прокрутке
+        window.addEventListener('scroll', updateAddressBarStatus);
+    </script>
+</body>
+</html>

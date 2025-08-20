@@ -1,3 +1,6 @@
+@import url("desktop.css");
+@import url("mobile.css");
+
 :root {
   /* Дефолтные значения */
   --chat-scrollbar-width: 10px;
@@ -11,14 +14,21 @@
 }
 
 #game-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 #game-canvas {
+position: absolute;
     display: block;
-
+    top: 0;
+   left: 0;
 }
 
 #main-menu {
@@ -37,24 +47,22 @@
 }
 
 .menu-title {
+    font-size: 140%;
     margin: 10px;
     color: var(--title-text-color);
     text-align: center;
 }
 
 .menu-subtitle {
-    margin: 2%;
+    margin: 10px;
     color: var(second-text-color);
     text-align: center;
 }
 
-
-
-
 .menu-input {
     width: 300px;
-    padding: 10px;
-    margin: 10px 0;
+    padding: 8px;
+    margin: 5px;
     color: var(--menu-input-text-color);
     background-color: var(--menu-input-bg-color);
     border: 1px solid  var(--menu-input-border-color);
@@ -66,23 +74,18 @@ input:focus {
 }
 
 
-.button-container {
-  display: flex;
-  flex-direction: column; /* Располагаем элементы вертикально */
-  align-items: center; /* Центрируем по горизонтали */
-  gap: 8px; /* Расстояние между кнопками */
-}
 
-.small-button {
+
+.info-button {
     width: 90%;
 
     min-width: 250px;
 
-    margin: 1%;
+    margin: 5px;
 
 }
 
-.small-button:hover {
+.info-button:hover {
     background-color: var(--button-bg-color-hover);
 }
 
@@ -90,12 +93,20 @@ input:focus {
     opacity: 1;
     transition: opacity 0.3s ease;
     position: absolute;
-    bottom: 10px;
+
     left: 10px;
     width: 500px;
     background-color: var(--chat-bg-color);
     border: 1px solid var(--pad-border-color);
     display: none;
+}
+
+#chat-container.chat-top {
+    top: 10px;
+}
+
+#chat-container.chat-bottom {
+    bottom: 10px;
 }
 
 #chat-messages { /* scrollbar */
@@ -146,9 +157,9 @@ input:focus {
     word-wrap: break-word;
 }
 
-#last-messages {
+#mini-chat {
     position: absolute;
-    bottom: 10px;
+    top: 50px;
     left: 10px;
     width: 500px;
     max-height: 150px;
@@ -157,13 +168,18 @@ input:focus {
     z-index: 2;
     display: none; /* По умолчанию скрыт */
     transition: opacity 0.2s ease;
-}
-
-#last-messages-content {
     padding: 5px;
 }
 
-#last-messages .chat-message {
+#mini-chat.chat-top {
+    top: 10px;
+}
+
+#mini-chat.chat-bottom {
+    bottom: 10px;
+}
+
+#mini-chat-messages .chat-message {
     margin: 3px 0;
     word-wrap: break-word;
     font-size: 100%;
@@ -206,8 +222,9 @@ input:focus {
 
 .message {
     text-align: center;
-    margin: 3%;
+    margin: 5px;
 }
+
 #death-screen .title {
     color: var(--highlight-text-color);
 }
@@ -223,7 +240,7 @@ input:focus {
     background-color: var(--pad-bg-color);
     /*color: #e0e0e0;*/
     padding: 50px;
-    margin: 5%;
+    margin: 5px;
     display: table;
 }
 
@@ -318,9 +335,6 @@ input:focus {
     color: #ffcdd2;
 }
 
-
-
-
 #debug-info {
     position: absolute;
     top: 10px;
@@ -332,13 +346,36 @@ input:focus {
 
 .controls-info {
     position: absolute;
-    top: 1%;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     color: var(--pad-text-color);
-    background-color: var(--pad-bg-color);
+
     padding: 5px 10px;
     font-size: 60%
+}
+
+.toggle-fullscreen {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    padding: 0;
+    z-index: 1000;
+}
+
+#fullscreen-button, #fullscreen-button *{
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--button-border-color);
+    border-radius: var(--border-radius);
+    background: rgba(90, 90, 90, 1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#fullscreen-button:hover {
+    background: rgba(0, 0, 0, 0.5);
 }
 
 
@@ -351,4 +388,5 @@ input:focus {
     background-color: var(--pad-bg-color);
     padding: 5px 10px;
 }
+
 

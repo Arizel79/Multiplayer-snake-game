@@ -1,52 +1,3 @@
-// Основные константы и переменные
-const CELL_SIZE = 20;
-const COLORS = {
-    white: "#ffffff",
-    red: "#ff3232",
-    orange: "#fc8105",
-    yellow: "#ffff32",
-    green: "#32ff32",
-    lime: "#adf542",
-    turquoise: "#05fc9d",
-    cyan: "#00ffff",
-    light_blue: "#1999ff",
-    blue: "#3232ff",
-    violet: "#7f00fe",
-    magenta: "#ff32ff",
-    dead: "#464646",
-    border: "#646464",
-    food: "#ff3232",
-    grid: "#FF82828",
-    background: "#141414",
-    text: "#ffffff"
-};
-
-// Состояние игры
-const gameState = {
-    state: "main_menu",
-    canvas: null,
-    ctx: null,
-    socket: null,
-    playerId: null,
-    playerName: "",
-    serverAddress: "",
-    showChat: false,
-    showTablist: false,
-    showDebug: false,
-    chatInput: "",
-    chatMessages: [],
-    gameState: null,
-    lastMessages: {
-        visible: false,
-        timeout: null,
-        fadeDuration: 300
-    },
-    lastDirection: null,
-    keysPressed: {},
-    deathMessage: "",
-    serverDescription: "Welcome to server!",
-    alertData: null
-};
 
 // Инициализация игры
 function initGame() {
@@ -55,6 +6,7 @@ function initGame() {
 
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
+    document.addEventListener('fullscreenchange', resizeCanvas);
 
     // Обработчики событий
     document.getElementById("play-button").addEventListener("click", startGame);
@@ -66,11 +18,30 @@ function initGame() {
 
     // Загрузка сохраненных настроек
     loadSettings();
+
 }
 
+//function resizeCanvas() {
+//    gameState.canvas.width = window.innerWidth;
+//    gameState.canvas.height = window.innerHeight;
+//    if (gameState.state == "game") {
+//        renderGame();
+//    }
+//}
+
 function resizeCanvas() {
-    gameState.canvas.width = window.innerWidth;
-    gameState.canvas.height = window.innerHeight;
+    const canvas = gameState.canvas;
+    const container = canvas.parentElement;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    gameState.canvas.width = containerWidth;
+    gameState.canvas.height = containerHeight;
+    gameState.canvas.top = container.top;
+    gameState.canvas.left = container.left;
+
+    // Обновляем отображение если игра активна
     if (gameState.state == "game") {
         renderGame();
     }
@@ -109,7 +80,6 @@ function startGame() {
     }
 
     saveSettings();
-
     // Скрываем меню
     document.getElementById("main-menu").style.display = "none";
 
@@ -214,10 +184,8 @@ function handleServerMessage(data) {
 
 // Игровой цикл
 function gameLoop() {
-    console.log("gameLoop");
     if (gameState.state != "game") {
-        console.log("Mainloop closed");
-        return
+        return;
     }
 
     // Обработка ввода
@@ -228,6 +196,17 @@ function gameLoop() {
 
     // Следующий кадр
     requestAnimationFrame(gameLoop);
+}
+
+function setDirection(direction) {
+   if (direction && direction !== gameState.lastDirection) {
+
+        gameState.socket.send(JSON.stringify({
+            type: "direction",
+            data: direction
+        }));
+        gameState.lastDirection = direction;
+    }
 }
 
 function handleMovementInput() {
@@ -245,13 +224,8 @@ function handleMovementInput() {
         direction = "right";
     }
 
-    if (direction && direction !== gameState.lastDirection) {
-        gameState.socket.send(JSON.stringify({
-            type: "direction",
-            data: direction
-        }));
-        gameState.lastDirection = direction;
-    }
+    setDirection(direction);
+
 }
 
 function handleKeyDown(event) {
@@ -307,52 +281,6 @@ if (event.key == " ") {
         closeAlert();
     }
 }
-//    switch (event.key) {
-//        case "t":
-//            if (gameState.state == "game") {
-//                event.preventDefault();
-//                toggleChat();
-//            }
-//            break;
-//
-//        case "Tab":
-//            if (gameState.state == "game") {
-//                event.preventDefault();
-//                toggleTablist();
-//            }
-//            break;
-//
-//        case "i":
-//            toggleDebugInfo();
-//            break;
-//
-//        case " ":
-//            if (document.getElementById("death-screen").style.display === "flex") {
-//                respawn();
-//            } else if (document.getElementById("alert-screen").style.display === "flex") {
-//                closeAlert();
-//            }
-//            break;
-//
-//        case "Escape":
-//            if (gameState.showChat) {
-//                closeChat();
-//            } else if (gameState.showTablist) {
-//                closeTablist();
-//            }
-//            break;
-//
-//        case "Enter":
-//            if (gameState.state == "main_menu") {
-//                startGame();
-//            } else if (gameState.state == "death") {
-//                respawn();
-//            } else if (gameState.state == "disconnected" || gameState.state == "connection_error") {
-//                returnToMenu();
-//            }
-//
-//
-//    }
 }
 
 function handleKeyUp(event) {
@@ -372,20 +300,18 @@ function handleChatInput(event) {
     }
 }
 
-
-
 // Функции для управления мини-чатом
 function showLastMessages() {
     clearTimeout(gameState.lastMessages.timeout);
-    const el = document.getElementById('last-messages');
-    el.style.display = 'block';
+    const el = document.getElementById('mini-chat');
     el.style.opacity = '1';
+    el.style.display = 'block';
     gameState.lastMessages.visible = true;
 
 }
 
 function hideLastMessages() {
-    const el = document.getElementById('last-messages');
+    const el = document.getElementById('mini-chat');
     el.style.opacity = '0';
     gameState.lastMessages.visible = false;
 
@@ -516,10 +442,9 @@ function updateChatDisplay() {
 }
 
 function updateLastMessages() {
-    console.log("last msg upd");
     if (!gameState.chatMessages.length) return;
 
-    const container = document.getElementById('last-messages-content');
+    const container = document.getElementById('mini-chat-messages');
     const messagesToShow = gameState.chatMessages.slice(-5);
 
     container.innerHTML = messagesToShow.map(msg =>
@@ -735,7 +660,6 @@ function disconnectFromServer() {
 }
 
 function returnToMenu() {
-
     disconnectFromServer();
     closeAll();
     document.getElementById("main-menu").style.display = "flex";
@@ -744,7 +668,7 @@ function returnToMenu() {
     document.getElementById("tablist").style.display = "none";
     document.getElementById("chat-container").style.display = "none";
     gameState.state = "main_menu";
-    document.getElementById("last-messages").style.display = "none";
+    document.getElementById("mini-chat").style.display = "none";
     console.log("Back to main menu")
 }
 

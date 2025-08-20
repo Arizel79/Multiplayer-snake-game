@@ -127,3 +127,27 @@ function convertCustomTagsToHtml(input) {
     out = '<span class="gray-text">'+ out +'</span>'
     return out
 }
+
+function toggleFullscreen() {
+    const elem = document.documentElement;
+
+    if (!document.fullscreenElement) {
+        // Вход в полноэкранный режим
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+        }
+    } else {
+        // Выход из полноэкранного режима
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        }
+    }
+}
