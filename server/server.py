@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict
 from pprint import pprint
 from random import randint, choice
 import websockets
-
+import ssl
 from time import time
 import argparse
 import logging
@@ -637,6 +637,11 @@ class Server:
     async def run(self):
         self.game_task = asyncio.create_task(self.game_loop())
         try:
+
+
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain('server/server.crt', 'server/server.key')
+            self.logger.info("ssl init")
             async with websockets.serve(self.handle_connection, self.address, self.port):
                 print(f"Server started at {self.address}:{self.port}")
                 await asyncio.Future()
@@ -675,7 +680,7 @@ async def run_server():
     parser.add_argument('--map_width', "--width", "--w", "--x_size", type=int, help='Width of server map', default=100)
     parser.add_argument('--map_height', "--height", "--h", "--y_size", type=int, help='Height of server map',
                         default=100)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in %', default=4)
+    parser.add_argument('--food_perc', type=int, help='Proportion food/map in perc', default=4)
     parser.add_argument('--default_move_timeout', '--move_timeout', type=float, help='Timeout move snake (sec)',
                         default=0.1)
     parser.add_argument('--logging_level', '--log_lvl', type=str,
