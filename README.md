@@ -1,6 +1,13 @@
 # Multiplayer snake game
 Multiplayer snake game writen on python with support for 3 clients: web, console (cli) and pygame (gui)
 
+- [x] Console client (ascii graphics)
+- [x] GUI client (pygame library)
+- [x] Web client (writen on JS)
+- [x] Mobile web client (optimize for mobile devices)
+
+See [screenshots](#Screenshots)
+
 #### Web client:
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/81801295-ee96-4db3-b9d6-70d0ce11ce7d" />
 
@@ -62,11 +69,20 @@ Colors (--color argument):
 ```
 red,orange,yellow,lime,green,turquoise,cyan,light_blue,blue,violet,magenta
 ```
+
 # Screenshots
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/194b622d-94a1-45e5-8cfd-6bbfe53a6858" />
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/890f35cc-95be-4ade-9bdf-bcfe7379bd0f" />
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/88f98420-d536-447a-afc7-12a9d4e46c02" />
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/4db69f3d-ed6b-4dab-9ce2-f843b1358994" />
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/e787097d-a2e9-402e-a385-9c981dd5cc78" />
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/6e6bcebb-bb97-4e3d-b126-5bd279e2ea33" />
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/2784f3b1-907b-42aa-aec4-5d9d0ff763ae" />
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/c9f3a3a9-7aea-4202-99ba-1f0a6120c6bc" />
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/99d3304b-d8d7-4a70-b36f-77417a08c186" />
+<img width="1919" alt="image" src="https://github.com/user-attachments/assets/24fd2cb1-ed20-4d75-9430-83a372685dca" />
+
+
+
 
 
