@@ -637,11 +637,6 @@ class Server:
     async def run(self):
         self.game_task = asyncio.create_task(self.game_loop())
         try:
-
-
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            ssl_context.load_cert_chain('server/server.crt', 'server/server.key')
-            self.logger.info("ssl init")
             async with websockets.serve(self.handle_connection, self.address, self.port):
                 print(f"Server started at {self.address}:{self.port}")
                 await asyncio.Future()
