@@ -1,5 +1,4 @@
 
-// Инициализация игры
 function initGame() {
     gameState.canvas = document.getElementById("game-canvas");
     gameState.ctx = gameState.canvas.getContext("2d");
@@ -8,15 +7,20 @@ function initGame() {
     window.addEventListener("resize", resizeCanvas);
     document.addEventListener('fullscreenchange', resizeCanvas);
 
-    // Обработчики событий
+    document.getElementById("server-input").disabled = !can_user_change_server;
+    if (!show_menu_server_address_input) {
+        const serverInput = document.getElementById('server-input');
+        if (serverInput) {
+            serverInput.hidden = true
+        }
+    }
+
     document.getElementById("play-button").addEventListener("click", startGame);
     document.getElementById("chat-input").addEventListener("keydown", handleChatInput);
 
-    // Глобальные обработчики клавиш
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
 
-    // Загрузка сохраненных настроек
     loadSettings();
 
 }
@@ -41,36 +45,37 @@ function resizeCanvas() {
     gameState.canvas.top = container.top;
     gameState.canvas.left = container.left;
 
-    // Обновляем отображение если игра активна
     if (gameState.state == "game") {
         renderGame();
     }
 }
 
 function loadSettings() {
-    const settings = JSON.parse(localStorage.getItem("snakeGameSettings")) || {};
-    document.getElementById("name-input").value = settings.playerName || "player_web";
-    document.getElementById("color-input").value = settings.playerColor || "red,orange,yellow,lime,green,turquoise,cyan,light_blue,blue,violet,magenta";
-    document.getElementById("server-input").value = settings.serverAddress || "localhost:8090";
+    let json_settings = localStorage.getItem("snakeGameSettings");
+    const settings = JSON.parse(json_settings) || {};
+    console.log("settings loaded: " + json_settings)
+    document.getElementById("name-input").value = settings.playerName || default_player_name;
+    document.getElementById("color-input").value = settings.playerColor || getRandomSnakeColor();
+    document.getElementById("server-input").value = settings.serverAddress || default_server;
 }
 
 function saveSettings() {
     const settings = {
         playerName: gameState.playerName,
-        serverColor: gameState.playerColor,
+        playerColor: gameState.playerColor,
         serverAddress: gameState.serverAddress
     };
     localStorage.setItem("snakeGameSettings", JSON.stringify(settings));
+    console.log("settings saved: " + JSON.stringify(settings))
 }
 
-// Запуск игры
 function startGame() {
     gameState.playerName = document.getElementById("name-input").value.trim();
     gameState.playerColor = document.getElementById("color-input").value.trim();
     gameState.serverAddress = document.getElementById("server-input").value.trim();
 
     if (!gameState.playerName) {
-        alert("Please enter your name");
+        alert("Please enter player name");
         return;
     }
 
@@ -80,10 +85,8 @@ function startGame() {
     }
 
     saveSettings();
-    // Скрываем меню
     document.getElementById("main-menu").style.display = "none";
 
-    // Подключаемся к серверу
     connectToServer();
     showLastMessages();
 }
@@ -108,13 +111,11 @@ function connectToServer() {
             console.log("Connected to server");
             gameState.state = "game";
 
-            // Отправляем данные игрока
             gameState.socket.send(JSON.stringify({
                 name: gameState.playerName,
-                color: gameState.playerColor // Можно добавить выбор цвета
+                color: gameState.playerColor
             }));
 
-            // Начинаем игровой цикл
             gameLoop();
         };
 
@@ -156,6 +157,7 @@ function handleServerMessage(data) {
 
         case "game_state":
             gameState.gameState = data;
+            updateTablist();
             break;
 
         case "chat_message":
@@ -167,9 +169,12 @@ function handleServerMessage(data) {
             break;
 
         case "you_died":
+            console.log("You died: " + data.data)
             gameState.state = "death"
+            gameState.direction = null;
             gameState.deathMessage = data.data || "You died";
             showDeathScreen(data);
+
             break;
 
         case "connection_error":
@@ -182,19 +187,16 @@ function handleServerMessage(data) {
     }
 }
 
-// Игровой цикл
+
 function gameLoop() {
     if (gameState.state != "game") {
         return;
     }
 
-    // Обработка ввода
     handleMovementInput();
 
-    // Отрисовка
     renderGame();
 
-    // Следующий кадр
     requestAnimationFrame(gameLoop);
 }
 
@@ -271,7 +273,6 @@ switch (gameState.state) {
         break;
 }
 
-// Глобальные горячие клавиши (работают во всех состояниях)
 if (event.key == "i") {
     toggleDebugInfo();
 }
@@ -285,8 +286,6 @@ if (event.key == " ") {
 
 function handleKeyUp(event) {
     gameState.keysPressed[event.key] = false;
-
-    // Сбрасываем последнее направление, когда клавиша отпущена
     if (["w", "ArrowUp", "s", "ArrowDown", "a", "ArrowLeft", "d", "ArrowRight"].includes(event.key)) {
         gameState.lastDirection = null;
     }
@@ -300,7 +299,6 @@ function handleChatInput(event) {
     }
 }
 
-// Функции для управления мини-чатом
 function showLastMessages() {
     clearTimeout(gameState.lastMessages.timeout);
     const el = document.getElementById('mini-chat');
@@ -337,7 +335,6 @@ function updateChatDisplay() {
     ).join("");
     chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
 
-    // Обновляем мини-чат
     updateLastMessages();
 }
 
@@ -350,7 +347,6 @@ function toggleChat() {
     const chatMessages = document.getElementById('chat-messages');
 
     if (gameState.showChat) {
-        // Открытие чата - плавное появление
         chatContainer.style.display = 'block';
         chatContainer.style.opacity = '0';
         chatContainer.style.transition = 'opacity 0.1s ease';
@@ -366,18 +362,15 @@ function toggleChat() {
             document.getElementById('chat-input').focus();
         }, 50);
     } else {
-        // Закрытие чата - плавное исчезновение
         chatContainer.style.opacity = '1';
         chatContainer.style.transition = 'opacity 0.1s ease';
 
-        // Запускаем анимацию исчезновения
         chatContainer.style.opacity = '0';
 
-        // Ждем завершения анимации перед скрытием
         setTimeout(() => {
             chatContainer.style.display = 'none';
             showLastMessages();
-        }, 100); // Должно соответствовать времени анимации (0.3s)
+        }, 100);
     }
 }
 
@@ -385,13 +378,11 @@ function sendChatMessage() {
     const message = document.getElementById("chat-input").value.trim();
     if (message && gameState.socket) {
         if (message.startsWith(".")) {
-            // Обработка команд
             const cmd = message.split(" ")[0];
             if (cmd === ".clear" || cmd === ".cl") {
                 gameState.chatMessages = [];
                 updateChatDisplay();
             } else if (cmd === ".q" || cmd === ".quit") {
-                disconnectFromServer();
                 returnToMenu();
             } else if (cmd === "/kill") {
                 gameState.socket.send(JSON.stringify({ type: "kill_me" }));
@@ -480,21 +471,21 @@ function updateTablist() {
     const snakes = gameState.gameState.snakes;
 
     // Информация о сервере
-    document.getElementById("server-info").innerHTML = `
-        <div>Server: ${escapeHtml(gameState.serverAddress)}</div>
-        <div>${escapeHtml(gameState.serverDescription)}</div>
+    document.getElementById("tablist-title").innerHTML = escapeHtml(gameState.serverAddress);
+    document.getElementById("tablist-server-info").innerHTML = `
+        <div id="tablist-server-desc">${escapeHtml(gameState.serverDescription)}</div>
     `;
 
     // Количество игроков
     const aliveCount = Object.values(players).filter(p => p.alive).length;
     const deadCount = Object.keys(players).length - aliveCount;
-    document.getElementById("player-count").innerHTML = `
-        Players (${Object.keys(players).length}): Alive: ${aliveCount} | Dead: ${deadCount}
+    document.getElementById("tablist-players-count").innerHTML = `
+        All: ${Object.keys(players).length};   Alive: ${aliveCount};   Dead: ${deadCount};
     `;
 
     // Создаем таблицу
     const table = document.createElement("table");
-    table.className = "players-table";
+    table.className = "tablist-players-table";
     table.innerHTML = `
         <thead>
             <tr>
@@ -528,7 +519,7 @@ function updateTablist() {
             </td>
             <td>
                 <span class="status-badge ${player.alive ? "alive" : "dead"}">
-                    ${player.alive}
+                   ${player.alive ? "alive" : "dead"}
                 </span>
             </td>
             <td>${snake.size || 0}</td>
@@ -541,7 +532,7 @@ function updateTablist() {
     });
 
     // Обновляем контейнер
-    const container = document.getElementById("players-list");
+    const container = document.getElementById("tablist-players-list");
     container.innerHTML = "";
     container.appendChild(table);
 }
@@ -604,7 +595,9 @@ function showDeathScreen(data) {
       </table>
 </div>`;
 
-        document.querySelector("#death-screen .message").innerHTML = convertCustomTagsToHtml(gameState.deathMessage) + statsText;
+        // document.querySelector("#death-screen .info-message").innerHTML = "convertCustomTagsToHtml(gameState.deathMessage) + statsText;
+         document.querySelector("#death-screen .info-message #death-reason").innerHTML = convertCustomTagsToHtml(gameState.deathMessage);
+         document.querySelector("#death-screen .info-message #death-player-stats-table-container").innerHTML = statsText;
 
 
     }
@@ -624,7 +617,7 @@ function showAlert(title, message, instruction) {
     closeAll();
     gameState.alertData = { title, message, instruction };
     document.querySelector('#alert-screen .title').textContent = title;
-    document.querySelector('#alert-screen .message').textContent = message;
+    document.querySelector('#alert-screen .info-message').textContent = message;
     // document.querySelector('#alert-screen .instruction').textContent = instruction;
     document.querySelector('#alert-screen').style.display = "flex";
 }
@@ -633,7 +626,7 @@ function showError(title, message) { // Can be XSS injection!!!
     closeAlert();
     gameState.errorData = { title, message};
     document.querySelector('#error-screen .title').textContent = title;
-    document.querySelector('#error-screen .message').textContent = message;
+    document.querySelector('#error-screen .info-message').textContent = message;
     // document.querySelector('#error-screen .button').textContent = ;
     document.querySelector('#error-screen').style.display = "flex";
 }
@@ -660,6 +653,7 @@ function disconnectFromServer() {
 }
 
 function returnToMenu() {
+    console.log("Backing to main menu")
     disconnectFromServer();
     closeAll();
     document.getElementById("main-menu").style.display = "flex";
@@ -695,12 +689,12 @@ function renderGame() {
     // Отрисовка границ
     renderBorders(center);
 
-    // Отрисовка еды
-    renderFood(center);
-
     // Отрисовка змеек (сначала других игроков, потом свою)
     renderOtherSnakes(center);
     renderMySnake(center);
+
+    // Отрисовка еды
+    renderFood(center);
 
     // Отрисовка UI
     renderUI();
@@ -924,7 +918,7 @@ function renderSnake(snake, center, isMe) {
     });
 
     // 2. Только после отрисовки тела рисуем никнейм ПОВЕРХ всего
-    if (snake.name && snake.alive && snake.body.length > 0) {
+    if ((snake.name && snake.alive && snake.body.length > 0) && !isMe) {
         const head = snake.body[0];
         const screenX = width / 2 + (head.x - center.x) * cellSize;
         const screenY = height / 2 + (head.y - center.y) * cellSize;

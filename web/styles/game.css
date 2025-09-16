@@ -45,6 +45,12 @@ position: absolute;
 
     z-index: 10;
 }
+#play-form {
+display: flex;
+    flex-direction: column;
+        justify-content: center;
+        align-items: center;
+}
 
 .menu-title {
     font-size: 140%;
@@ -77,12 +83,16 @@ input:focus {
 
 
 .info-button {
-    width: 90%;
+    width: 100%;
 
     min-width: 250px;
 
     margin: 5px;
 
+}
+
+.button-container {
+    width: 100%;
 }
 
 .info-button:hover {
@@ -155,6 +165,7 @@ input:focus {
 .chat-message {
     margin: 3px 0;
     word-wrap: break-word;
+    font-size: 70%;
 }
 
 #mini-chat {
@@ -182,7 +193,6 @@ input:focus {
 #mini-chat-messages .chat-message {
     margin: 3px 0;
     word-wrap: break-word;
-    font-size: 100%;
     color: #d0d0ds0;
     opacity: 0.9;
 }
@@ -201,6 +211,9 @@ input:focus {
     align-items: center;
     z-index: 5;
 }
+.screen-content {
+    display: flex;
+}
 
 #death-screen {
     background-color: rgba(150, 0, 0, 0.3);
@@ -216,31 +229,42 @@ input:focus {
 
 .title {
     color: var(--highlight-text-color);
-    margin: 20px;
-    font-size: 230%;
+    margin: 15px;
+    font-size: 180%;
 }
 
-.message {
-    text-align: center;
-    margin: 5px;
+.info-message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 #death-screen .title {
     color: var(--highlight-text-color);
 }
 
+#death-reason {
+    font-size: 120%;
+}
+
 #alert-screen .title {
     color: var(--text-color);
 }
 
+.player-stats {
+    justify: center;
+}
+
 .table-player-stats {
     width: 90%;
+    max-width: 300px;
     border-collapse: collapse;
     border-radius: var(--border-radius);
     background-color: var(--pad-bg-color);
     /*color: #e0e0e0;*/
     padding: 50px;
-    margin: 5px;
+    margin: 0 auto;
     display: table;
 }
 
@@ -264,23 +288,20 @@ input:focus {
 
 
 
-.info-message {
-    margin: 30px;
-    max-width: 600px;
-    text-align: center;
-}
-
 .instruction {
     margin: 30px;
     color: var(--text-color);
 }
 
+
 #tablist {
     position: absolute;
-    top: 50%;
+    top: 10px;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
+    transform: translate(-50%);
+    min-width: 400px;
+    width: 600px;
+
     background-color: var(--pad-bg-color);
     border: 1px solid var(--pad-border-color);
     padding: 20px;
@@ -288,14 +309,35 @@ input:focus {
     z-index: 5;
 }
 
-.players-table {
+#tablist-players-list {
+    max-height: 600px; /* Фиксированная высота */
+    overflow-y: auto;
+}
+
+#tablist-title {
+    font-size: 130%;
+    text-align: center;
+    margin-bottom: 10px;
+
+}
+#tablist-server-ip, #tablist-server-desc {
+    text-align: center;
+}
+#tablist-players-count {
+    text-align: center;
+    margin-top: 10px;
+}
+
+
+.tablist-players-table {
     width: 100%;
-    border-collapse: collapse;
+    table-layout: fixed;
+    overflow-y: auto;
     margin-top: 10px;
     font-size: 14px;
 }
 
-.players-table th {
+.tablist-players-table th {
     background-color: #2c2c2c;
     color: #e0e0e0;
     text-align: left;
@@ -303,12 +345,12 @@ input:focus {
     border-bottom: 2px solid #444;
 }
 
-.players-table td {
+.tablist-players-table td {
     padding: 8px 12px;
     border-bottom: 1px solid #333;
 }
 
-.players-table tr:hover {
+.tablist-players-table tr:hover {
     background-color: #3a3a3a;
 }
 

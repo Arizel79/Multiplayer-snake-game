@@ -40,6 +40,7 @@ function initMobileControlHandlers() {
     const upBtn = document.getElementById('btn-up');
     const leftBtn = document.getElementById('btn-left');
     const downBtn = document.getElementById('btn-down');
+    const centerBtn = document.getElementById('btn-center');
     const rightBtn = document.getElementById('btn-right');
     const chatBtn = document.getElementById('btn-chat');
     const tabBtn = document.getElementById('btn-tab');
@@ -51,13 +52,10 @@ function initMobileControlHandlers() {
     }
     }
 
-    // Добавляем обработчики для кнопок движения
-    function addButtonListeners(button, direction) {
-        // Для сенсорных устройств
+    function addButtonPressedListeners(button) {
         button.addEventListener('touchstart', function(e) {
             e.preventDefault();
             this.classList.add('pressed');
-            sendMoveCommand(direction);
         });
 
         button.addEventListener('touchend', function(e) {
@@ -70,10 +68,8 @@ function initMobileControlHandlers() {
             this.classList.remove('pressed');
         });
 
-        // Для устройств с мышью (тестирование)
         button.addEventListener('mousedown', function() {
             this.classList.add('pressed');
-            sendMoveCommand(direction);
         });
 
         button.addEventListener('mouseup', function() {
@@ -85,27 +81,52 @@ function initMobileControlHandlers() {
         });
     }
 
-    // Добавляем обработчики для всех кнопок направления
-    addButtonListeners(upBtn, 'up');
-    addButtonListeners(leftBtn, 'left');
-    addButtonListeners(downBtn, 'down');
-    addButtonListeners(rightBtn, 'right');
+    function addButtonListener(button, func) {
+        // Для сенсорных устройств
+        button.addEventListener('touchstart', func());
 
-    // Обработчики для action кнопок
-    chatBtn.addEventListener('click', function() {
-        // Эмулируем нажатие клавиши T для чата
-        const event = new KeyboardEvent('keydown', { key: 't' });
-        document.dispatchEvent(event);
+
+        // Для устройств с мышью (тестирование)
+        button.addEventListener('mousedown', func());
+    }
+
+     let btns = [upBtn, leftBtn, rightBtn, downBtn, centerBtn, tabBtn, chatBtn];
+     btns.forEach(btn => {
+      addButtonPressedListeners(btn);
     });
 
-    tabBtn.addEventListener('click', function() {
-        // Эмулируем нажатие клавиши Tab для списка игроков
-        const event = new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab' });
-        // Предотвращаем стандартное поведение Tab
-        event.preventDefault = function() {};
-        document.dispatchEvent(event);
-    });
+//    addButtonListeners(upBtn, 'up');
+//    addButtonListeners(leftBtn, 'left');
+//    addButtonListeners(downBtn, 'down');
+//    addButtonListeners(rightBtn, 'right');
 
+    function addButtonListener(btn, func) {
+      // Проверяем, что элемент существует
+      if (!btn) {
+        console.error('Элемент не найден');
+        return;
+      }
+
+      // Обработчик кликов и касаний
+      const handleInteraction = (event) => {
+        // Предотвращаем стандартное поведение для касаний (если нужно)
+        event.preventDefault();
+        // Вызываем переданную функцию
+        func();
+      };
+
+      // Добавляем обработчики для мыши и касаний
+      btn.addEventListener('click', handleInteraction);
+      btn.addEventListener('touchstart', handleInteraction, { passive: false });
+    }
+    addButtonListener(chatBtn, () => {
+      console.log('Кнопка активирована!');
+      toggleChat();
+    });
+    addButtonListener(tabBtn, () => {
+      console.log('Кнопка активирована!');
+      toggleTablist();
+    });
     // Добавляем поддержку удерживания кнопок для непрерывного движения
     let activeInterval = null;
 

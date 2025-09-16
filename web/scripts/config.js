@@ -1,5 +1,5 @@
 // Основные константы и переменные
-const CELL_SIZE = 20;
+const CELL_SIZE = 25;
 const COLORS = {
     white: "#ffffff",
     red: "#ff3232",
@@ -47,3 +47,10 @@ const gameState = {
     serverDescription: "Welcome to server!",
     alertData: null
 };
+
+
+
+const default_player_name = "";
+const default_server = "192.168.1.25:8090";
+const show_menu_server_address_input = true;
+const can_user_change_server = true;

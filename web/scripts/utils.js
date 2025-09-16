@@ -1,3 +1,21 @@
+function getRandomSnakeColor() {
+    const colors = ["red", "orange", "yellow", "lime", "green", "turquoise", "cyan", "light_blue", "blue", "violet", "magenta"];
+    const length = Math.floor(Math.random() * 5) + 4;
+    let result = [];
+    let lastIndex = -1;
+
+    for (let i = 0; i < length; i++) {
+        let availableIndices = colors
+            .map((_, index) => index)
+            .filter(index => index !== lastIndex);
+
+        const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        result.push(colors[randomIndex]);
+        lastIndex = randomIndex;
+    }
+
+    return result.join(',');
+}
 function convertCustomTagsToHtml(input) {
     // Сопоставление пользовательских тегов с HTML/стилями
     const tagMap = {
@@ -124,7 +142,7 @@ function convertCustomTagsToHtml(input) {
     const rootNode = parseToTree(input);
 
     let out = generateHtml(rootNode);
-    out = '<span class="gray-text">'+ out +'</span>'
+    out = '<span class="custom-html">'+ out +'</span>'
     return out
 }
 

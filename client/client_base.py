@@ -24,7 +24,7 @@ class ClientBase(ABC):
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
     VERSION_NUMBER = "v0.1, client"
 
-    def __init__(self, game_config_filename="client/.game_config.json",server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug"):
+    def __init__(self, game_config_filename=None, server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug", logs_file="client/client.log", logging_name="client"):
         self.version = self.VERSION_NUMBER
         self.run_mode = "base"
         self.ascii_logo = """  █████████                       █████              
@@ -36,8 +36,15 @@ class ClientBase(ABC):
 ░░█████████  ████ █████░░████████ ████ █████░░██████ 
  ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░░░ ░░░░ ░░░░░  ░░░░░░ 
 """
-        self.logging_level = logging_level.upper()
-        self.setup_logger(__name__, "client/client.log", self.logging_level)
+
+        if not logging_level is None:
+            self.logging_level = logging_level.upper()
+        else:
+            self.logging_level = None
+
+        self.logs_file = logs_file
+        self.logging_name = logging_name
+        self.setup_logger(self.logging_name, self.logs_file, self.logging_level)
 
         self.use_main_menu = use_main_menu
 
@@ -82,7 +89,7 @@ class ClientBase(ABC):
     def save_game_configs(self, filename=None):
         assert self.run_mode != "base"
         if filename is None:
-            filename = self.game_config_filename
+            return
 
         with open(self.game_config_filename, "w+") as f:
             data = {"player": self.player_name,
@@ -96,21 +103,23 @@ class ClientBase(ABC):
     def setup_logger(self, name, log_file, level=logging.INFO):
         """Настройка логгера"""
         self.logger = logging.getLogger(name)
-        self.logger.setLevel(level)
 
-        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
+        if not self.logging_level is None:
+            self.logger.setLevel(level)
+            file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
 
-        # To file
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(file_formatter)
+            # To file
+            if not self.logs_file is None:
+                file_handler = logging.FileHandler(log_file)
+                file_handler.setFormatter(file_formatter)
+                self.logger.addHandler(file_handler)
+            # To console
+            console_handler = logging.StreamHandler(stdout)
+            console_handler.setFormatter(console_formatter)
 
-        # To console
-        console_handler = logging.StreamHandler(stdout)
-        console_handler.setFormatter(console_formatter)
 
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(console_handler)
+            self.logger.addHandler(console_handler)
 
         return self.logger
 
@@ -225,7 +234,7 @@ class ClientBase(ABC):
         message = await asyncio.wait_for(self.websocket.recv(), timeout=0.1)
         data = json.loads(message)
         if data["type"] == "connection_error":
-            raise ConnectionError(data["data"])
+            raise ServerConnectionError(data["data"])
 
         self.player_id = data["player_id"]
     async def handle_websocket(self):
@@ -296,10 +305,11 @@ class ClientBase(ABC):
     @abstractmethod
     async def wait_for_end_session(self):
         pass
+
     async def connect_to_server(self):
         self.is_game_session_now = True
         try:
-
+            self.logger.info(f"Starting connection. Server: {self.server}; name: {self.player_name}; color: {self.color}")
             self.logger.info(f"Trying connecting to {self.server}...")
             self.state = "connecting"
             self.view_message = f"Connecting to {self.server}"
@@ -322,7 +332,7 @@ class ClientBase(ABC):
         except ServerConnectionError as e:
             self.logger.warning(f"{type(e).__name__}: {e}")
             self.alert("Server send error", f"{type(e).__name__}: {e}", "press space")
-            await self.wait_for_end_session()
+            self.quit_session()
 
         except Exception as e:
             if type(e) == KeyboardInterrupt:
@@ -332,17 +342,17 @@ class ClientBase(ABC):
             self.logger.critical(f"Game crashed. Error: {type(e).__name__}: {e}")
         finally:
             self.quit_session()
-            self.logger.info("Session finished. Finally")
+            self.logger.info("Session finished")
 
     async def run_game(self):
-        print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
-
-        self.logger.info(f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}")
-        self.logger.info(f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}")
-        self.logger.info(f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
+        # print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
+        if self.run_mode in ["cli", "gui"]:
+            self.logger.info(f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}")
+            self.logger.info(f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}")
+            self.logger.info(f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
 
         self.logger.debug(f"main menu? {'true' if self.use_main_menu else 'false'}")
-        self.logger.info(f"Logging level: {self.logging_level}")
+        self.logger.debug(f"Logging level: {self.logging_level}")
         try:
             self.input_thread.start()
             if self.use_main_menu:
@@ -350,7 +360,6 @@ class ClientBase(ABC):
                     while self.state == "main_menu" and self.running:
                         await asyncio.sleep(.01)
                     if self.state == "start_session":
-                        self.logger.info(f"Server: {self.server}; name: {self.player_name}; color: {self.color}")
                         await self.connect_to_server()
                         self.logger.info("Disconnected, backing to main menu...")
 
