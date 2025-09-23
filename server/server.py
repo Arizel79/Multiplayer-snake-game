@@ -44,7 +44,7 @@ class Snake:
     max_size: int = size
     alive: bool = True
     is_fast: str = False
-    immortal: bool = False  # бессмерный
+    immortal: bool = False
 
     def remove_segment(self, n=1, min_pop_size=2):
         for i in range(n):
@@ -77,7 +77,7 @@ class Player:
 class Server:
     def __init__(self, address, port, map_width=80, map_height=80, max_players=20,
                  server_name="Test Server", server_desc=None, logging_level="debug",
-                 max_food_perc=10, default_move_timeout=0.3):
+                 max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1):
         self.port = port
         self.address = address
 
@@ -87,7 +87,7 @@ class Server:
         self.snake_colors = DEAFULT_SNAKE_COLORS
 
         self.DEFAULT_MOVE_TIMEOUT = default_move_timeout
-        self.FAST_MOVE_TIMEOUT = self.DEFAULT_MOVE_TIMEOUT / 2
+        self.FAST_MOVE_TIMEOUT = fast_move_timeout
 
         self.VALID_NAME_CHARS = VALID_NAME_CHARS
 
@@ -352,8 +352,12 @@ class Server:
         if self.move_fast:
             self.last_fast_snake_move_time = now
 
-        for player_id, snake in list(self.snakes.items()):
-            await self.update_snake(player_id, snake)
+        for player_id, snake in list(copy.copy(self.snakes).items()):
+            try:
+                await self.update_snake(player_id, snake)
+            except Exception as e:
+                self.logger.error("Error in updating snakes (update):")
+                self.logger.exception(e)
 
 
     def to_dict(self):
@@ -373,6 +377,7 @@ class Server:
                 'max_size': s.max_size,
                 'alive': s.alive,
                 'direction': s.direction,
+                'is_fast': s.is_fast
             }
 
         for f in self.food:
@@ -446,9 +451,19 @@ class Server:
         #     await self.player_death(player_id, "%NAME% committed suicide")
         elif data["type"] == "respawn":
             await self.respawn(player_id)
+        elif data["type"] == "is_fast":
+            await self.toggle_speed(player_id, data["data"])
         else:
             self.logger.warning(f"Unknown data type received from {self.get_player(player_id)}: {data}")
 
+    async def toggle_speed(self, player_id, is_fast):
+        self.logger.info(f"Snake {player_id} toggle is_fast: {is_fast}")
+        pl = self.players[player_id]
+        sn = self.snakes[player_id]
+        if len(sn.body) < 2:
+            return
+
+        sn.is_fast = is_fast
 
     async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
         x, y = self.get_avalible_coords()
@@ -563,8 +578,9 @@ class Server:
                     try:
                         data = json.loads(message)
                         await self.handle_client_data(player_id, data)
-                    except:
-                        pass
+                    except Exception as e:
+                        self.logger.error("Error while handle_client_data:")
+                        self.logger.exception(e)
 
             except (json.JSONDecodeError, websockets.exceptions.ConnectionClosedError,
                     websockets.exceptions.ConnectionClosedOK) as e:
@@ -604,23 +620,27 @@ class Server:
 
 
     async def send_game_state_to_all(self):
-        state = self.to_dict()
+        try:
+            state = self.to_dict()
 
-        connections_ = copy.copy(self.connections)
-        for player_id, ws in connections_.items():
-            try:
-                await ws.send(json.dumps(state))
-            except websockets.exceptions.ConnectionClosedOK:
-                pass
-            finally:
-                pass
+            connections_ = copy.copy(self.connections)
+            for player_id, ws in connections_.items():
+                try:
+                    await ws.send(json.dumps(state))
+                except websockets.exceptions.ConnectionClosedOK:
+                    pass
+                finally:
+                    pass
+        except Exception as e:
+            self.logger.error("Error in send_game_state_to_all:")
+            self.logger.exception(e)
 
 
     async def game_loop(self):
         try:
             while True:
                 # if random.random() < 0.01:
-                #     self.logger.info("ITER ML")
+                #     self.logger.info("ITER game_loop")
                 await self.update()
                 now = time()
                 if now >= self.old_tick_time + self.tick:
@@ -676,7 +696,9 @@ async def run_server():
     parser.add_argument('--map_height', "--height", "--h", "--y_size", type=int, help='Height of server map',
                         default=100)
     parser.add_argument('--food_perc', type=int, help='Proportion food/map in perc', default=4)
-    parser.add_argument('--default_move_timeout', '--move_timeout', type=float, help='Timeout move snake (sec)',
+    parser.add_argument('--default_move_timeout', '--default_move', type=float, help='Timeout move snake (sec)',
+                        default=0.1)
+    parser.add_argument('--fast_move_timeout', '--fast_move', type=float, help='Timeout move fast snake (sec)',
                         default=0.1)
     parser.add_argument('--logging_level', '--log_lvl', type=str,
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
@@ -686,7 +708,7 @@ async def run_server():
     game_state = Server(address=args.address, port=args.port, map_width=args.map_width, map_height=args.map_height,
                         max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
                         logging_level=args.logging_level, max_food_perc=args.food_perc,
-                        default_move_timeout=args.default_move_timeout)
+                        default_move_timeout=args.default_move_timeout, fast_move_timeout=args.fast_move_timeout)
     try:
         await game_state.run()
     except asyncio.CancelledError:

@@ -20,6 +20,14 @@
     pointer-events: auto;
 }
 
+
+.fast-panel {
+    position: absolute;
+    bottom: 60px;
+    left: 60px;
+    pointer-events: auto;
+}
+
 .action-panel {
     position: absolute;
     top: 10px;
@@ -75,12 +83,12 @@
     pointer-events: auto;
 }
 
-.wasd-btn, .action-btn {
+.wasd-btn, .action-btn, .fast-btn {
 
 }
 .wasd-btn {
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
 }
 .action-btn {
@@ -89,8 +97,13 @@
     height: 50px;
     border-radius: 50%;
 }
+.fast-btn {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+}
 
-.wasd-btn.pressed, .action-btn.pressed {
+.wasd-btn.pressed, .action-btn.pressed, .fast-btn.pressed {
     transform: scale(1.05);
     background: rgba(100, 100, 100, 0.4);
 }

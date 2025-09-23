@@ -1,5 +1,5 @@
 function getRandomSnakeColor() {
-    const colors = ["red", "orange", "yellow", "lime", "green", "turquoise", "cyan", "light_blue", "blue", "violet", "magenta"];
+    const colors = ["red", "orange", "yellow", "lime", "green", "turquoise", "cyan", "light_blue", "blue"];
     const length = Math.floor(Math.random() * 5) + 4;
     let result = [];
     let lastIndex = -1;
@@ -17,7 +17,6 @@ function getRandomSnakeColor() {
     return result.join(',');
 }
 function convertCustomTagsToHtml(input) {
-    // Сопоставление пользовательских тегов с HTML/стилями
     const tagMap = {
         red: (content) => `<span style="color:red">${content}</span>`,
         green: (content) => `<span style="color:green">${content}</span>`,
@@ -39,7 +38,6 @@ function convertCustomTagsToHtml(input) {
             .replace(/>/g, "&gt;");
     }
 
-    // Парсинг строки в дерево узлов
     function parseToTree(text) {
         const root = { type: 'root', children: [] };
         const stack = [root];
@@ -48,7 +46,6 @@ function convertCustomTagsToHtml(input) {
 
         while (i < text.length) {
             if (text[i] === '<') {
-                // Обработка закрывающего тега
                 if (text[i + 1] === '/') {
                     const tagEnd = text.indexOf('>', i + 2);
                     if (tagEnd === -1) {
@@ -73,7 +70,6 @@ function convertCustomTagsToHtml(input) {
                         i = tagEnd + 1;
                     }
                 }
-                // Обработка открывающего тега
                 else {
                     const tagEnd = text.indexOf('>', i + 1);
                     if (tagEnd === -1) {
@@ -121,7 +117,6 @@ function convertCustomTagsToHtml(input) {
         return root;
     }
 
-    // Генерация HTML из дерева
     function generateHtml(node) {
         if (node.type === 'text') {
             return escapeHtml(node.content);
@@ -150,7 +145,6 @@ function toggleFullscreen() {
     const elem = document.documentElement;
 
     if (!document.fullscreenElement) {
-        // Вход в полноэкранный режим
         if (elem.requestFullscreen) {
             elem.requestFullscreen();
         } else if (elem.webkitRequestFullscreen) { /* Safari */
@@ -159,7 +153,6 @@ function toggleFullscreen() {
             elem.msRequestFullscreen();
         }
     } else {
-        // Выход из полноэкранного режима
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) { /* Safari */
@@ -168,4 +161,14 @@ function toggleFullscreen() {
             document.msExitFullscreen();
         }
     }
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

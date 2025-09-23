@@ -1,0 +1,270 @@
+[INFO] Player bot_0@127.0.0.1:65012 death (<white>bot_0</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Player bot_2@127.0.0.1:65008 death (<white>bot_2</white> crashed into the border)
+[INFO] Player bot_3@127.0.0.1:65006 death (<white>bot_3</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Player bot_6@127.0.0.1:65010 death (<white>bot_6</white> crashed into the border)
+[INFO] Player bot_9@127.0.0.1:65015 death (<white>bot_9</white> crashed into the border)
+[INFO] Player bot_8@127.0.0.1:65011 death (<white>bot_8</white> crashed into the border)
+[INFO] Player bot_1@127.0.0.1:65009 death (<white>bot_1</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Player bot_3@127.0.0.1:65006 disconnected
+[INFO] Player bot_1@127.0.0.1:65009 disconnected
+[INFO] Player bot_5@127.0.0.1:65013 disconnected
+[INFO] Player bot_9@127.0.0.1:65015 disconnected
+[INFO] Player bot_7@127.0.0.1:65014 disconnected
+[INFO] Player bot_6@127.0.0.1:65010 disconnected
+[INFO] Player bot_0@127.0.0.1:65012 disconnected
+[INFO] Player bot_2@127.0.0.1:65008 disconnected
+[INFO] Player bot_4@127.0.0.1:65007 disconnected
+[INFO] Player bot_8@127.0.0.1:65011 disconnected
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Spawned bot_0@127.0.0.1:65035 (bot_0)
+[INFO] Connection 127.0.0.1:65035 registred as bot_0@127.0.0.1:65035
+[INFO] Spawned bot_1@127.0.0.1:65036 (bot_1)
+[INFO] Connection 127.0.0.1:65036 registred as bot_1@127.0.0.1:65036
+[INFO] Spawned bot_2@127.0.0.1:65037 (bot_2)
+[INFO] Connection 127.0.0.1:65037 registred as bot_2@127.0.0.1:65037
+[INFO] Spawned bot_6@127.0.0.1:65038 (bot_6)
+[INFO] Connection 127.0.0.1:65038 registred as bot_6@127.0.0.1:65038
+[INFO] Spawned bot_8@127.0.0.1:65039 (bot_8)
+[INFO] Connection 127.0.0.1:65039 registred as bot_8@127.0.0.1:65039
+[INFO] Spawned bot_4@127.0.0.1:65040 (bot_4)
+[INFO] Connection 127.0.0.1:65040 registred as bot_4@127.0.0.1:65040
+[INFO] Spawned bot_3@127.0.0.1:65041 (bot_3)
+[INFO] Connection 127.0.0.1:65041 registred as bot_3@127.0.0.1:65041
+[INFO] Spawned bot_5@127.0.0.1:65042 (bot_5)
+[INFO] Connection 127.0.0.1:65042 registred as bot_5@127.0.0.1:65042
+[INFO] Spawned bot_7@127.0.0.1:65043 (bot_7)
+[INFO] Connection 127.0.0.1:65043 registred as bot_7@127.0.0.1:65043
+[INFO] Spawned bot_9@127.0.0.1:65044 (bot_9)
+[INFO] Connection 127.0.0.1:65044 registred as bot_9@127.0.0.1:65044
+[INFO] Player bot_4@127.0.0.1:65040 death (<white>bot_4</white> crashed into the border)
+[INFO] Player bot_0@127.0.0.1:65035 death (<white>bot_0</white> crashed into the border)
+[INFO] Player bot_9@127.0.0.1:65044 death (<white>bot_9</white> crashed into the border)
+[INFO] Player bot_6@127.0.0.1:65038 death (<white>bot_6</white> crashed into the border)
+[INFO] Player bot_7@127.0.0.1:65043 death (<white>bot_7</white> crashed into the border)
+[INFO] Player bot_2@127.0.0.1:65037 death (<white>bot_2</white> crashed into the border)
+[INFO] Player bot_5@127.0.0.1:65042 death (<white>bot_5</white> crashed into the border)
+[INFO] Player bot_3@127.0.0.1:65041 death (<white>bot_3</white> crashed into the border)
+[INFO] Player bot_1@127.0.0.1:65036 death (<white>bot_1</white> crashed into the border)
+[INFO] Player SNAKE_0_0@192.168.1.25:64989 death (<white>SNAKE_0_0</white> crashed into bot_8)
+[INFO] ITER game_loop
+[INFO] Player bot_8@127.0.0.1:65039 death (<white>bot_8</white> crashed into the border)
+[INFO] Player bot_5@127.0.0.1:65042 disconnected
+[INFO] Player bot_9@127.0.0.1:65044 disconnected
+[INFO] Player bot_8@127.0.0.1:65039 disconnected
+[INFO] Player bot_7@127.0.0.1:65043 disconnected
+[INFO] Player bot_6@127.0.0.1:65038 disconnected
+[INFO] Player bot_4@127.0.0.1:65040 disconnected
+[INFO] Player bot_3@127.0.0.1:65041 disconnected
+[INFO] Player bot_2@127.0.0.1:65037 disconnected
+[INFO] Player bot_1@127.0.0.1:65036 disconnected
+[INFO] Player bot_0@127.0.0.1:65035 disconnected
+[INFO] ITER game_loop
+[INFO] Spawned bot_3@127.0.0.1:65077 (bot_3)
+[INFO] Connection 127.0.0.1:65077 registred as bot_3@127.0.0.1:65077
+[INFO] Spawned bot_1@127.0.0.1:65078 (bot_1)
+[INFO] Connection 127.0.0.1:65078 registred as bot_1@127.0.0.1:65078
+[INFO] Spawned bot_2@127.0.0.1:65079 (bot_2)
+[INFO] Connection 127.0.0.1:65079 registred as bot_2@127.0.0.1:65079
+[INFO] Spawned bot_26@127.0.0.1:65080 (bot_26)
+[INFO] Connection 127.0.0.1:65080 registred as bot_26@127.0.0.1:65080
+[INFO] Spawned bot_28@127.0.0.1:65081 (bot_28)
+[INFO] Connection 127.0.0.1:65081 registred as bot_28@127.0.0.1:65081
+[INFO] Spawned bot_9@127.0.0.1:65082 (bot_9)
+[INFO] Connection 127.0.0.1:65082 registred as bot_9@127.0.0.1:65082
+[INFO] Spawned bot_11@127.0.0.1:65083 (bot_11)
+[INFO] Connection 127.0.0.1:65083 registred as bot_11@127.0.0.1:65083
+[INFO] Spawned bot_13@127.0.0.1:65084 (bot_13)
+[INFO] Connection 127.0.0.1:65084 registred as bot_13@127.0.0.1:65084
+[INFO] Spawned bot_15@127.0.0.1:65085 (bot_15)
+[INFO] Connection 127.0.0.1:65085 registred as bot_15@127.0.0.1:65085
+[INFO] Spawned bot_17@127.0.0.1:65086 (bot_17)
+[INFO] Connection 127.0.0.1:65086 registred as bot_17@127.0.0.1:65086
+[INFO] Spawned bot_19@127.0.0.1:65087 (bot_19)
+[INFO] Connection 127.0.0.1:65087 registred as bot_19@127.0.0.1:65087
+[INFO] Spawned bot_21@127.0.0.1:65088 (bot_21)
+[INFO] Connection 127.0.0.1:65088 registred as bot_21@127.0.0.1:65088
+[INFO] Spawned bot_23@127.0.0.1:65089 (bot_23)
+[INFO] Connection 127.0.0.1:65089 registred as bot_23@127.0.0.1:65089
+[INFO] Spawned bot_4@127.0.0.1:65090 (bot_4)
+[INFO] Connection 127.0.0.1:65090 registred as bot_4@127.0.0.1:65090
+[INFO] Spawned bot_6@127.0.0.1:65091 (bot_6)
+[INFO] Connection 127.0.0.1:65091 registred as bot_6@127.0.0.1:65091
+[INFO] Spawned bot_8@127.0.0.1:65092 (bot_8)
+[INFO] Connection 127.0.0.1:65092 registred as bot_8@127.0.0.1:65092
+[INFO] Spawned bot_25@127.0.0.1:65093 (bot_25)
+[INFO] Connection 127.0.0.1:65093 registred as bot_25@127.0.0.1:65093
+[INFO] Spawned bot_0@127.0.0.1:65094 (bot_0)
+[INFO] Connection 127.0.0.1:65094 registred as bot_0@127.0.0.1:65094
+[INFO] Spawned bot_7@127.0.0.1:65096 (bot_7)
+[INFO] Connection 127.0.0.1:65096 registred as bot_7@127.0.0.1:65096
+[INFO] Spawned bot_5@127.0.0.1:65095 (bot_5)
+[INFO] Connection 127.0.0.1:65095 registred as bot_5@127.0.0.1:65095
+[INFO] Spawned bot_27@127.0.0.1:65097 (bot_27)
+[INFO] Connection 127.0.0.1:65097 registred as bot_27@127.0.0.1:65097
+[INFO] Spawned bot_29@127.0.0.1:65098 (bot_29)
+[INFO] Connection 127.0.0.1:65098 registred as bot_29@127.0.0.1:65098
+[INFO] 127.0.0.1:65099 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65100 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65101 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65102 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65103 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65104 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65105 is trying to connect, but the server is full
+[INFO] 127.0.0.1:65106 is trying to connect, but the server is full
+[INFO] Spawned SNAKE_0_0@192.168.1.25:64989 (SNAKE_0_0)
+[INFO] Player bot_15@127.0.0.1:65085 death (<white>bot_15</white> crashed into the border)
+[INFO] Player bot_4@127.0.0.1:65090 death (<white>bot_4</white> crashed into the border)
+[INFO] Player bot_0@127.0.0.1:65094 death (<white>bot_0</white> crashed into the border)
+[INFO] Player bot_8@127.0.0.1:65092 death (<white>bot_8</white> crashed into the border)
+[INFO] Player bot_26@127.0.0.1:65080 death (<white>bot_26</white> crashed into the border)
+[INFO] Player bot_1@127.0.0.1:65078 death (<white>bot_1</white> crashed into bot_13)
+[INFO] Player bot_23@127.0.0.1:65089 death (<white>bot_23</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] Player bot_5@127.0.0.1:65095 death (<white>bot_5</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] Player bot_25@127.0.0.1:65093 death (<white>bot_25</white> crashed into the border)
+[INFO] Player bot_6@127.0.0.1:65091 death (<white>bot_6</white> crashed into the border)
+[INFO] Player bot_2@127.0.0.1:65079 death (<white>bot_2</white> crashed into the border)
+[INFO] Player bot_29@127.0.0.1:65098 death (<white>bot_29</white> crashed into the border)
+[INFO] Player bot_7@127.0.0.1:65096 death (<white>bot_7</white> crashed into the border)
+[INFO] Player bot_21@127.0.0.1:65088 death (<white>bot_21</white> crashed into the border)
+[INFO] Player bot_28@127.0.0.1:65081 death (<white>bot_28</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] Player bot_13@127.0.0.1:65084 death (<white>bot_13</white> crashed into the border)
+[INFO] Player bot_9@127.0.0.1:65082 death (<white>bot_9</white> crashed into the border)
+[INFO] Player bot_27@127.0.0.1:65097 death (<white>bot_27</white> crashed into the border)
+[INFO] Player bot_19@127.0.0.1:65087 death (<white>bot_19</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] Player bot_17@127.0.0.1:65086 death (<white>bot_17</white> crashed into the border)
+[INFO] Player bot_11@127.0.0.1:65083 death (<white>bot_11</white> crashed into the border)
+[INFO] Player bot_3@127.0.0.1:65077 death (<white>bot_3</white> crashed into the border)
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Player bot_8@127.0.0.1:65092 disconnected
+[INFO] Player bot_7@127.0.0.1:65096 disconnected
+[INFO] Player bot_29@127.0.0.1:65098 disconnected
+[INFO] Player bot_25@127.0.0.1:65093 disconnected
+[INFO] Player bot_5@127.0.0.1:65095 disconnected
+[INFO] Player bot_0@127.0.0.1:65094 disconnected
+[INFO] Player bot_1@127.0.0.1:65078 disconnected
+[INFO] Player bot_28@127.0.0.1:65081 disconnected
+[INFO] Player bot_3@127.0.0.1:65077 disconnected
+[INFO] Player bot_2@127.0.0.1:65079 disconnected
+[INFO] Player bot_4@127.0.0.1:65090 disconnected
+[INFO] Player bot_6@127.0.0.1:65091 disconnected
+[INFO] Player bot_19@127.0.0.1:65087 disconnected
+[INFO] Player bot_21@127.0.0.1:65088 disconnected
+[INFO] Player bot_9@127.0.0.1:65082 disconnected
+[INFO] Player bot_23@127.0.0.1:65089 disconnected
+[INFO] Player bot_26@127.0.0.1:65080 disconnected
+[INFO] Player bot_27@127.0.0.1:65097 disconnected
+[INFO] Player bot_11@127.0.0.1:65083 disconnected
+[INFO] Player bot_15@127.0.0.1:65085 disconnected
+[INFO] Player bot_17@127.0.0.1:65086 disconnected
+[INFO] Player bot_13@127.0.0.1:65084 disconnected
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] ITER game_loop
+[INFO] Spawned bot_7@127.0.0.1:65167 (bot_7)
+[INFO] Connection 127.0.0.1:65167 registred as bot_7@127.0.0.1:65167
+[INFO] Spawned bot_6@127.0.0.1:65168 (bot_6)
+[INFO] Connection 127.0.0.1:65168 registred as bot_6@127.0.0.1:65168
+[INFO] Spawned bot_0@127.0.0.1:65169 (bot_0)
+[INFO] Connection 127.0.0.1:65169 registred as bot_0@127.0.0.1:65169
+[INFO] Spawned bot_2@127.0.0.1:65170 (bot_2)
+[INFO] Connection 127.0.0.1:65170 registred as bot_2@127.0.0.1:65170
+[INFO] Spawned bot_3@127.0.0.1:65171 (bot_3)
+[INFO] Connection 127.0.0.1:65171 registred as bot_3@127.0.0.1:65171
+[INFO] Spawned bot_1@127.0.0.1:65172 (bot_1)
+[INFO] Connection 127.0.0.1:65172 registred as bot_1@127.0.0.1:65172
+[INFO] Spawned bot_4@127.0.0.1:65173 (bot_4)
+[INFO] Connection 127.0.0.1:65173 registred as bot_4@127.0.0.1:65173
+[INFO] Spawned bot_5@127.0.0.1:65174 (bot_5)
+[INFO] Connection 127.0.0.1:65174 registred as bot_5@127.0.0.1:65174
+[INFO] Spawned bot_39@127.0.0.1:65175 (bot_39)
+[INFO] Connection 127.0.0.1:65175 registred as bot_39@127.0.0.1:65175
+[INFO] Spawned bot_38@127.0.0.1:65176 (bot_38)
+[INFO] Connection 127.0.0.1:65176 registred as bot_38@127.0.0.1:65176
+[INFO] Spawned bot_41@127.0.0.1:65177 (bot_41)
+[INFO] Connection 127.0.0.1:65177 registred as bot_41@127.0.0.1:65177
+[INFO] Spawned bot_40@127.0.0.1:65178 (bot_40)
+[INFO] Connection 127.0.0.1:65178 registred as bot_40@127.0.0.1:65178
+[INFO] Spawned bot_43@127.0.0.1:65179 (bot_43)
+[INFO] Connection 127.0.0.1:65179 registred as bot_43@127.0.0.1:65179
+[INFO] Spawned bot_42@127.0.0.1:65180 (bot_42)
+[INFO] Connection 127.0.0.1:65180 registred as bot_42@127.0.0.1:65180
+[INFO] Spawned bot_44@127.0.0.1:65181 (bot_44)
+[INFO] Connection 127.0.0.1:65181 registred as bot_44@127.0.0.1:65181
+[INFO] Player bot_2@127.0.0.1:65170 death (<white>bot_2</white> crashed into the border)
+[INFO] Spawned bot_46@127.0.0.1:65182 (bot_46)
+[INFO] Spawned bot_48@127.0.0.1:65183 (bot_48)
+[INFO] Spawned bot_9@127.0.0.1:65184 (bot_9)
+[INFO] Spawned bot_11@127.0.0.1:65185 (bot_11)
+[INFO] Spawned bot_13@127.0.0.1:65186 (bot_13)
+[INFO] Spawned bot_15@127.0.0.1:65187 (bot_15)
+[INFO] Spawned bot_17@127.0.0.1:65188 (bot_17)
+[INFO] Spawned bot_19@127.0.0.1:65189 (bot_19)
+[INFO] Spawned bot_21@127.0.0.1:65190 (bot_21)
+[INFO] Spawned bot_23@127.0.0.1:65191 (bot_23)
+[INFO] Spawned bot_25@127.0.0.1:65192 (bot_25)
+[INFO] Spawned bot_27@127.0.0.1:65193 (bot_27)
+[INFO] Spawned bot_29@127.0.0.1:65194 (bot_29)
+[INFO] Spawned bot_31@127.0.0.1:65195 (bot_31)
+[INFO] Spawned bot_33@127.0.0.1:65196 (bot_33)
+[INFO] Spawned bot_35@127.0.0.1:65197 (bot_35)
+[INFO] Spawned bot_37@127.0.0.1:65198 (bot_37)
+[INFO] Spawned bot_8@127.0.0.1:65199 (bot_8)
+[INFO] Spawned bot_10@127.0.0.1:65200 (bot_10)
+[INFO] Spawned bot_12@127.0.0.1:65201 (bot_12)
+[INFO] Spawned bot_14@127.0.0.1:65202 (bot_14)
+[INFO] Spawned bot_16@127.0.0.1:65203 (bot_16)
+[INFO] Spawned bot_18@127.0.0.1:65204 (bot_18)
+[INFO] Spawned bot_22@127.0.0.1:65205 (bot_22)
+[INFO] Spawned bot_20@127.0.0.1:65206 (bot_20)
+[INFO] Spawned bot_24@127.0.0.1:65207 (bot_24)
+[INFO] Spawned bot_26@127.0.0.1:65208 (bot_26)
+[INFO] Spawned bot_28@127.0.0.1:65209 (bot_28)
+[INFO] Spawned bot_30@127.0.0.1:65210 (bot_30)
+[INFO] Spawned bot_32@127.0.0.1:65211 (bot_32)
+[INFO] Spawned bot_34@127.0.0.1:65212 (bot_34)
+[INFO] Spawned bot_36@127.0.0.1:65213 (bot_36)
+[INFO] Spawned bot_45@127.0.0.1:65214 (bot_45)
+[INFO] Spawned bot_47@127.0.0.1:65215 (bot_47)
+[INFO] Spawned bot_49@127.0.0.1:65216 (bot_49)
+[ERROR] received 1000 (OK); then sent 1000 (OK)
+Traceback (most recent call last):
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\server\server.py", line 624, in game_loop
+    await self.update()
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\server\server.py", line 356, in update
+    await self.update_snake(player_id, snake)
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\server\server.py", line 310, in update_snake
+    await self.player_death(player_id, "%NAME% crashed into the border")
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\server\server.py", line 247, in player_death
+    await ws.send(json.dumps(state))
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 476, in send
+    async with self.send_context():
+  File "C:\Users\User\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 204, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Kirill\Programming\python\ascii\asciiMultiplayerSnakeGame\.venv\Lib\site-packages\websockets\asyncio\connection.py", line 957, in send_context
+    raise self.protocol.close_exc from original_exc
+websockets.exceptions.ConnectionClosedOK: received 1000 (OK); then sent 1000 (OK)
+[INFO] game_loop closed

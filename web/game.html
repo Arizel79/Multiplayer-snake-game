@@ -11,7 +11,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport"
-          content="width=device-width, initial-scale=0.6, minimum-scale=0.6, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+          content="width=device-width, initial-scale=0.5, minimum-scale=0.6, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 </head>
 <body>
 <div id="main-menu">
@@ -63,6 +63,11 @@
                 <button id="btn-right" class="wasd-btn hud-btn">→</button>
             </div>
         </div>
+        <div class="fast-panel">
+            <div>
+                <button id="btn-fast" class="fast-btn hud-btn">F</button>
+            </div>
+        </div>
 
         <!-- Action панель -->
         <div class="action-panel">
@@ -108,8 +113,10 @@
 
 </div>
 <script src="scripts/config.js"></script>
-<script src="scripts/script.js"></script>
-<script src="scripts/mobile.js"></script>
 <script src="scripts/utils.js"></script>
+<script src="scripts/script.js"></script>
+<script src="scripts/rendering.js"></script>
+<script src="scripts/mobile.js"></script>
+
 </body>
 </html>

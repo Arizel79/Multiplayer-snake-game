@@ -49,16 +49,13 @@ async def run_bot(server, bot_name, bot_color):
 
 
 async def main():
-    # Количество ботов для запуска
-    num_bots = 90
+    num_bots = 25
     SERVER = "localhost:8090"
 
-    # Создаем и запускаем ботов параллельно
     tasks = []
     for i in range(num_bots):
-        tasks.append(asyncio.create_task(run_bot(server=SERVER, bot_name=f"bot_{str(i)}", bot_color="red;green,lime")))
+        tasks.append(asyncio.create_task(run_bot(server=SERVER, bot_name=f"ThisIsBot_{str(i)}", bot_color="red;green,lime")))
 
-    # Ждем завершения всех ботов
     await asyncio.gather(*tasks)
 
 

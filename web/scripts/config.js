@@ -45,7 +45,8 @@ const gameState = {
     keysPressed: {},
     deathMessage: "",
     serverDescription: "Welcome to server!",
-    alertData: null
+    alertData: null,
+    isFast: false
 };
 
 
