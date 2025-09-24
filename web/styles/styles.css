@@ -33,6 +33,7 @@
   --chat-input-text-color: rgba(255, 255, 255, 0.9);
   --chat-input-bg-color: rgba(0, 0, 0, 0.3);
   --chat-bg-color: rgba(30, 30, 30, 0.8);
+  --mini-chat-bg-color: rgba(30, 30, 30, 0.0);
 }
 
 * {
@@ -80,6 +81,8 @@ button.default-btn {
   padding: 10px;
   transition: background-color 0.2s ease;
 }
+
+
 
 button.default-btn:hover {
   background-color: var(--button-bg-color-hover);
@@ -175,8 +178,8 @@ input:focus {
 .info-button {
   width: 100%;
   min-width: 250px;
-  max-width: 10rem;
-  margin: 5px;
+  max-width: 500px;
+  margin: 8px;
 }
 
 .info-button:hover {

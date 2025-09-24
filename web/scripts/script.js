@@ -484,9 +484,12 @@ function closeTablist() {
 
 function updateTablist() {
     if (!gameState.gameState) return;
+    document.getElementById("your-score-value").innerHTML = gameState.gameState.snakes[gameState.playerId].size || -1;
 
     const players = gameState.gameState.players;
     const snakes = gameState.gameState.snakes;
+
+
 
     document.getElementById("tablist-title").innerHTML = escapeHtml(gameState.serverAddress);
     document.getElementById("tablist-server-info").innerHTML = `
@@ -571,14 +574,15 @@ function updateDebugInfo() {
 }
 
 function showDeathScreen(data) {
+
     closeAll();
     document.querySelector('#death-screen').style.display = "flex";
 
 
     if (gameState.gameState && gameState.playerId) {
-        const player = gameState.gameState.players[gameState.playerId] || {};
-        const snake = gameState.gameState.snakes[gameState.playerId] || {};
-
+        console.log(gameState.playerId);
+        const player = gameState.gameState.players[gameState.playerId];
+        const snake = gameState.gameState.snakes[gameState.playerId];
         let statsText = `
 <div class="player-stats">
     <table class="table-player-stats">
@@ -590,19 +594,19 @@ function showDeathScreen(data) {
         <tbody>
            <tr>
               <td>Size</td>
-              <td>${snake.size || 0}</td>
+              <td>${data.stats.size}</td>
            </tr>
            <tr>
               <td>Max size</td>
-              <td>${snake.max_size || 0}</td>
+              <td>${data.stats.max_size}</td>
            </tr>
            <tr>
               <td>Kills</td>
-              <td>${player.kills || 0}</td>
+              <td>${data.stats.kills}</td>
            </tr>
            <tr>
               <td>Deaths</td>
-              <td>${player.deaths || 1}</td>
+              <td>${data.stats.deaths}</td>
            </tr>
        </tbody>
       </table>

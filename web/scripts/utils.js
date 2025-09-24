@@ -1,21 +1,15 @@
 function getRandomSnakeColor() {
-    const colors = ["red", "orange", "yellow", "lime", "green", "turquoise", "cyan", "light_blue", "blue"];
-    const length = Math.floor(Math.random() * 5) + 4;
-    let result = [];
-    let lastIndex = -1;
+    const skins = [
+        "red,orange,yellow,lime,green,turquoise,cyan,blue", // радужный
+        "blue,cyan,turquoise,lime,yellow,lime,turquoise", // из комментария
+        "red,orange,yellow,green,cyan,blue", // классический радужный
+        "purple,blue,cyan,green,yellow,orange,red", // фиолетовый радужный
+        "blue,light_blue,cyan,turquoise,green" // океанский
+    ];
 
-    for (let i = 0; i < length; i++) {
-        let availableIndices = colors
-            .map((_, index) => index)
-            .filter(index => index !== lastIndex);
-
-        const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-        result.push(colors[randomIndex]);
-        lastIndex = randomIndex;
-    }
-
-    return result.join(',');
+    return skins[Math.floor(Math.random() * skins.length)];
 }
+
 function convertCustomTagsToHtml(input) {
     const tagMap = {
         red: (content) => `<span style="color:red">${content}</span>`,

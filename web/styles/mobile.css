@@ -1,4 +1,10 @@
+@media (max-width: 768px) {
+  button.default-btn {
 
+  padding: 15px;
+
+}
+}
 
 
 /* Стили для мобильных контролов */

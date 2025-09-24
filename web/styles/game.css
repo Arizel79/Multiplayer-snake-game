@@ -175,12 +175,14 @@ input:focus {
     width: 500px;
     max-height: 150px;
     overflow: hidden;
-    background-color: var(--chat-bg-color);
+    background-color: var(--mini-chat-bg-color);
     z-index: 2;
     display: none; /* По умолчанию скрыт */
     transition: opacity 0.2s ease;
     padding: 5px;
 }
+
+
 
 #mini-chat.chat-top {
     top: 10px;
@@ -197,6 +199,16 @@ input:focus {
     opacity: 0.9;
 }
 
+#player-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 500px;
+    max-height: 150px;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+    padding: 5px;
+}
 
 
 #death-screen, #alert-screen, #error-screen {
@@ -258,7 +270,7 @@ input:focus {
 
 .table-player-stats {
     width: 90%;
-    max-width: 300px;
+    max-width: 500px;
     border-collapse: collapse;
     border-radius: var(--border-radius);
     background-color: var(--pad-bg-color);

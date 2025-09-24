@@ -1,5 +1,5 @@
 // Основные константы и переменные
-const CELL_SIZE = 25;
+const CELL_SIZE = 20;
 const COLORS = {
     white: "#ffffff",
     red: "#ff3232",

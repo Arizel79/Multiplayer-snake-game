@@ -131,19 +131,31 @@ function renderFood(center) {
     const height = canvas.height;
     const cellSize = CELL_SIZE;
 
-    ctx.fillStyle = COLORS.food;
-
     gameState.gameState.food.forEach(food => {
         const screenX = width / 2 + (food.x - center.x) * cellSize;
         const screenY = height / 2 + (food.y - center.y) * cellSize;
 
+        // Проверяем видимость пищи на экране
         if (screenX >= -cellSize && screenX <= width + cellSize &&
             screenY >= -cellSize && screenY <= height + cellSize) {
+
+            // Определяем размер в зависимости от типа
+            let size;
+            if (food.type === "default") {
+                size = cellSize / 6;
+            } else if (food.type === "death") {
+                size = cellSize / 4;
+            } else {
+                size = cellSize / 4; // Значение по умолчанию
+            }
+
+            // Рисуем элемент
             ctx.beginPath();
+            ctx.fillStyle = food.color || COLORS.food; // Используем цвет по умолчанию если не указан
             ctx.arc(
                 screenX + cellSize / 2,
                 screenY + cellSize / 2,
-                cellSize / 3,
+                size,
                 0,
                 Math.PI * 2
             );

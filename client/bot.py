@@ -1,5 +1,7 @@
 import asyncio
 import os
+import random
+
 from client_base import *
 from random import randint
 class Bot(ClientBase):
@@ -49,12 +51,12 @@ async def run_bot(server, bot_name, bot_color):
 
 
 async def main():
-    num_bots = 25
+    num_bots = 20
     SERVER = "localhost:8090"
 
     tasks = []
     for i in range(num_bots):
-        tasks.append(asyncio.create_task(run_bot(server=SERVER, bot_name=f"ThisIsBot_{str(i)}", bot_color="red;green,lime")))
+        tasks.append(asyncio.create_task(run_bot(server=SERVER, bot_name=f"BOT_{str(i)}_{random.randint(0, 100_000)}", bot_color="red;green,lime")))
 
     await asyncio.gather(*tasks)
 
