@@ -3,7 +3,7 @@ import copy
 import json
 import random
 from collections import deque
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pprint import pprint
 from random import randint, choice
 import websockets
@@ -138,7 +138,7 @@ class Server:
         else:
             self.server_desc = server_desc
 
-        self.game_speed = 0.002
+        self.game_speed = 0.01
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
 
@@ -320,7 +320,6 @@ class Server:
                 return True
 
         return False
-
     async def set_server_desc(self, server_desc):
         self.server_desc = server_desc
         await self.broadcast_chat_message({"type": "set_server_desc",
@@ -532,7 +531,7 @@ class Server:
                     return
 
         # Проверка коллизий с собой (только первые N сегментов)
-        max_self_check = min(10, len(snake.body) - 1)  # Проверяем только первые 10 сегментов
+        max_self_check = len(snake.body)  # Проверяем только первые 10 сегментов
         for i, segment in enumerate(list(snake.body)[1:1 + max_self_check]):
             if new_head.x == segment.x and new_head.y == segment.y:
                 await self.player_death(player_id, f'%NAME% crashed into his tail')
@@ -580,6 +579,8 @@ class Server:
             except Exception as e:
                 self.logger.error("Error in updating snakes (update):")
                 self.logger.exception(e)
+
+        self.update_spatial_grid()
 
     def to_dict(self, player_id: str = None):
         return self._get_partial_state(player_id)
@@ -665,7 +666,7 @@ class Server:
 
     def _snake_to_dict(self, snake: Snake):
         return {
-            'body': [asdict(p) for p in snake.body],
+            'body': [{'x': p.x, "y": p.y} for p in snake.body],
             'color': snake.color,
             'name': snake.name,
             'size': snake.size,
@@ -941,6 +942,8 @@ class Server:
                 snake.remove_segment(segments_to_remove, min_pop_size=self.min_steling_snake_size)
 
     async def on_tick(self):
+
+        await self.update()
         # TPS calculation
         self.tps_counter += 1
         current_time = time()
@@ -961,13 +964,14 @@ class Server:
         """Отправляет состояние игры каждому клиенту с фильтрацией по области видимости"""
         try:
             # Обновляем пространственное разбиение
-            self.update_spatial_grid()
+
 
             connections_ = copy.copy(self.connections)
             for player_id, ws in connections_.items():
                 try:
                     # Отправляем частичное состояние для каждого игрока
                     state = self.to_dict(player_id)
+                    # self.logger.info("send state")
                     await ws.send(json.dumps(state))
                 except websockets.exceptions.ConnectionClosedOK:
                     pass
@@ -981,7 +985,7 @@ class Server:
             while True:
                 # if random.random() < 0.01:
                 #     self.logger.info("ITER game_loop")
-                await self.update()
+
                 now = time()
 
                 if now >= self.old_tick_time + self.tick:
