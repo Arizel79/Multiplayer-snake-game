@@ -2,9 +2,9 @@ function getRandomSnakeColor() {
     const skins = [
         "red,orange,yellow,lime,green,turquoise,cyan,blue", // радужный
         "blue,cyan,turquoise,lime,yellow,lime,turquoise", // из комментария
-        "red,orange,yellow,green,cyan,blue", // классический радужный
-        "purple,blue,cyan,green,yellow,orange,red", // фиолетовый радужный
-        "blue,light_blue,cyan,turquoise,green" // океанский
+        "red,orange,yellow,green,cyan,blue,cyan,green,yellow", // классический радужный
+        "blue,cyan,green,yellow,orange,red,orange,yellow,green,cyan", // фиолетовый радужный
+        "blue,light_blue,cyan,turquoise,green,turquoise,cyan,light_blue" // океанский
     ];
 
     return skins[Math.floor(Math.random() * skins.length)];

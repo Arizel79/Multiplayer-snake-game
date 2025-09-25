@@ -335,7 +335,7 @@ function getNeonGlowColor(snake, index, defaultColor) {
 
             const textColor = headColor || defaultColor;
             ctx.fillStyle = getColorValue(textColor);
-            ctx.font = `bold ${Math.max(12, cellSize * 0.7)}px Mono`;
+            ctx.font = `bold ${Math.max(12, cellSize * 0.7)}px monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
 

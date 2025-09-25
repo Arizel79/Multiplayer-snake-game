@@ -1,24 +1,19 @@
+import argparse
 import asyncio
 import copy
 import json
+import logging
 import random
+import sys
 from collections import deque
 from dataclasses import dataclass
-from pprint import pprint
-from random import randint, choice
-import websockets
-import ssl
 from time import time
-import argparse
-import logging
-import sys
-import traceback
+
+import websockets
 
 from config import *
 
 prnt = print
-
-
 
 
 @dataclass
@@ -26,13 +21,13 @@ class Point:
     x: int
     y: int
 
+
 @dataclass
 class Food:
     point: Point
     type_: int
     color: str
     size: int
-
 
 
 @dataclass
@@ -74,6 +69,7 @@ class Player:
     kills: int = 0
     best_score: int = 0
     last_score: int = 0
+
 
 @dataclass
 class Viewport:
@@ -120,7 +116,7 @@ class Server:
         self.width = map_width
         self.height = map_height
 
-        self.snake_colors = DEAFULT_SNAKE_COLORS
+        self.snake_colors = DEAFAULT_SNAKE_COLORS
 
         self.DEFAULT_MOVE_TIMEOUT = default_move_timeout
         self.FAST_MOVE_TIMEOUT = fast_move_timeout
@@ -128,7 +124,7 @@ class Server:
         self.VALID_NAME_CHARS = VALID_NAME_CHARS
 
         self.snakes = {}
-        self.food = []
+        self.food = {}
         self.players = {}
         self.max_players = max_players
         self.connections = {}
@@ -138,13 +134,13 @@ class Server:
         else:
             self.server_desc = server_desc
 
-        self.game_speed = 0.01
+        self.game_speed = 0.001
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
 
         self.min_steling_snake_size = 5
-        self.stealing_chance = 0.005
-        self.steal_percentage = 0.1  # 5%
+        self.stealing_chance = 0.003
+        self.steal_percentage = 0.05  # 5%
 
         self.fast_stealing_chance = 0.1
         self.fast_steal_abs_size = 1
@@ -159,26 +155,25 @@ class Server:
         self.setup_logger(__name__, "server/server.log", getattr(logging, self.logging_level))
         self.logger.info(f"Logging level: {self.logging_level}")
 
-        self.base_viewport_width = BASE_VIEWPORT_WIDTH  # базовая ширина области видимости
-        self.base_viewport_height = BASE_VIEWPORT_HEIGHT  # базовая высота области видимости
-        self.viewport_scale_factor = 1  # увеличение области видимости для запаса
+        self.base_viewport_width = BASE_VIEWPORT_WIDTH
+        self.base_viewport_height = BASE_VIEWPORT_HEIGHT
+        self.viewport_scale_factor = 1
 
-        # Кэш для оптимизации
-        self.spatial_grid = {}  # Пространственное разбиение для быстрого поиска
-        self.grid_cell_size = 1  # Размер ячейки сетки
+        self.spatial_grid = {}
+        self.grid_cell_size = 1
 
         # TPS tracking
         self.tps_counter = 0
         self.last_tps_time = time()
         self.tps = 0
-        self.tps_log_interval = 3  # Log TPS every 5 seconds
+        self.tps_log_interval = 0.5  # Log TPS every 5 seconds
 
-
-        # Кэш для оптимизации
-        self._food_dict_cache = {}  # Кэш преобразования еды в dict
-        self._snake_dict_cache = {}  # Кэш преобразования змей в dict
+        self._food_dict_cache = {}
+        self._snake_dict_cache = {}
         self._last_cache_update = 0
-        self.cache_ttl = 0.1  # Обновлять кэш каждые 100мс
+        self.cache_ttl = 0.05
+
+        self._send_cache = {}
 
     def get_color_for_segment(self, snake, segment_n):
         n = segment_n
@@ -208,54 +203,36 @@ class Server:
 
         return out_color
 
-    # def get_viewport_for_snake(self, snake: Snake) -> Viewport:
-    #     """Улучшенная версия с динамическим масштабированием"""
-    #     if not snake.body:
-    #         return Viewport(0, 0, self.base_viewport_width, self.base_viewport_height)
-    #
-    #     head = snake.body[0]
-    #
-    #     # Динамическое масштабирование в зависимости от размера змеи
-    #     size_factor = 1.0
-    #     if self.viewport_settings['dynamic_scaling']:
-    #         size_factor = max(1.0, min(2.0, 1.0 + len(snake.body) / 50))
-    #
-    #     viewport_width = int(self.viewport_settings['base_width'] *
-    #                          self.viewport_settings['scale_factor'] * size_factor)
-    #     viewport_height = int(self.viewport_settings['base_height'] *
-    #                           self.viewport_settings['scale_factor'] * size_factor)
-    #
-    #     # Ограничение размеров
-    #     viewport_width = max(self.viewport_settings['min_width'],
-    #                          min(self.viewport_settings['max_width'], viewport_width))
-    #     viewport_height = max(self.viewport_settings['min_height'],
-    #                           min(self.viewport_settings['max_height'], viewport_height))
-    #
-    #     return Viewport(head.x, head.y, viewport_width, viewport_height)
 
     def update_spatial_grid(self):
-        """Обновляет пространственное разбиение для оптимизации поиска"""
-        self.spatial_grid = {}
+        new_grid = {}
 
-        # Добавляем еду в сетку
-        for food in self.food:
-            cell_x = food.point.x // self.grid_cell_size
-            cell_y = food.point.y // self.grid_cell_size
-            cell_key = (cell_x, cell_y)
-            if cell_key not in self.spatial_grid:
-                self.spatial_grid[cell_key] = {'food': [], 'snake_ids': []}
-            self.spatial_grid[cell_key]['food'].append(food)
+        for xy, food in self.food.items():
+            # cell_x = food.point.x // self.grid_cell_size
+            # cell_y = food.point.y // self.grid_cell_size
+            # cell_key = (cell_x, cell_y)
 
-        # Добавляем змей в сетку (по player_id)
+            if xy not in new_grid:
+                new_grid[xy] = {'food': [], 'snake_ids': set()}  # Используем set вместо list
+
+            new_grid[xy]['food'].append(food)
+
         for player_id, snake in self.snakes.items():
-            for segment in snake.body:
+            segments_to_check = [snake.body[0]]
+            if len(snake.body) > 1:
+                segments_to_check.append(snake.body[-1])
+
+            for segment in segments_to_check:
                 cell_x = segment.x // self.grid_cell_size
                 cell_y = segment.y // self.grid_cell_size
                 cell_key = (cell_x, cell_y)
-                if cell_key not in self.spatial_grid:
-                    self.spatial_grid[cell_key] = {'food': [], 'snake_ids': []}
-                if player_id not in self.spatial_grid[cell_key]['snake_ids']:
-                    self.spatial_grid[cell_key]['snake_ids'].append(player_id)
+
+                if cell_key not in new_grid:
+                    new_grid[cell_key] = {'food': [], 'snake_ids': set()}
+
+                new_grid[cell_key]['snake_ids'].add(player_id)
+
+        self.spatial_grid = new_grid
 
     def get_viewport_for_snake(self, snake: Snake) -> Viewport:
         """Возвращает область видимости для змеи"""
@@ -269,31 +246,32 @@ class Server:
         return Viewport(head.x, head.y, viewport_width, viewport_height)
 
     def get_objects_in_viewport(self, viewport: Viewport):
-        """Оптимизированная версия с предварительной фильтрацией ячеек"""
-        visible_food = []
         visible_snake_ids = set()
+        visible_food = []
 
-        # Быстро вычисляем диапазон ячеек
-        start_cell_x = max(-self.width // 2, viewport.left) // self.grid_cell_size
-        end_cell_x = min(self.width // 2, viewport.right) // self.grid_cell_size
-        start_cell_y = max(-self.height // 2, viewport.top) // self.grid_cell_size
-        end_cell_y = min(self.height // 2, viewport.bottom) // self.grid_cell_size
+        # Быстро вычисляем диапазон ячеек один раз
+        start_x = max(viewport.left // self.grid_cell_size, -self.width // 2)
+        end_x = min(viewport.right // self.grid_cell_size, self.width // 2)
+        start_y = max(viewport.top // self.grid_cell_size, -self.height // 2)
+        end_y = min(viewport.bottom // self.grid_cell_size, self.height // 2)
 
-        # Быстрая проверка только нужных ячеек
-        for cell_x in range(int(start_cell_x), int(end_cell_x) + 1):
-            for cell_y in range(int(start_cell_y), int(end_cell_y) + 1):
+        left, right, top, bottom = viewport.left, viewport.right, viewport.top, viewport.bottom
+        spatial_grid = self.spatial_grid
+
+        for cell_x in range(int(start_x), int(end_x) + 1):
+            for cell_y in range(int(start_y), int(end_y) + 1):
                 cell_key = (cell_x, cell_y)
-                if cell_key in self.spatial_grid:
-                    cell_data = self.spatial_grid[cell_key]
+                if cell_key in spatial_grid:
+                    cell_data = spatial_grid[cell_key]
 
                     # Быстрая проверка еды
                     for food in cell_data.get('food', []):
-                        if (viewport.left <= food.point.x <= viewport.right and
-                                viewport.top <= food.point.y <= viewport.bottom):
+                        point = food.point
+                        if left <= point.x <= right and top <= point.y <= bottom:
                             visible_food.append(food)
 
                     # Быстрая проверка змей
-                    for player_id in cell_data.get('snake_ids', []):
+                    for player_id in cell_data.get('snake_ids', set()):
                         if player_id not in visible_snake_ids:
                             snake = self.snakes.get(player_id)
                             if snake and self._snake_intersects_viewport_fast(snake, viewport):
@@ -303,7 +281,6 @@ class Server:
 
     def _snake_intersects_viewport_fast(self, snake: Snake, viewport: Viewport) -> bool:
         """Быстрая проверка пересечения змеи с viewport"""
-        # Проверяем только голову и хвост для экономии
         head = snake.body[0]
         if viewport.contains_point(head):
             return True
@@ -320,6 +297,7 @@ class Server:
                 return True
 
         return False
+
     async def set_server_desc(self, server_desc):
         self.server_desc = server_desc
         await self.broadcast_chat_message({"type": "set_server_desc",
@@ -360,7 +338,7 @@ class Server:
             x = random.randint(x1, x2)
             y = random.randint(y1, y2)
             p = (x, y)
-            if not p in self.food:
+            if not p in self.food.keys():
                 break
         return x, y
 
@@ -413,8 +391,9 @@ class Server:
         x = random.randint(x1, x2)
         y = random.randint(y1, y2)
         self.add_food(x, y)
+
     def add_food(self, x, y, type_="default", color="red", size=1):
-        self.food.append(Food(Point(x, y), type_=type_, color=color, size=size))
+        self.food[(x, y)] = (Food(Point(x, y), type_=type_, color=color, size=size))
         # self.logger.debug(f"new food object at {x}, {y}")
 
     def generate_food(self):
@@ -422,8 +401,6 @@ class Server:
 
             if len(self.food) < self.max_food:
                 self.add_random_food()
-
-
 
     def get_player(self, player_id):
 
@@ -508,50 +485,76 @@ class Server:
         new_head.x += dx
         new_head.y += dy
 
-        # Быстрая проверка стен
-        walls = self.get_map_rect()  # Используем кэш
-        if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
-            await self.player_death(player_id, "%NAME% crashed into the border")
-            return
+        # Проверяем коллизии с новой позицией головы
+        if await self.check_collision(player_id, new_head, head):
+            return  # Если есть коллизия, выходим
 
-        # Оптимизированная проверка коллизий с использованием spatial grid
-        head_cell_x = new_head.x // self.grid_cell_size
-        head_cell_y = new_head.y // self.grid_cell_size
-        head_cell_key = (head_cell_x, head_cell_y)
-
-        # Проверка коллизий с другими змеями
-        if head_cell_key in self.spatial_grid:
-            for other_id in self.spatial_grid[head_cell_key].get('snake_ids', []):
-                if other_id == player_id:
-                    continue
-                other_snake = self.snakes[other_id]
-                if other_snake.alive and new_head in other_snake.body:
-                    await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
-                    self.players[other_id].kills += 1
-                    return
-
-        # Проверка коллизий с собой (только первые N сегментов)
-        max_self_check = len(snake.body)  # Проверяем только первые 10 сегментов
-        for i, segment in enumerate(list(snake.body)[1:1 + max_self_check]):
-            if new_head.x == segment.x and new_head.y == segment.y:
-                await self.player_death(player_id, f'%NAME% crashed into his tail')
-                return
-
-        # Проверка еды через spatial grid
+        # Если коллизий нет, продолжаем движение
         food_eaten = False
-        if head_cell_key in self.spatial_grid:
-            for i, food in enumerate(self.spatial_grid[head_cell_key].get('food', [])):
-                if new_head.x == food.point.x and new_head.y == food.point.y:
-                    # Нашли еду - удаляем и выходим
-                    self.food.remove(food)
-                    snake.add_segment()
-                    food_eaten = True
-                    break
+        food_key = (new_head.x, new_head.y)
+        if food_key in self.food:
+            del self.food[food_key]
+            snake.add_segment()
+            food_eaten = True
 
         # Move snake
         snake.body.appendleft(new_head)
-        if not food_eaten:  # Удаляем хвост только если не съели еду
+        if not food_eaten:
             snake.remove_segment()
+
+    def check_collision_fast(self, player_id, point):
+        """Быстрая проверка коллизий через spatial grid"""
+        cell_x = point.x // self.grid_cell_size
+        cell_y = point.y // self.grid_cell_size
+        cell_key = (cell_x, cell_y)
+
+        if cell_key in self.spatial_grid:
+            for seg_x, seg_y, seg_player_id in self.spatial_grid[cell_key].get('snake_segments', set()):
+                if point.x == seg_x and point.y == seg_y:
+                    if seg_player_id != player_id:  # Столкновение с другой змеей
+                        return True
+                    else:
+                        # Нужно проверить, что это не голова текущей змеи
+                        snake = self.snakes[player_id]
+                        if point != snake.body[0]:  # Если это не голова
+                            return True
+        return False
+
+    async def check_collision(self, player_id, new_head, old_head):
+        """Полная проверка коллизий со всеми змеями на карте"""
+
+        walls = self.get_map_rect()
+        if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
+            await self.player_death(player_id, "%NAME% crashed into the border")
+            return True
+
+        # Проверка коллизий со всеми змеями (не только видимыми)
+        for other_id, other_snake in self.snakes.items():
+            if other_id == player_id:
+                continue  # Проверка с собой отдельно
+
+            if other_snake.alive and self.point_in_snake_body(new_head, other_snake):
+                await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
+                self.players[other_id].kills += 1
+                return True
+
+        # Проверка коллизии с собой
+        snake = self.snakes.get(player_id)
+        if snake is None:
+            return
+        if self.point_in_snake_body(new_head, snake, exclude_head=True):
+            await self.player_death(player_id, "%NAME% crashed into his tail")
+            return True
+
+        return False
+
+    def point_in_snake_body(self, point, snake, exclude_head=False):
+        """Проверяет, находится ли точка в теле змеи"""
+        start_index = 1 if exclude_head else 0
+        for i in range(start_index, len(snake.body)):
+            if point.x == snake.body[i].x and point.y == snake.body[i].y:
+                return True
+        return False
 
     async def is_move_now(self, now):
 
@@ -660,7 +663,7 @@ class Server:
 
         # Кэш еды
         self._food_dict_cache = {}
-        for food in self.food:
+        for xy, food in self.food.items():
             food_key = (food.point.x, food.point.y, food.color)
             self._food_dict_cache[food_key] = self._food_snake_to_dict(food)
 
@@ -675,6 +678,7 @@ class Server:
             'direction': snake.direction,
             'is_fast': snake.is_fast
         }
+
     def _food_snake_to_dict(self, food: Food):
         return {
             'x': food.point.x,
@@ -693,7 +697,6 @@ class Server:
             "deaths": player.deaths
         }
 
-
     async def broadcast_chat_message(self, data):
         connections_ = copy.copy(self.connections)
         to_send = json.dumps(data)
@@ -706,7 +709,6 @@ class Server:
             except websockets.exceptions.ConnectionClosedOK as e:
                 pass
 
-
     async def get_stilizate_name_color(self, player_id, text=None):
         color = self.players.get(player_id, {}).color
         if text == None:
@@ -718,7 +720,6 @@ class Server:
             color = "white"
 
         return f"<{color}>{text}</{color}>"
-
 
     async def handle_client_chat_message(self, player_id, message: str):
         con = self.connections[player_id]
@@ -737,7 +738,6 @@ class Server:
             await self.broadcast_chat_message(
                 {"type": "chat_message", "data": f"{message}",
                  "from_user": f"{await self.get_stilizate_name_color(player_id)}"})
-
 
     async def handle_client_data(self, player_id: str, data: dict):
         self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
@@ -784,10 +784,8 @@ class Server:
 
         # self.players[player_id].alive = True
 
-
     async def respawn(self, player_id):
         await self.spawn(player_id)
-
 
     def get_pretty_address(self, websocket):
         if len(websocket.remote_address) == 2:
@@ -795,12 +793,10 @@ class Server:
         else:
             return str(websocket.remote_address)
 
-
     def is_single_color_valid(self, color):
         if color in self.snake_colors:
             return True
         return False
-
 
     def is_color_valid(self, color):
         list_head_body = color.split(";", maxsplit=2)
@@ -824,14 +820,14 @@ class Server:
 
         for n, i in enumerate(ls):
             if not self.is_single_color_valid(i):
-                raise ValueError(f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
+                raise ValueError(
+                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
 
         out = {"body": ls}
         if not head_str is None:
             out["head"] = head_str
             out["name_color"] = "white"
         return out
-
 
     async def handle_connection(self, websocket):
         if len(self.players) >= self.max_players:
@@ -895,7 +891,6 @@ class Server:
             await self.remove_player(player_id)
             await websocket.close()
 
-
     async def sometimes_steal_body(self, player_id):
         snake = self.snakes[player_id]
         if not snake.alive:
@@ -908,6 +903,7 @@ class Server:
                     f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
 
                 snake.remove_segment(segments_to_remove, min_pop_size=self.min_steling_snake_size)
+
     async def fast_snake_steal_body(self, player_id):
 
         snake = self.snakes[player_id]
@@ -965,34 +961,34 @@ class Server:
         try:
             # Обновляем пространственное разбиение
 
-
             connections_ = copy.copy(self.connections)
             for player_id, ws in connections_.items():
                 try:
                     # Отправляем частичное состояние для каждого игрока
                     state = self.to_dict(player_id)
-                    # self.logger.info("send state")
-                    await ws.send(json.dumps(state))
+                    if self._send_cache.get(player_id) != state:
+                        await ws.send(json.dumps(state))
+                        self._send_cache[player_id] = state
+
+                    else:
+                        pass
+                        # self.logger.debug("skipping send (cache)")
                 except websockets.exceptions.ConnectionClosedOK:
                     pass
         except Exception as e:
             self.logger.error("Error in send_game_state_to_all:")
             self.logger.exception(e)
 
-
     async def game_loop(self):
         try:
             while True:
-                # if random.random() < 0.01:
-                #     self.logger.info("ITER game_loop")
-
                 now = time()
 
                 if now >= self.old_tick_time + self.tick:
                     self.old_tick_time = now
                     await self.on_tick()
 
-                    # # Optional: Warn if TPS is too low
+                    # Optional: Warn if TPS is too low
                     # if hasattr(self, 'tps') and self.tps < 20 and self.tps > 0:
                     #     self.logger.warning(f"Low TPS: {self.tps:.2f}")
 
@@ -1001,7 +997,6 @@ class Server:
             self.logger.exception(e)
         finally:
             self.logger.info("game_loop closed")
-
 
     async def run(self):
         self.game_task = asyncio.create_task(self.game_loop())

@@ -157,7 +157,7 @@ function toggleSpeed(isFast){
 
 
 function handleServerMessage(data) {
-    //console.log("New packet:", data);
+    console.log("New packet:", data);
     switch (data.type) {
 
         case "player_id":
