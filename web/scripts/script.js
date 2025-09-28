@@ -157,7 +157,7 @@ function toggleSpeed(isFast){
 
 
 function handleServerMessage(data) {
-    console.log("New packet:", data);
+    //console.log("New packet:", data);
     switch (data.type) {
 
         case "player_id":
@@ -639,11 +639,11 @@ function showAlert(title, message, instruction) {
     document.querySelector('#alert-screen').style.display = "flex";
 }
 
-function showError(title, message) { // Can be XSS injection!!!
+function showError(title, message) {
     closeAlert();
     gameState.errorData = { title, message};
     document.querySelector('#error-screen .title').textContent = title;
-    document.querySelector('#error-screen .info-message').textContent = message;
+    document.querySelector('#error-screen .info-message').textContent = escapeHtml(message);
     // document.querySelector('#error-screen .button').textContent = ;
     document.querySelector('#error-screen').style.display = "flex";
 }

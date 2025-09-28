@@ -53,16 +53,16 @@ display: flex;
 }
 
 .menu-title {
-    font-size: 140%;
-    margin: 10px;
-    color: var(--title-text-color);
-    text-align: center;
+  font-size: 1.5em;
+  margin: 0.3em;
+  color: var(--title-text-color);
+  text-align: center;
 }
 
 .menu-subtitle {
-    margin: 10px;
-    color: var(second-text-color);
-    text-align: center;
+  margin: 0.2em;
+  color: var(--second-text-color);
+  text-align: center;
 }
 
 .menu-input {
@@ -84,9 +84,7 @@ input:focus {
 
 .info-button {
     width: 100%;
-
     min-width: 250px;
-
     margin: 5px;
 
 }
@@ -104,7 +102,7 @@ input:focus {
     transition: opacity 0.3s ease;
     position: absolute;
 
-    left: 10px;
+    left: 0.5em;
     width: 500px;
     background-color: var(--chat-bg-color);
     border: 1px solid var(--pad-border-color);
@@ -112,11 +110,11 @@ input:focus {
 }
 
 #chat-container.chat-top {
-    top: 10px;
+    top: 0.5em;
 }
 
 #chat-container.chat-bottom {
-    bottom: 10px;
+    bottom: 0.5em;
 }
 
 #chat-messages { /* scrollbar */
@@ -148,7 +146,7 @@ input:focus {
 }
 
 #chat-messages {
-    height: 150px;
+    height: 10em;
     overflow-y: auto;
     padding: 5px;
 }
@@ -298,7 +296,13 @@ input:focus {
 .table-player-stats tr:hover td {
 }
 
-
+#your-score {
+    color: var(--text-color);
+    font-size: 12px;
+}
+#your-score-value {
+    font-size: 1.8em;
+}
 
 .instruction {
     margin: 30px;

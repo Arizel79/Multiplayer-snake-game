@@ -1,7 +1,14 @@
 /* styles.css */
 :root {
-  --font: 20px monospace, sans-serif;
-  --input-font: 18px monospace, Arial, sans-serif;
+  --font: 16px monospace, sans-serif;
+
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+
+
+  --input-font: 1.2em monospace, Arial, sans-serif;
   --text-color: white;
   --bg-color: black;
   --second-text-color: green;
@@ -23,7 +30,7 @@
   --pad-bg-color: rgba(50, 50, 50, .9);
   --pad-border-color: rgba(100, 100, 100, .7);
   --title-text-color: #00ff00;
-  --border-radius: 5px;
+  --border-radius: 0.3em;
   --link-text-color: #00ff00;
   --link-text-color-hover: #99ff00;
   --menu-bg-color: rgba(17, 17, 17, .7);
@@ -77,6 +84,7 @@ button.default-btn {
   cursor: pointer;
   min-width: 300px;
   font: var(--font);
+  font-size: var(--spacing-md);
   margin: 5px;
   padding: 10px;
   transition: background-color 0.2s ease;
@@ -148,18 +156,7 @@ input:focus {
   align-items: center;
 }
 
-.menu-title {
-  font-size: 1.4em;
-  margin: 10px;
-  color: var(--title-text-color);
-  text-align: center;
-}
 
-.menu-subtitle {
-  margin: 10px;
-  color: var(--second-text-color);
-  text-align: center;
-}
 
 .menu-input {
   width: 300px;

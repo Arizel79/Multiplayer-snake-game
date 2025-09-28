@@ -52,6 +52,6 @@ const gameState = {
 
 
 const default_player_name = "";
-const default_server = "192.168.1.25:8090";
+const default_server = "localhost:8090";
 const show_menu_server_address_input = true;
 const can_user_change_server = true;
