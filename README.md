@@ -1,6 +1,8 @@
 # Multiplayer snake game
 Multiplayer snake game writen on python with support for 3 clients: web, console (cli) and pygame (gui)
 
+You can play [here](http://protein-gnu.gl.at.ply.gg:34472/game.html)
+
 - [x] Console client (ascii graphics)
 - [x] GUI client (pygame library)
 - [x] Web client (writen on JS)
