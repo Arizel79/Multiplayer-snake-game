@@ -1,8 +1,17 @@
+/* Game css */
+
 @import url("desktop.css");
 @import url("mobile.css");
 
+@import url("buttons.css");
+@import url("main-menu.css");
+@import url("input.css");
+@import url("alerts-like.css");
+@import url("chat.css");
+@import url("tablist.css");
+@import url("other.css");
+
 :root {
-  /* Дефолтные значения */
   --chat-scrollbar-width: 10px;
   --chat-scrollbar-color: rgba(100, 100, 100, 0.7);
   --chat-scrollbar-bg-color: rgba(30, 30, 30, 0.3);
@@ -10,7 +19,6 @@
   --chat-input-bg-color: rgba(0, 0, 0, 0.3);
 
   --chat-bg-color: rgba(30, 30, 30, 0.8);
-
 }
 
 #game-container {
@@ -31,171 +39,8 @@ position: absolute;
    left: 0;
 }
 
-#main-menu {
-    background-color: var(--menu-bg-color);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 10;
-}
-#play-form {
-display: flex;
-    flex-direction: column;
-        justify-content: center;
-        align-items: center;
-}
-
-.menu-title {
-  font-size: 1.5em;
-  margin: 0.3em;
-  color: var(--title-text-color);
-  text-align: center;
-}
-
-.menu-subtitle {
-  margin: 0.2em;
-  color: var(--second-text-color);
-  text-align: center;
-}
-
-.menu-input {
-    width: 300px;
-    padding: 8px;
-    margin: 5px;
-    color: var(--menu-input-text-color);
-    background-color: var(--menu-input-bg-color);
-    border: 1px solid  var(--menu-input-border-color);
-    border-radius: var(--border-radius);
-}
-
-input:focus {
-      border: 1px solid var(--menu-input-border-color-focus);
-}
 
 
-
-
-.info-button {
-    width: 100%;
-    min-width: 250px;
-    margin: 5px;
-
-}
-
-.button-container {
-    width: 100%;
-}
-
-.info-button:hover {
-    background-color: var(--button-bg-color-hover);
-}
-
-#chat-container {
-    opacity: 1;
-    transition: opacity 0.3s ease;
-    position: absolute;
-
-    left: 0.5em;
-    width: 500px;
-    background-color: var(--chat-bg-color);
-    border: 1px solid var(--pad-border-color);
-    display: none;
-}
-
-#chat-container.chat-top {
-    top: 0.5em;
-}
-
-#chat-container.chat-bottom {
-    bottom: 0.5em;
-}
-
-#chat-messages { /* scrollbar */
-  /* Для Firefox */
-  scrollbar-width: auto;
-  scrollbar-color: var(--chat-scrollbar-color) var(--chat-scrollbar-bg-color);
-
-  /* Для WebKit-браузеров */
-  &::-webkit-scrollbar {
-    width: var(--chat-scrollbar-width);
-    height: var(--chat-scrollbar-width);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--chat-scrollbar-color);
-    border-radius: calc(var(--chat-scrollbar-width) / 2);
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--chat-scrollbar-bg-color);
-    border-radius: calc(var(--chat-scrollbar-width) / 2);
-  }
-
-  &::-webkit-scrollbar-corner {
-    background: transparent;
-  }
-}
-
-#chat-messages {
-    height: 10em;
-    overflow-y: auto;
-    padding: 5px;
-}
-
-#chat-input {
-    width: 100%;
-    padding: 5px;
-    background-color: var(--chat-input-bg-color);
-    color: var(--chat-input-text-color);
-    border: none;
-    box-sizing: border-box; /* Добавьте это свойство */
-}
-
-.chat-message {
-    margin: 3px 0;
-    word-wrap: break-word;
-    font-size: 70%;
-}
-
-#mini-chat {
-    position: absolute;
-    top: 50px;
-    left: 10px;
-    width: 500px;
-    max-height: 150px;
-    overflow: hidden;
-    background-color: var(--mini-chat-bg-color);
-    z-index: 2;
-    display: none; /* По умолчанию скрыт */
-    transition: opacity 0.2s ease;
-    padding: 5px;
-}
-
-
-
-#mini-chat.chat-top {
-    top: 10px;
-}
-
-#mini-chat.chat-bottom {
-    bottom: 10px;
-}
-
-#mini-chat-messages .chat-message {
-    margin: 3px 0;
-    word-wrap: break-word;
-    color: #d0d0ds0;
-    opacity: 0.9;
-}
 
 #player-info {
     position: absolute;
@@ -208,6 +53,12 @@ input:focus {
     padding: 5px;
 }
 
+.like-alert-message-container {
+    padding: 10%;
+      display: flex;
+  flex-direction: column; /* Если элементы должны быть в колонке */
+  align-items: center; /* Выравнивание по горизонтали */
+}
 
 #death-screen, #alert-screen, #error-screen {
     position: absolute;
@@ -219,7 +70,7 @@ input:focus {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 5;
+
 }
 .screen-content {
     display: flex;
@@ -310,88 +161,7 @@ input:focus {
 }
 
 
-#tablist {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translate(-50%);
-    min-width: 400px;
-    width: 600px;
 
-    background-color: var(--pad-bg-color);
-    border: 1px solid var(--pad-border-color);
-    padding: 20px;
-    display: none;
-    z-index: 5;
-}
-
-#tablist-players-list {
-    max-height: 600px; /* Фиксированная высота */
-    overflow-y: auto;
-}
-
-#tablist-title {
-    font-size: 130%;
-    text-align: center;
-    margin-bottom: 10px;
-
-}
-#tablist-server-ip, #tablist-server-desc {
-    text-align: center;
-}
-#tablist-players-count {
-    text-align: center;
-    margin-top: 10px;
-}
-
-
-.tablist-players-table {
-    width: 100%;
-    table-layout: fixed;
-    overflow-y: auto;
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-.tablist-players-table th {
-    background-color: #2c2c2c;
-    color: #e0e0e0;
-    text-align: left;
-    padding: 8px 12px;
-    border-bottom: 2px solid #444;
-}
-
-.tablist-players-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #333;
-}
-
-.tablist-players-table tr:hover {
-    background-color: #3a3a3a;
-}
-
-.current-player {
-    background-color: #2a2a5a !important;
-    border-left: 3px solid #6464ff;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.status-badge.alive {
-    background-color: #2e7d32;
-    color: #b9f6ca;
-}
-
-.status-badge.dead {
-    background-color: #c62828;
-    color: #ffcdd2;
-}
 
 #debug-info {
     position: absolute;

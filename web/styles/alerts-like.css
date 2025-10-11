@@ -1,0 +1,54 @@
+#death-screen, #alert-screen, #error-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+}
+
+.screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#death-screen {
+  background-color: rgba(150, 0, 0, 0.3);
+}
+
+#error-screen {
+  background-color: rgba(50, 0, 0, 0.5);
+}
+
+#alert-screen {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+
+.info-message {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#death-screen .title {
+  color: var(--highlight-text-color);
+}
+
+#death-reason {
+  font-size: 1.2em;
+}
+
+#alert-screen .title {
+  color: var(--text-color);
+}
+
+.player-stats {
+  text-align: center;
+}

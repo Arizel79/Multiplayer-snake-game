@@ -1,13 +1,54 @@
-function getRandomSnakeColor() {
-    const skins = [
-        "red,orange,yellow,lime,green,turquoise,cyan,blue", // радужный
-        "blue,cyan,turquoise,lime,yellow,lime,turquoise", // из комментария
-        "red,orange,yellow,green,cyan,blue,cyan,green,yellow", // классический радужный
-        "blue,cyan,green,yellow,orange,red,orange,yellow,green,cyan", // фиолетовый радужный
-        "blue,light_blue,cyan,turquoise,green,turquoise,cyan,light_blue" // океанский
-    ];
 
-    return skins[Math.floor(Math.random() * skins.length)];
+
+
+const gameState = {
+    state: "main_menu",
+    canvas: null,
+    ctx: null,
+    socket: null,
+    playerId: null,
+    playerName: "",
+    serverAddress: "",
+    showChat: false,
+    showTablist: false,
+    showDebug: false,
+    chatInput: "",
+    chatMessages: [],
+    gameState: null,
+    lastMessages: {
+        visible: false,
+        timeout: null,
+        fadeDuration: 300
+    },
+    lastDirection: null,
+    keysPressed: {},
+    deathMessage: "",
+    serverDescription: "Welcome to server!",
+    alertData: null,
+    isFast: false
+};
+
+function loadSettings() {
+    let json_settings = localStorage.getItem("snakeGameSettings");
+    const settings = JSON.parse(json_settings) || {};
+    console.log("settings loaded: " + json_settings)
+    document.getElementById("name-input").value = settings.playerName || default_player_name;
+    document.getElementById("color-input").value = settings.playerColor || getRandomSnakeColor();
+    document.getElementById("server-input").value = settings.serverAddress || default_server;
+}
+
+function saveSettings() {
+    const settings = {
+        playerName: gameState.playerName,
+        playerColor: gameState.playerColor,
+        serverAddress: gameState.serverAddress
+    };
+    localStorage.setItem("snakeGameSettings", JSON.stringify(settings));
+    console.log("settings saved: " + JSON.stringify(settings))
+}
+
+function getRandomSnakeColor() {
+    return SKINS[Math.floor(Math.random() * SKINS.length)];
 }
 
 function convertCustomTagsToHtml(input) {
@@ -24,7 +65,6 @@ function convertCustomTagsToHtml(input) {
         u: (content) => `<u>${content}</u>`,
     };
 
-    // Экранирование HTML в текстовых узлах
     function escapeHtml(text) {
         return text
             .replace(/&/g, "&amp;")
@@ -166,3 +206,22 @@ function escapeHtml(unsafe) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
+// Modal windows
+
+function showHelp() {
+    document.getElementById('help-screen').style.display = 'flex';
+}
+
+function closeHelp() {
+    document.getElementById('help-screen').style.display = 'none';
+}
+
+function closeAll() {
+    closeAlert();
+    closeError();
+    closeDeath();
+    closeTablist();
+    closeChat();
+}
+

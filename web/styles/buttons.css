@@ -1,0 +1,60 @@
+button.default-btn {
+  color: var(--button-text-color);
+  background-color: var(--button-bg-color);
+  border: 1px solid var(--button-border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  min-width: 300px;
+  font: var(--font);
+  font-size: var(--spacing-md);
+  margin: 5px;
+  padding: 10px;
+  transition: background-color 0.2s ease;
+}
+
+
+
+button.default-btn:hover {
+  background-color: var(--button-bg-color-hover);
+}
+
+.button-container {
+    width: 100%;
+}
+
+.info-button:hover {
+    background-color: var(--button-bg-color-hover);
+}
+
+
+.info-button {
+  width: 40%;
+  min-width: 250px;
+  max-width: 90%;
+  margin: 8px;
+}
+
+.info-button:hover {
+  background-color: var(--button-bg-color-hover);
+}
+
+#fullscreen-button, #fullscreen-button * {
+  width: 40px;
+  height: 40px;
+  border: 10px solid var(--button-border-color);
+  border-radius: var(--border-radius);
+  background: rgba(90, 90, 90, 1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+#fullscreen-button:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#play-button {
+
+    margin: 0;
+    margin-top: 2%;
+}

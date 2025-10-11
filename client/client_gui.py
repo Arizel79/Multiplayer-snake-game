@@ -4,6 +4,7 @@ from random import randint, choice
 
 from client_base import *
 import random
+
 # from pyAsciiEngine import *
 import pygame
 from pygame.locals import *
@@ -25,7 +26,7 @@ class HTMLTagStripper(HTMLParser):
         self.text_parts.append(data)
 
     def get_text(self):
-        return unescape(''.join(self.text_parts))
+        return unescape("".join(self.text_parts))
 
 
 def strip_html_tags(html_string):
@@ -52,7 +53,6 @@ class ClientGUI(ClientBase):
             "blue": "#3232FF",
             "violet": "#7F00FE",
             "magenta": (255, 50, 255),
-
         }
         snake_colors = snake_colors_map.keys()
 
@@ -76,9 +76,9 @@ github.com/Arizel79/Multiplayer-snake-game
         self.TEXT_COLOR = (255, 255, 255)
 
         # Fonts
-        self.font_small = pygame.font.SysFont('Arial', 18)
-        self.font_medium = pygame.font.SysFont('Arial', 20)
-        self.font_large = pygame.font.SysFont('Arial', 24)
+        self.font_small = pygame.font.SysFont("Arial", 18)
+        self.font_medium = pygame.font.SysFont("Arial", 20)
+        self.font_large = pygame.font.SysFont("Arial", 24)
 
         self.chat_active = False
         self.chat_input = ""
@@ -115,14 +115,16 @@ github.com/Arizel79/Multiplayer-snake-game
 
         elif event.type == VIDEORESIZE:
             # Handle window resize
-            name_input = self.ui_elements_main_menu['name_input'].get_text()
-            ip_input = self.ui_elements_main_menu['ip_input'].text
+            name_input = self.ui_elements_main_menu["name_input"].get_text()
+            ip_input = self.ui_elements_main_menu["ip_input"].text
 
             self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
             self.manager_main_menu.set_window_resolution((event.w, event.h))
             for element in self.ui_elements_main_menu.values():
                 element.kill()
-            self.ui_elements_main_menu = self.create_centered_elements_main_menu(name_input, ip_input)
+            self.ui_elements_main_menu = self.create_centered_elements_main_menu(
+                name_input, ip_input
+            )
 
         else:
             # self.logger.debug(f"Add to event queue: {event}")
@@ -158,7 +160,10 @@ github.com/Arizel79/Multiplayer-snake-game
                             self.is_open_tablist = not self.is_open_tablist
                         elif event.key == K_F3:
                             self.show_debug = not self.show_debug
-                        elif event.key in [K_w, K_UP] + [K_s, K_DOWN] + [K_a, K_LEFT] + [K_d, K_RIGHT]:
+                        elif event.key in [K_w, K_UP] + [K_s, K_DOWN] + [
+                            K_a,
+                            K_LEFT,
+                        ] + [K_d, K_RIGHT]:
                             self.input_queue.put_nowait(event)
 
                 elif self.state == "died" and event.key == K_SPACE:
@@ -170,32 +175,39 @@ github.com/Arizel79/Multiplayer-snake-game
                 elif self.state == "connecting" and event.key == K_SPACE:
                     self.finish_game_session()
             elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-                if event.ui_element == self.ui_elements_main_menu['name_input']:
-                    self.player_name = self.ui_elements_main_menu['name_input'].get_text()
+                if event.ui_element == self.ui_elements_main_menu["name_input"]:
+                    self.player_name = self.ui_elements_main_menu[
+                        "name_input"
+                    ].get_text()
                     # self.ui_elements['output'].set_text(f"Entered: {entered_text}")
                     # output_text = f"Entered: {entered_text}"  # Сохраняем состояние
                     # print(f"Player: {self.player_name}")
-                elif event.ui_element == self.ui_elements_main_menu['ip_input']:
-                    self.server = self.ui_elements_main_menu['ip_input'].get_text()
+                elif event.ui_element == self.ui_elements_main_menu["ip_input"]:
+                    self.server = self.ui_elements_main_menu["ip_input"].get_text()
                     # self.ui_elements['output'].set_text(f"Entered: {entered_text}")
                     # output_text = f"Entered: {entered_text}"  # Сохраняем состояние
                     # print(f"IP: {self.server}")
 
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == self.ui_elements_main_menu['play_button']:
-                    self.player_name = self.ui_elements_main_menu['name_input'].get_text()
-                    self.server = self.ui_elements_main_menu['ip_input'].get_text()
+                if event.ui_element == self.ui_elements_main_menu["play_button"]:
+                    self.player_name = self.ui_elements_main_menu[
+                        "name_input"
+                    ].get_text()
+                    self.server = self.ui_elements_main_menu["ip_input"].get_text()
 
                     self.start_game_session()
 
                     # entered_text = self.ui_elements['text_input'].get_text()
                     # self.ui_elements['output'].set_text(f"Hello, {entered_text}!")
                     # output_text = f"Hello, {entered_text}!"  # Сохраняем состояние
+
     def start_game_session(self):
         self.is_game_session_now = True
         self.state = "start_session"
 
-    def create_centered_elements_main_menu(self, name_text=None, ip_text=None, info_text="Welcome!"):
+    def create_centered_elements_main_menu(
+        self, name_text=None, ip_text=None, info_text="Welcome!"
+    ):
         width, height = self.screen.get_size()
         manager = self.manager_main_menu
         elements = {}
@@ -211,74 +223,67 @@ github.com/Arizel79/Multiplayer-snake-game
         for i, line in enumerate(logo):
             label = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(
-                    (width - input_width) // 2,
-                    y_offset,
-                    input_width,
-                    element_height
+                    (width - input_width) // 2, y_offset, input_width, element_height
                 ),
                 text=line,
                 manager=manager,
-                object_id="#logo"
+                object_id="#logo",
             )
-            elements[f'logo_{i}'] = label
+            elements[f"logo_{i}"] = label
             y_offset += element_height // 2  # Уменьшаем вертикальный отступ для лого
 
         # Центрируем основную группу элементов
         start_y = y_offset + padding
 
         # Поля ввода
-        elements['name_input'] = pygame_gui.elements.UITextEntryLine(
+        elements["name_input"] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
-                (width - input_width) // 2,
-                start_y,
-                input_width,
-                element_height
+                (width - input_width) // 2, start_y, input_width, element_height
             ),
             placeholder_text="Player name",
             initial_text=self.player_name,
-            manager=manager
+            manager=manager,
         )
         if name_text is not None:
-            elements['name_input'].set_text(name_text)
+            elements["name_input"].set_text(name_text)
 
-        elements['ip_input'] = pygame_gui.elements.UITextEntryLine(
+        elements["ip_input"] = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
                 start_y + element_height + padding // 2,
                 input_width,
-                element_height
+                element_height,
             ),
             placeholder_text="Server IP",
             initial_text=self.server,
-            manager=manager
+            manager=manager,
         )
         if ip_text is not None:
-            elements['ip_input'].set_text(ip_text)
+            elements["ip_input"].set_text(ip_text)
 
         # Кнопка
-        elements['play_button'] = pygame_gui.elements.UIButton(
+        elements["play_button"] = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
                 start_y + 2 * (element_height + padding // 2),
                 input_width,
-                element_height
+                element_height,
             ),
             text="PLAY",
-            manager=manager
+            manager=manager,
         )
 
         # Информационная метка
-        elements['info'] = pygame_gui.elements.UILabel(
+        elements["info"] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(
                 (width - input_width) // 2,
                 start_y + 3 * (element_height + padding // 2),
                 input_width,
-                element_height
+                element_height,
             ),
             text=info_text,
-            manager=manager
+            manager=manager,
         )
-
 
         return elements
 
@@ -288,8 +293,12 @@ github.com/Arizel79/Multiplayer-snake-game
             pygame.init()
             self.clock = pygame.time.Clock()
             pygame.display.set_caption("Multiplayer Snake Game")
-            self.screen = pygame.display.set_mode((self.default_width, self.default_height), pygame.RESIZABLE)
-            self.manager_main_menu = pygame_gui.UIManager((self.default_width, self.default_height))
+            self.screen = pygame.display.set_mode(
+                (self.default_width, self.default_height), pygame.RESIZABLE
+            )
+            self.manager_main_menu = pygame_gui.UIManager(
+                (self.default_width, self.default_height)
+            )
             self.manager_main_menu.get_theme().load_theme(r"client\theme.json")
             self.ui_elements_main_menu = self.create_centered_elements_main_menu()
 
@@ -297,7 +306,9 @@ github.com/Arizel79/Multiplayer-snake-game
             while self.input_thread_running:
                 time_delta = self.clock.tick(60) / 1000.0
                 self.render()
-                for event in pygame.event.get():  # Блокирующий вызов с небольшим таймаутом
+                for (
+                    event
+                ) in pygame.event.get():  # Блокирующий вызов с небольшим таймаутом
                     try:
 
                         self.first_handle_event(event)
@@ -337,13 +348,21 @@ github.com/Arizel79/Multiplayer-snake-game
                     elif event.key == K_F3:
                         self.show_debug = not self.show_debug
                     elif event.key in [K_w, K_UP]:
-                        await self.websocket.send(json.dumps({"type": "direction", "data": "up"}))
+                        await self.websocket.send(
+                            json.dumps({"type": "direction", "data": "up"})
+                        )
                     elif event.key in [K_s, K_DOWN]:
-                        await self.websocket.send(json.dumps({"type": "direction", "data": "down"}))
+                        await self.websocket.send(
+                            json.dumps({"type": "direction", "data": "down"})
+                        )
                     elif event.key in [K_a, K_LEFT]:
-                        await self.websocket.send(json.dumps({"type": "direction", "data": "left"}))
+                        await self.websocket.send(
+                            json.dumps({"type": "direction", "data": "left"})
+                        )
                     elif event.key in [K_d, K_RIGHT]:
-                        await self.websocket.send(json.dumps({"type": "direction", "data": "right"}))
+                        await self.websocket.send(
+                            json.dumps({"type": "direction", "data": "right"})
+                        )
                     elif event.key == K_q:
                         self.running = False
 
@@ -367,7 +386,7 @@ github.com/Arizel79/Multiplayer-snake-game
 
     async def wait_for_quit(self):
         while self.running == True:
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
             # print("state", self.state)
             # await self.input_handler()
         self.logger.debug("Wait_for_quit finished")
@@ -375,7 +394,7 @@ github.com/Arizel79/Multiplayer-snake-game
     async def wait_for_end_session(self):
         self.logger.debug("waiting session end start")
         while self.is_game_session_now and self.running:
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
             # self.logger.debug("waiting session finished")
             # await self.handle_input()
         self.logger.debug("wait_for_end_session finished")
@@ -401,7 +420,8 @@ github.com/Arizel79/Multiplayer-snake-game
         elif subtype == "chat_message":
             if not from_user is None:
                 self.add_chat_message(
-                    f"{from_user}<white>:</white> {html.escape(message.get('data', None))}")
+                    f"{from_user}<white>:</white> {html.escape(message.get('data', None))}"
+                )
             elif from_user in ["", None]:
                 self.add_chat_message(f"{message.get('data', None)}")
 
@@ -436,7 +456,9 @@ github.com/Arizel79/Multiplayer-snake-game
                 #     text = text.replace("<yellow>", "").replace("</yellow>", "")
                 text = text
 
-                msg_text = self.font_small.render(text, True, color)  # BUG: текст выходит за пределы фона
+                msg_text = self.font_small.render(
+                    text, True, color
+                )  # BUG: текст выходит за пределы фона
                 self.screen.blit(msg_text, (10, chat_y - (n * 20) - 25))
 
     def render_main_menu(self):
@@ -460,8 +482,8 @@ github.com/Arizel79/Multiplayer-snake-game
 
         if self.show_debug:
             self.render_debug_info()
-        #text = self.font_large.render(f"state: {self.state}; sesion: {self.is_game_session_now}", True, (255, 50, 50))
-        #self.screen.blit(text, (0, 0))
+        # text = self.font_large.render(f"state: {self.state}; sesion: {self.is_game_session_now}", True, (255, 50, 50))
+        # self.screen.blit(text, (0, 0))
         pygame.display.flip()
         # self.clock.tick(self.FPS)
 
@@ -475,7 +497,9 @@ github.com/Arizel79/Multiplayer-snake-game
         pygame.draw.rect(self.screen, (100, 100, 100), input_box, 2)
 
         # Chat input text
-        input_text = self.font_medium.render(f"> {self.chat_input}", True, self.TEXT_COLOR)
+        input_text = self.font_medium.render(
+            f"> {self.chat_input}", True, self.TEXT_COLOR
+        )
         self.screen.blit(input_text, (input_box.x + 5, input_box.y + 5))
 
         # Render chat messages above input
@@ -492,7 +516,6 @@ github.com/Arizel79/Multiplayer-snake-game
             if snake["alive"]:
                 color = self.get_color_for_segment(snake, n)
 
-
             else:
                 color = self.Color.died_snake
                 # color = self.Color.snake_colors_map.get(snake["color"], (200, 200, 200))
@@ -501,41 +524,73 @@ github.com/Arizel79/Multiplayer-snake-game
             screen_y = height // 2 + (segment["y"] - center_y) * cell_size
 
             if n == 0:  # Head
-                pygame.draw.rect(self.screen, color,
-                                 (screen_x, screen_y, cell_size, cell_size))
+                pygame.draw.rect(
+                    self.screen, color, (screen_x, screen_y, cell_size, cell_size)
+                )
                 # Draw eyes
                 eye_offset = cell_size // 4
                 if snake["direction"] == "up":
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + cell_size // 3, screen_y + eye_offset),
-                                       cell_size // 8)
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + 2 * cell_size // 3, screen_y + eye_offset),
-                                       cell_size // 8)
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + cell_size // 3, screen_y + eye_offset),
+                        cell_size // 8,
+                    )
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + 2 * cell_size // 3, screen_y + eye_offset),
+                        cell_size // 8,
+                    )
                 elif snake["direction"] == "down":
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + cell_size // 3, screen_y + cell_size - eye_offset),
-                                       cell_size // 8)
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + 2 * cell_size // 3, screen_y + cell_size - eye_offset),
-                                       cell_size // 8)
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + cell_size // 3, screen_y + cell_size - eye_offset),
+                        cell_size // 8,
+                    )
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (
+                            screen_x + 2 * cell_size // 3,
+                            screen_y + cell_size - eye_offset,
+                        ),
+                        cell_size // 8,
+                    )
                 elif snake["direction"] == "left":
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + eye_offset, screen_y + cell_size // 3),
-                                       cell_size // 8)
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + eye_offset, screen_y + 2 * cell_size // 3),
-                                       cell_size // 8)
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + eye_offset, screen_y + cell_size // 3),
+                        cell_size // 8,
+                    )
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + eye_offset, screen_y + 2 * cell_size // 3),
+                        cell_size // 8,
+                    )
                 elif snake["direction"] == "right":
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + cell_size - eye_offset, screen_y + cell_size // 3),
-                                       cell_size // 8)
-                    pygame.draw.circle(self.screen, (0, 0, 0),
-                                       (screen_x + cell_size - eye_offset, screen_y + 2 * cell_size // 3),
-                                       cell_size // 8)
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (screen_x + cell_size - eye_offset, screen_y + cell_size // 3),
+                        cell_size // 8,
+                    )
+                    pygame.draw.circle(
+                        self.screen,
+                        (0, 0, 0),
+                        (
+                            screen_x + cell_size - eye_offset,
+                            screen_y + 2 * cell_size // 3,
+                        ),
+                        cell_size // 8,
+                    )
             else:  # Body
-                pygame.draw.rect(self.screen, color,
-                                 (screen_x, screen_y, cell_size, cell_size))
+                pygame.draw.rect(
+                    self.screen, color, (screen_x, screen_y, cell_size, cell_size)
+                )
 
     def get_color_for_segment(self, snake, segment_n):
         n = segment_n
@@ -556,11 +611,14 @@ github.com/Arizel79/Multiplayer-snake-game
 
         else:
             raise ValueError(
-                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}")
+                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}"
+            )
 
         out_color = self.Color.snake_colors_map.get(color_str)
         if out_color is None:
-            self.logger.warning(f"Unknown color: {color_str}; snake color: {snake['color']} ")
+            self.logger.warning(
+                f"Unknown color: {color_str}; snake color: {snake['color']} "
+            )
             out_color = (255, 255, 255)
 
         return out_color
@@ -590,9 +648,12 @@ github.com/Arizel79/Multiplayer-snake-game
         for food in self.game_state["food"]:
             screen_x = width // 2 + (food["x"] - center_x) * cell_size
             screen_y = height // 2 + (food["y"] - center_y) * cell_size
-            pygame.draw.circle(self.screen, (255, 50, 50),
-                               (screen_x + cell_size // 2, screen_y + cell_size // 2),
-                               cell_size // 3)
+            pygame.draw.circle(
+                self.screen,
+                (255, 50, 50),
+                (screen_x + cell_size // 2, screen_y + cell_size // 2),
+                cell_size // 3,
+            )
 
     def get_visible_area_center(self):
         if self.player_id in self.game_state["snakes"]:
@@ -608,14 +669,27 @@ github.com/Arizel79/Multiplayer-snake-game
         center_x, center_y = self.get_visible_area_center()
         width, height = self.screen.get_size()
 
-        for x in range(self.game_state["map_borders"][0], self.game_state["map_borders"][2] + 1):
-            for y in range(self.game_state["map_borders"][1], self.game_state["map_borders"][3] + 1):
+        for x in range(
+            self.game_state["map_borders"][0], self.game_state["map_borders"][2] + 1
+        ):
+            for y in range(
+                self.game_state["map_borders"][1], self.game_state["map_borders"][3] + 1
+            ):
                 screen_x = width // 2 + (x - center_x) * cell_size
                 screen_y = height // 2 + (y - center_y) * cell_size
 
-                if (screen_x >= 0 and screen_x <= width and screen_y >= 0 and screen_y <= height):
-                    pygame.draw.rect(self.screen, self.GRID_COLOR,
-                                     (screen_x, screen_y, cell_size, cell_size), 1)
+                if (
+                    screen_x >= 0
+                    and screen_x <= width
+                    and screen_y >= 0
+                    and screen_y <= height
+                ):
+                    pygame.draw.rect(
+                        self.screen,
+                        self.GRID_COLOR,
+                        (screen_x, screen_y, cell_size, cell_size),
+                        1,
+                    )
 
     def render_ui(self):
         # Draw UI
@@ -625,11 +699,16 @@ github.com/Arizel79/Multiplayer-snake-game
 
         if self.player_id in self.game_state["snakes"]:
             snake = self.game_state["snakes"][self.player_id]
-            score_text = self.font_medium.render(f"Size: {snake['size']}", True, self.TEXT_COLOR)
+            score_text = self.font_medium.render(
+                f"Size: {snake['size']}", True, self.TEXT_COLOR
+            )
             self.screen.blit(score_text, (10, 10))
 
-            controls_text = self.font_small.render("WASD: Move | T: Chat | TAB: Player list | F3: Debug", True,
-                                                   self.TEXT_COLOR)
+            controls_text = self.font_small.render(
+                "WASD: Move | T: Chat | TAB: Player list | F3: Debug",
+                True,
+                self.TEXT_COLOR,
+            )
             self.screen.blit(controls_text, (10, height - 30))
 
         if len(self.chat_messages) > 0:
@@ -652,15 +731,21 @@ github.com/Arizel79/Multiplayer-snake-game
             for y in range(min_y - 1, max_y + 2):
                 screen_x = width // 2 + (x - center_x) * cell_size
                 screen_y = height // 2 + (y - center_y) * cell_size
-                pygame.draw.rect(self.screen, self.Color.border,
-                                 (screen_x, screen_y, cell_size, cell_size))
+                pygame.draw.rect(
+                    self.screen,
+                    self.Color.border,
+                    (screen_x, screen_y, cell_size, cell_size),
+                )
 
         for y in [min_y - 1, max_y + 1]:
             for x in range(min_x - 1, max_x + 2):
                 screen_x = width // 2 + (x - center_x) * cell_size
                 screen_y = height // 2 + (y - center_y) * cell_size
-                pygame.draw.rect(self.screen, self.Color.border,
-                                 (screen_x, screen_y, cell_size, cell_size))
+                pygame.draw.rect(
+                    self.screen,
+                    self.Color.border,
+                    (screen_x, screen_y, cell_size, cell_size),
+                )
 
     def render_game(self):
         # Draw game grid
@@ -707,16 +792,20 @@ github.com/Arizel79/Multiplayer-snake-game
                 f"Size: {snake.get('size', 0)}",
                 f"Max Size: {snake.get('max_size', 0)}",
                 f"Kills: {player.get('kills', 0)}",
-                f"Deaths: {player.get('deaths', 0)}"
+                f"Deaths: {player.get('deaths', 0)}",
             ]
 
             for i, stat in enumerate(stats):
                 stat_text = self.font_medium.render(stat, True, self.TEXT_COLOR)
-                stat_rect = stat_text.get_rect(center=(width // 2, height // 2 + 40 + i * 30))
+                stat_rect = stat_text.get_rect(
+                    center=(width // 2, height // 2 + 40 + i * 30)
+                )
                 self.screen.blit(stat_text, stat_rect)
 
         # Instructions
-        instructions = self.font_medium.render("Press SPACE to respawn", True, self.TEXT_COLOR)
+        instructions = self.font_medium.render(
+            "Press SPACE to respawn", True, self.TEXT_COLOR
+        )
         instructions_rect = instructions.get_rect(center=(width // 2, height - 100))
         self.screen.blit(instructions, instructions_rect)
 
@@ -734,8 +823,12 @@ github.com/Arizel79/Multiplayer-snake-game
         box_x = (width - box_width) // 2
         box_y = (height - box_height) // 2
 
-        pygame.draw.rect(self.screen, (50, 50, 50), (box_x, box_y, box_width, box_height))
-        pygame.draw.rect(self.screen, (100, 100, 100), (box_x, box_y, box_width, box_height), 2)
+        pygame.draw.rect(
+            self.screen, (50, 50, 50), (box_x, box_y, box_width, box_height)
+        )
+        pygame.draw.rect(
+            self.screen, (100, 100, 100), (box_x, box_y, box_width, box_height), 2
+        )
 
         # Title
         title = self.font_large.render("Alert", True, (255, 50, 50))
@@ -743,15 +836,19 @@ github.com/Arizel79/Multiplayer-snake-game
         self.screen.blit(title, title_rect)
 
         # Message
-        message_lines = text.split('\n')
+        message_lines = text.split("\n")
         for i, line in enumerate(message_lines):
             line_text = self.font_medium.render(line, True, self.TEXT_COLOR)
             line_rect = line_text.get_rect(center=(width // 2, box_y + 80 + i * 30))
             self.screen.blit(line_text, line_rect)
 
         # Instructions
-        instructions = self.font_medium.render("Press SPACE to continue", True, self.TEXT_COLOR)
-        instructions_rect = instructions.get_rect(center=(width // 2, box_y + box_height - 50))
+        instructions = self.font_medium.render(
+            "Press SPACE to continue", True, self.TEXT_COLOR
+        )
+        instructions_rect = instructions.get_rect(
+            center=(width // 2, box_y + box_height - 50)
+        )
         self.screen.blit(instructions, instructions_rect)
 
     def render_message(self, title="Title here", text="", instructions="instructions"):
@@ -768,8 +865,12 @@ github.com/Arizel79/Multiplayer-snake-game
         box_x = (width - box_width) // 2
         box_y = (height - box_height) // 2
 
-        pygame.draw.rect(self.screen, (50, 50, 50), (box_x, box_y, box_width, box_height))
-        pygame.draw.rect(self.screen, (100, 100, 100), (box_x, box_y, box_width, box_height), 2)
+        pygame.draw.rect(
+            self.screen, (50, 50, 50), (box_x, box_y, box_width, box_height)
+        )
+        pygame.draw.rect(
+            self.screen, (100, 100, 100), (box_x, box_y, box_width, box_height), 2
+        )
 
         # Title
         title = self.font_large.render(title, True, (255, 50, 50))
@@ -777,7 +878,7 @@ github.com/Arizel79/Multiplayer-snake-game
         self.screen.blit(title, title_rect)
 
         # Message
-        message_lines = text.split('\n')
+        message_lines = text.split("\n")
         for i, line in enumerate(message_lines):
             line_text = self.font_medium.render(line, True, self.TEXT_COLOR)
             line_rect = line_text.get_rect(center=(width // 2, box_y + 80 + i * 30))
@@ -785,7 +886,9 @@ github.com/Arizel79/Multiplayer-snake-game
 
         # Instructions
         instructions = self.font_medium.render(instructions, True, self.TEXT_COLOR)
-        instructions_rect = instructions.get_rect(center=(width // 2, box_y + box_height - 50))
+        instructions_rect = instructions.get_rect(
+            center=(width // 2, box_y + box_height - 50)
+        )
         self.screen.blit(instructions, instructions_rect)
 
     def render_tablist(self):
@@ -797,8 +900,17 @@ github.com/Arizel79/Multiplayer-snake-game
         tablist_x = (width - tablist_width) // 2
         tablist_y = (height - tablist_height) // 2
 
-        pygame.draw.rect(self.screen, (50, 50, 50), (tablist_x, tablist_y, tablist_width, tablist_height))
-        pygame.draw.rect(self.screen, (100, 100, 100), (tablist_x, tablist_y, tablist_width, tablist_height), 2)
+        pygame.draw.rect(
+            self.screen,
+            (50, 50, 50),
+            (tablist_x, tablist_y, tablist_width, tablist_height),
+        )
+        pygame.draw.rect(
+            self.screen,
+            (100, 100, 100),
+            (tablist_x, tablist_y, tablist_width, tablist_height),
+            2,
+        )
 
         # Title
         title = self.font_large.render("Player List", True, self.TEXT_COLOR)
@@ -806,7 +918,9 @@ github.com/Arizel79/Multiplayer-snake-game
         self.screen.blit(title, title_rect)
 
         # Server info
-        server_info = self.font_small.render(f"Server: {self.server}", True, self.TEXT_COLOR)
+        server_info = self.font_small.render(
+            f"Server: {self.server}", True, self.TEXT_COLOR
+        )
         self.screen.blit(server_info, (tablist_x + 10, tablist_y + 60))
 
         server_desc = self.font_small.render(self.server_desc, True, self.TEXT_COLOR)
@@ -817,7 +931,8 @@ github.com/Arizel79/Multiplayer-snake-game
         dead_count = len(self.game_state["players"]) - alive_count
         count_text = self.font_medium.render(
             f"Players ({len(self.game_state['players'])}): Alive: {alive_count} | Dead: {dead_count}",
-            True, self.TEXT_COLOR
+            True,
+            self.TEXT_COLOR,
         )
         self.screen.blit(count_text, (tablist_x + 10, tablist_y + 110))
 
@@ -826,25 +941,25 @@ github.com/Arizel79/Multiplayer-snake-game
         for player_id, player in self.game_state["players"].items():
             snake = self.game_state["snakes"].get(player_id, {})
 
-            color = self.Color.snake_colors_map.get(snake["color"].get("head"), (200, 200, 200))
+            color = self.Color.snake_colors_map.get(
+                snake["color"].get("head"), (200, 200, 200)
+            )
 
             # Player info
             status = "Alive" if player["alive"] else "Dead"
             status_color = (50, 255, 50) if player["alive"] else (255, 50, 50)
 
             name_text = self.font_medium.render(
-                f"{player['name']} ({status})",
-                True,
-                color
+                f"{player['name']} ({status})", True, color
             )
             self.screen.blit(name_text, (tablist_x + 10, y_offset))
 
             # Player stats
             stats_text = self.font_small.render(
-                f"Size: {snake.get('size', 0)} | Max: {snake.get('max_size', 0)} | " +
-                f"Kills: {player.get('kills', 0)} | Deaths: {player.get('deaths', 0)}",
+                f"Size: {snake.get('size', 0)} | Max: {snake.get('max_size', 0)} | "
+                + f"Kills: {player.get('kills', 0)} | Deaths: {player.get('deaths', 0)}",
                 True,
-                self.TEXT_COLOR
+                self.TEXT_COLOR,
             )
             self.screen.blit(stats_text, (tablist_x + 30, y_offset + 25))
 
@@ -854,7 +969,7 @@ github.com/Arizel79/Multiplayer-snake-game
                     self.screen,
                     (100, 100, 255),
                     (tablist_x, y_offset - 5, tablist_width, 50),
-                    2
+                    2,
                 )
 
             y_offset += 50
@@ -868,8 +983,15 @@ github.com/Arizel79/Multiplayer-snake-game
         debug_x = width - debug_width - 20
         debug_y = 20
 
-        pygame.draw.rect(self.screen, (50, 50, 50), (debug_x, debug_y, debug_width, debug_height))
-        pygame.draw.rect(self.screen, (100, 100, 100), (debug_x, debug_y, debug_width, debug_height), 2)
+        pygame.draw.rect(
+            self.screen, (50, 50, 50), (debug_x, debug_y, debug_width, debug_height)
+        )
+        pygame.draw.rect(
+            self.screen,
+            (100, 100, 100),
+            (debug_x, debug_y, debug_width, debug_height),
+            2,
+        )
 
         # Title
         title = self.font_large.render("Debug Info", True, (50, 255, 255))
@@ -884,18 +1006,20 @@ github.com/Arizel79/Multiplayer-snake-game
 
             debug_text += f"Snakes: {snakes_count} | Players: {players_count} | Food: {food_count}"
 
-        for n, ln, in enumerate(debug_text.splitlines()):
+        for (
+            n,
+            ln,
+        ) in enumerate(debug_text.splitlines()):
             state_text = self.font_medium.render(ln, True, self.TEXT_COLOR)
             self.screen.blit(state_text, (debug_x + 10, debug_y + 40 + (30 * n)))
 
     async def send_chat(self):
         if self.chat_input.strip():
-            await self.websocket.send(json.dumps({
-                "type": "chat_message",
-                "data": self.chat_input
-            }))
+            await self.websocket.send(
+                json.dumps({"type": "chat_message", "data": self.chat_input})
+            )
             self.chat_input = ""
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Dont run this file, run client.py")

@@ -11,6 +11,7 @@ import logging
 from abc import ABC, abstractmethod
 from colorama import init, Fore, Back, Style
 
+
 class Disconnected(Exception):
     pass
 
@@ -24,7 +25,17 @@ class ClientBase(ABC):
     MAX_SHOWN_MESSAGES_CHAT_ON = 32
     VERSION_NUMBER = "v0.1, client"
 
-    def __init__(self, game_config_filename=None, server=None, nickname=None, color=None, use_main_menu=False, logging_level="debug", logs_file="client/client.log", logging_name="client"):
+    def __init__(
+        self,
+        game_config_filename=None,
+        server=None,
+        nickname=None,
+        color=None,
+        use_main_menu=False,
+        logging_level="debug",
+        logs_file="client/client.log",
+        logging_name="client",
+    ):
         self.version = self.VERSION_NUMBER
         self.run_mode = "base"
         self.ascii_logo = """  █████████                       █████              
@@ -77,14 +88,14 @@ class ClientBase(ABC):
         self.is_open_help = False
         self.server_desc = "Welcome to server!"
 
-
         self.game_config_filename = game_config_filename
         self.view_message = None
         self.alert_message = None
         self.input_queue = Queue()  # Очередь для хранения нажатых клавиш
         self.input_thread_running = True
-        self.input_thread = threading.Thread(target=self.input_output_thread_worker, daemon=True)
-
+        self.input_thread = threading.Thread(
+            target=self.input_output_thread_worker, daemon=True
+        )
 
     def save_game_configs(self, filename=None):
         assert self.run_mode != "base"
@@ -92,11 +103,13 @@ class ClientBase(ABC):
             return
 
         with open(self.game_config_filename, "w+") as f:
-            data = {"player": self.player_name,
-                    "server": self.server,
-                    "color": self.color,
-                    "run_mode": self.run_mode,
-                    "use_main_menu": self.use_main_menu}
+            data = {
+                "player": self.player_name,
+                "server": self.server,
+                "color": self.color,
+                "run_mode": self.run_mode,
+                "use_main_menu": self.use_main_menu,
+            }
             self.logger.debug(f"Saving game configs to {filename}:\n{data}")
             json.dump(data, f)
 
@@ -106,8 +119,12 @@ class ClientBase(ABC):
 
         if not self.logging_level is None:
             self.logger.setLevel(level)
-            file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+            file_formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            console_formatter = logging.Formatter(
+                "%(name)s - %(levelname)s - %(message)s"
+            )
 
             # To file
             if not self.logs_file is None:
@@ -117,7 +134,6 @@ class ClientBase(ABC):
             # To console
             console_handler = logging.StreamHandler(stdout)
             console_handler.setFormatter(console_formatter)
-
 
             self.logger.addHandler(console_handler)
 
@@ -162,7 +178,7 @@ class ClientBase(ABC):
         elif data.get("type", None) == "chat_message":
             self.handle_chat_message(data)
 
-        elif data.get("type", None) == 'connection_error':
+        elif data.get("type", None) == "connection_error":
             raise ServerConnectionError(data["data"])
 
         elif data.get("type", None) == "you_died":
@@ -175,6 +191,7 @@ class ClientBase(ABC):
             return False
 
         return True
+
     @abstractmethod
     def quit_session(self):
         pass
@@ -183,11 +200,13 @@ class ClientBase(ABC):
         # self.state = None
         # self.running = False
         # self.input_thread_running = False
+
     async def send(self, data: dict):
         if type(data) != dict:
             raise ValueError("data must be a dict")
 
         await self.websocket.send(json.dumps(dict))
+
     async def send_chat(self):
         message = self.chat_prompt.lstrip()
         if message != "":
@@ -202,11 +221,13 @@ class ClientBase(ABC):
                     return
             if self.is_message_for_send(message):
                 # self.to_send.put({"type": "chat_message", "data": message})
-                await self.websocket.send(json.dumps({"type": "chat_message", "data": message}))
+                await self.websocket.send(
+                    json.dumps({"type": "chat_message", "data": message})
+                )
 
             else:
                 if message == "/kill":
-                    await self.websocket.send(json.dumps({"type": 'kill_me'}))
+                    await self.websocket.send(json.dumps({"type": "kill_me"}))
                 self.chat_messages.append(self.chat_prompt)
 
             self.chat_prompt = ""
@@ -225,10 +246,9 @@ class ClientBase(ABC):
         return bool(self.game_state) and snake["alive"]
 
     async def on_connect(self):
-        await self.websocket.send(json.dumps({
-            'name': self.player_name,
-            'color': self.color
-        }))
+        await self.websocket.send(
+            json.dumps({"name": self.player_name, "color": self.color})
+        )
         self.state = "game"
 
         message = await asyncio.wait_for(self.websocket.recv(), timeout=0.1)
@@ -237,6 +257,7 @@ class ClientBase(ABC):
             raise ServerConnectionError(data["data"])
 
         self.player_id = data["player_id"]
+
     async def handle_websocket(self):
         try:
             message = await asyncio.wait_for(self.websocket.recv(), timeout=0.01)
@@ -248,7 +269,9 @@ class ClientBase(ABC):
     async def connect(self, uri):
         try:
             # self.logger.info(f"start connecting to {self.server_address}")
-            async with websockets.connect(uri, ping_timeout=3, open_timeout=8) as websocket:
+            async with websockets.connect(
+                uri, ping_timeout=3, open_timeout=8
+            ) as websocket:
                 self.logger.info(f"connected to {self.server}")
 
                 self.websocket = websocket
@@ -266,7 +289,6 @@ class ClientBase(ABC):
                         await websocket.send(json.dumps(self.to_send.get()))
                 # else:
 
-
         # except asyncio.CancelledError:
         #     self.logger.debug("async task connect() cancelled")
         #     raise
@@ -276,7 +298,12 @@ class ClientBase(ABC):
 
     def get_follow(self) -> (int, int):
         try:
-            return [i for i in self.game_state["snakes"][str(self.player_id)]["body"][0].values()]
+            return [
+                i
+                for i in self.game_state["snakes"][str(self.player_id)]["body"][
+                    0
+                ].values()
+            ]
         except (KeyError, TypeError):
             return 0, 0
 
@@ -309,24 +336,33 @@ class ClientBase(ABC):
     async def connect_to_server(self):
         self.is_game_session_now = True
         try:
-            self.logger.info(f"Starting connection. Server: {self.server}; name: {self.player_name}; color: {self.color}")
+            self.logger.info(
+                f"Starting connection. Server: {self.server}; name: {self.player_name}; color: {self.color}"
+            )
             self.logger.info(f"Trying connecting to {self.server}...")
             self.state = "connecting"
             self.view_message = f"Connecting to {self.server}"
             await self.connect(f"ws://{self.server}")
-
 
         except websockets.exceptions.ConnectionClosedOK:
             self.alert("Disconnected", "Server closed\nYou can try reconnect later")
             self.logger.warning("Disconnected, server closed")
             await self.wait_for_end_session()
 
-
-        except (OSError, gaierror, ConnectionRefusedError, ConnectionError, websockets.exceptions.InvalidURI) as e:
+        except (
+            OSError,
+            gaierror,
+            ConnectionRefusedError,
+            ConnectionError,
+            websockets.exceptions.InvalidURI,
+        ) as e:
             self.logger.error(f"{type(e).__name__}: {e}")
             self.state = "connection_error"
-            self.view_message = (f"Connection error",
-                       f"Error connecting to {self.server}\n\n{type(e).__name__}\n\n{e}", "press space")
+            self.view_message = (
+                f"Connection error",
+                f"Error connecting to {self.server}\n\n{type(e).__name__}\n\n{e}",
+                "press space",
+            )
             await self.wait_for_end_session()
 
         except ServerConnectionError as e:
@@ -347,9 +383,15 @@ class ClientBase(ABC):
     async def run_game(self):
         # print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
         if self.run_mode in ["cli", "gui"]:
-            self.logger.info(f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}")
-            self.logger.info(f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}")
-            self.logger.info(f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}")
+            self.logger.info(
+                f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}"
+            )
+            self.logger.info(
+                f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}"
+            )
+            self.logger.info(
+                f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}"
+            )
 
         self.logger.debug(f"main menu? {'true' if self.use_main_menu else 'false'}")
         self.logger.debug(f"Logging level: {self.logging_level}")
@@ -358,7 +400,7 @@ class ClientBase(ABC):
             if self.use_main_menu:
                 while self.running:
                     while self.state == "main_menu" and self.running:
-                        await asyncio.sleep(.01)
+                        await asyncio.sleep(0.01)
                     if self.state == "start_session":
                         await self.connect_to_server()
                         self.logger.info("Disconnected, backing to main menu...")
@@ -371,7 +413,7 @@ class ClientBase(ABC):
             self.running = False
             self.input_thread_running = False
 
-            if hasattr(self, 'input_thread') and self.input_thread.is_alive():
+            if hasattr(self, "input_thread") and self.input_thread.is_alive():
                 self.input_thread.join(timeout=0.5)
 
             self.save_game_configs()

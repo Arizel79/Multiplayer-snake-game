@@ -38,7 +38,7 @@ def main():
         print("Directory not found")
         return
 
-    exclude_files = ["read_all.py"]
+    exclude_files = ["ra.py"]
 
     exclude_dirs = [".venv", "gen"]
     read_files(directory, exclude_files, exclude_dirs)

@@ -8,14 +8,12 @@ import sys
 from collections import deque
 from dataclasses import dataclass
 from time import time
-
-import websockets
-websockets_logger = logging.getLogger('websockets')
-websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровень логирования если нужно
-
 from config import *
 
-prnt = print
+import websockets
+
+websockets_logger = logging.getLogger('websockets')
+websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровень логирования если нужно
 
 
 @dataclass
@@ -103,7 +101,6 @@ class Viewport:
                 self.top <= point.y <= self.bottom)
 
     def intersects_snake(self, snake: Snake) -> bool:
-        """Проверяет, пересекается ли змея с областью видимости"""
         for segment in snake.body:
             if self.contains_point(segment):
                 return True
@@ -113,7 +110,8 @@ class Viewport:
 class Server:
     def __init__(self, address, port, map_width=80, map_height=80, max_players=20,
                  server_name="Server", server_desc=None, logging_level="debug",
-                 max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1):
+                 max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1, stealing_chanse_1percent=0.003,
+                 fast_stealing_chance=0.5):
         self.port = port
         self.address = address
 
@@ -143,11 +141,11 @@ class Server:
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
 
-        self.min_steling_snake_size = 5
-        self.stealing_chance = 0.003
-        self.steal_percentage = 0.05
+        self.min_stealing_snake_size = DEFAULT_SNAKE_LENGHT + 1
+        self.stealing_chance = stealing_chanse_1percent
+        self.steal_percentage = 0.01
 
-        self.fast_stealing_chance = 0.01
+        self.fast_stealing_chance = fast_stealing_chance
         self.fast_steal_abs_size = 1
 
         self.old_tick_time = time()
@@ -368,6 +366,9 @@ class Server:
             del self.snakes[player_id]
         if player_id in self.players:
             del self.players[player_id]
+
+        self._send_cache.clear()
+
         return True
 
     def change_direction(self, player_id, direction):
@@ -381,20 +382,19 @@ class Server:
                 snake.next_direction = direction
 
     def add_random_food(self):
-
         x1, y1, x2, y2 = self.get_map_rect()
         x = random.randint(x1, x2)
         y = random.randint(y1, y2)
         self.add_food(x, y)
 
-    def add_food(self, x, y, type_="default", color="red", size=1):
+    def add_food(self, x, y, type_=FOOD_TYPES.default, color=DEFAULT_FOOD_COLOR, size=1):
+        if self.food.get((x, y)):
+            return
         self.food[(x, y)] = (Food(Point(x, y), type_=type_, color=color, size=size))
 
     def generate_food(self):
-        if self.get_all_food_count() < self.max_food:
-
-            if len(self.food) < self.max_food:
-                self.add_random_food()
+        while self.get_all_food_count() < self.max_food:
+            self.add_random_food()
 
     def get_player(self, player_id):
 
@@ -409,6 +409,7 @@ class Server:
             return False
         if not self.snakes[player_id].alive:
             raise ValueError(f"Snake {player_id} is already death!")
+
         sn = self.snakes[player_id]
         pl = self.players[player_id]
         self.snakes[player_id].alive = False
@@ -427,7 +428,7 @@ class Server:
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "death_message",
                                            "data": text, "player_id": player_id})
         for n, i in enumerate(body):
-            self.add_food(i.x, i.y, type_="death", color=self.get_color_for_segment(sn, n))
+            self.add_food(i.x, i.y, type_=FOOD_TYPES.death, color=self.get_color_for_segment(sn, n))
 
         return True
 
@@ -725,9 +726,6 @@ class Server:
             self.logger.warning(f"Unknown data type received from {self.get_player(player_id)}: {data}")
 
     async def toggle_speed(self, player_id, is_fast):
-        self.logger.info(f"Snake {player_id} trying toggle is_fast: {is_fast}")
-
-        pl = self.players[player_id]
         sn = self.snakes[player_id]
         if len(sn.body) < self.MIN_LENGHT_FAST_ON:
             return
@@ -749,7 +747,7 @@ class Server:
 
         )
 
-        sn.add_segment(lenght)
+        sn.add_segment(lenght - 1)
         self.logger.info(f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})")
 
     async def respawn(self, player_id):
@@ -813,8 +811,8 @@ class Server:
         self.connections[player_id] = websocket
         await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
         try:
-            data = await websocket.recv()
             try:
+                data = await websocket.recv()
                 player_info = json.loads(data)
                 name = player_info.get('name', 'Player')
                 name_valid = self.is_name_valid(name)
@@ -850,12 +848,12 @@ class Server:
                 self.logger.warning(f"{type(e).__name__}: {e}")
                 await websocket.close()
                 return
+
         except Exception as e:
-            self.logger.error(f"Error while hanling connection {websocket}:")
+            self.logger.error(f"Error while handling connection {websocket}:")
             self.logger.exception(e)
 
         finally:
-
             await self.remove_player(player_id)
             await websocket.close()
 
@@ -865,12 +863,12 @@ class Server:
             return
         if random.random() < self.stealing_chance:
             current_length = len(snake.body)
-            if current_length > self.min_steling_snake_size:
+            if current_length > self.min_stealing_snake_size:
                 segments_to_remove = max(1, int(current_length * self.steal_percentage))
                 self.logger.debug(
                     f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
 
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_steling_snake_size)
+                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
 
     async def fast_snake_steal_body(self, player_id):
         snake = self.snakes[player_id]
@@ -880,7 +878,7 @@ class Server:
 
         if random.random() < self.fast_stealing_chance:
             current_length = len(snake.body)
-            if current_length > self.min_steling_snake_size:
+            if current_length > self.min_stealing_snake_size:
                 segments_to_remove = max(1, int(self.fast_steal_abs_size))
 
                 for i in range(segments_to_remove):
@@ -891,12 +889,12 @@ class Server:
                     point = snake.body[segment_index]
                     color = self.get_color_for_segment(snake, segment_index)
 
-                    self.add_food(point.x, point.y, type_="default", color=color, size=1)
+                    self.add_food(point.x, point.y, type_=FOOD_TYPES.from_fast_snake, color=color, size=1)
 
                 self.logger.debug(
-                    f"FAST SPEEDStole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
+                    f"FAST SPEED Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
 
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_steling_snake_size)
+                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
 
     async def on_tick(self):
         await self.update()
@@ -907,7 +905,8 @@ class Server:
             self.tps = self.tps_counter / (current_time - self.last_tps_time)
             self.tps_counter = 0
             self.last_tps_time = current_time
-            self.logger.info(f"Server TPS: {self.tps:.2f}")
+            if self.tps < 20:
+                self.logger.info(f"Server TPS (low): {self.tps:.1f}")
 
         for player_id, pl in self.players.items():
             pass
@@ -917,7 +916,6 @@ class Server:
         await self.send_game_state_to_all()
 
     async def send_game_state_to_all(self):
-        """Отправляет состояние игры каждому клиенту с фильтрацией по области видимости"""
         try:
             connections_ = copy.copy(self.connections)
             for player_id, ws in connections_.items():
@@ -990,28 +988,45 @@ def positive_int(value):
 
 async def run_server():
     parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
-    parser.add_argument('--address', "--ip", type=str, help='Server address (default: 0.0.0.0)', default="0.0.0.0")
-    parser.add_argument('--port', "--p", type=int, help='Server port (default: 8090)', default=8090)
-    parser.add_argument('--server_name', type=str, help='Server name', default="Snake Server")
-    parser.add_argument('--server_desc', type=str, help='Description of server', default="This is server")
-    parser.add_argument('--max_players', type=positive_int, help='Max online players count', default=20)
-    parser.add_argument('--map_width', "--width", "--w", "--x_size", type=int, help='Width of server map', default=100)
-    parser.add_argument('--map_height', "--height", "--h", "--y_size", type=int, help='Height of server map',
+    parser.add_argument('--host', type=str,
+                        help='Server host (default: 0.0.0.0)', default="0.0.0.0")
+    parser.add_argument('--port', "--p", type=int,
+                        help='Server port (default: 8090)', default=8090)
+    parser.add_argument('--server_name', type=str,
+                        help='Server name', default="Snake Server")
+    parser.add_argument('--server_desc', type=str,
+                        help='Description of server', default="This is server")
+    parser.add_argument('--max_players', type=positive_int,
+                        help='Max online players count', default=20)
+    parser.add_argument('--map_width', "--width", "--w", "--x_size", type=int,
+                        help='Width of server map', default=100)
+    parser.add_argument('--map_height', "--height", "--h", "--y_size", type=int,
+                        help='Height of server map',
                         default=100)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in perc', default=4)
-    parser.add_argument('--default_move_timeout', '--default_move', type=float, help='Timeout move snake (sec)',
+    parser.add_argument('--food_perc', type=int, help='Proportion food/map in perc', default=2)
+    parser.add_argument('--default_move_timeout', '--default_move', type=float,
+                        help='Timeout move snake (sec)',
                         default=0.1)
-    parser.add_argument('--fast_move_timeout', '--fast_move', type=float, help='Timeout move fast snake (sec)',
-                        default=0.1)
+    parser.add_argument('--fast_move_timeout', '--fast_move', type=float,
+                        help='Timeout move fast snake (sec)',
+                        default=0.07)
+
+    parser.add_argument('--steal_chance', type=float,
+                        help='chance of stealing 1 percent of the body per tick',
+                        default=0.003)
+    parser.add_argument('--steal_chance_fast', type=float,
+                        help='chance of stealing 1 segment of the body per tick, if snake is fast',
+                        default=0.01)
     parser.add_argument('--logging_level', '--log_lvl', type=str,
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Level of logging', default="INFO")
     args = parser.parse_args()
 
-    game_state = Server(address=args.address, port=args.port, map_width=args.map_width, map_height=args.map_height,
+    game_state = Server(address=args.host, port=args.port, map_width=args.map_width, map_height=args.map_height,
                         max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
                         logging_level=args.logging_level, max_food_perc=args.food_perc,
-                        default_move_timeout=args.default_move_timeout, fast_move_timeout=args.fast_move_timeout)
+                        default_move_timeout=args.default_move_timeout, fast_move_timeout=args.fast_move_timeout,
+                        stealing_chanse_1percent=args.steal_chance, fast_stealing_chance=args.steal_chance_fast)
     try:
         await game_state.run()
     except asyncio.CancelledError:

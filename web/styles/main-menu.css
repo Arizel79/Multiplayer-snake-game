@@ -1,0 +1,54 @@
+.controls-info {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--pad-text-color);
+  padding: 5px 10px;
+  font-size: 0.6em;
+}
+
+.toggle-fullscreen {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 0;
+  z-index: 1000;
+}
+
+#main-menu {
+    background-color: var(--menu-bg-color);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 10;
+}
+#play-form {
+    display: flex;
+    flex-direction: column;
+        justify-content: center;
+        align-items: center;
+}
+
+
+
+
+.menu-title {
+  font-size: 1.5em;
+  margin: 0.3em;
+  color: var(--title-text-color);
+  text-align: center;
+}
+
+.menu-subtitle {
+  margin: 0.2em;
+  color: var(--second-text-color);
+  text-align: center;
+}

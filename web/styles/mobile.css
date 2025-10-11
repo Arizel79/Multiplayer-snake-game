@@ -6,6 +6,31 @@
 }
 }
 
+/* Mobile controls (базовые стили) */
+#mobile-controls {
+  display: none; /* По умолчанию скрыты, mobile.css покажет на мобильных */
+}
+
+.wasd-panel, .action-panel {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hud-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: 1px solid var(--button-border-color);
+  font-size 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
 
 /* Стили для мобильных контролов */
 #mobile-controls {

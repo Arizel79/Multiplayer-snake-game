@@ -1,37 +1,8 @@
-
-function initGame() {
-    gameState.canvas = document.getElementById("game-canvas");
-    gameState.ctx = gameState.canvas.getContext("2d");
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    document.addEventListener('fullscreenchange', resizeCanvas);
-
-    document.getElementById("server-input").disabled = !can_user_change_server;
-    if (!show_menu_server_address_input) {
-        const serverInput = document.getElementById('server-input');
-        if (serverInput) {
-            serverInput.hidden = true
-        }
-    }
-
-    document.getElementById("play-button").addEventListener("click", startGame);
-    document.getElementById("chat-input").addEventListener("keydown", handleChatInput);
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
-
-    loadSettings();
-
+function onDisconnect() {
+    console.log("onDisconnect")
+    _addChatMessage(convertCustomTagsToHtml("disconnected from " + gameState.serverAddress))
 }
 
-//function resizeCanvas() {
-//    gameState.canvas.width = window.innerWidth;
-//    gameState.canvas.height = window.innerHeight;
-//    if (gameState.state == "game") {
-//        renderGame();
-//    }
-//}
 
 function resizeCanvas() {
     const canvas = gameState.canvas;
@@ -50,24 +21,6 @@ function resizeCanvas() {
     }
 }
 
-function loadSettings() {
-    let json_settings = localStorage.getItem("snakeGameSettings");
-    const settings = JSON.parse(json_settings) || {};
-    console.log("settings loaded: " + json_settings)
-    document.getElementById("name-input").value = settings.playerName || default_player_name;
-    document.getElementById("color-input").value = settings.playerColor || getRandomSnakeColor();
-    document.getElementById("server-input").value = settings.serverAddress || default_server;
-}
-
-function saveSettings() {
-    const settings = {
-        playerName: gameState.playerName,
-        playerColor: gameState.playerColor,
-        serverAddress: gameState.serverAddress
-    };
-    localStorage.setItem("snakeGameSettings", JSON.stringify(settings));
-    console.log("settings saved: " + JSON.stringify(settings))
-}
 
 function startGame() {
     gameState.playerName = document.getElementById("name-input").value.trim();
@@ -91,13 +44,6 @@ function startGame() {
     showLastMessages();
 }
 
-function closeAll() {
-    closeAlert();
-    closeError();
-    closeDeath();
-    closeTablist();
-    closeChat();
-}
 
 function connectToServer() {
     try {
@@ -109,6 +55,7 @@ function connectToServer() {
         gameState.socket.onopen = () => {
             closeAll();
             console.log("Connected to server");
+            _addChatMessage(convertCustomTagsToHtml("connected to " + gameState.serverAddress))
             gameState.state = "game";
 
             gameState.socket.send(JSON.stringify({
@@ -124,36 +71,44 @@ function connectToServer() {
             handleServerMessage(data);
         };
 
-        gameState.socket.onclose = () => {
+        gameState.socket.onclose = (event) => {
             console.log("Closing socket. State: " + gameState.state);
-            if (gameState.state != "connection_error" && gameState.state != "main_menu") {
-                closeAll();
-                showError("Disconnected", "Server closed the connection", "Press SPACE to return to menu");
-                gameState.state = "disconnected";
+
+            // Определяем причину отключения
+            let reason = "Connection closed";
+            if (event.code === 1000) {
+                reason = "Normal closure";
+            } else if (event.code === 1001) {
+                reason = "Server going away";
+            } else if (event.code === 1006) {
+                reason = "Connection lost";
             }
 
+            if (gameState.state != "connection_error" && gameState.state != "main_menu") {
+                onDisconnect(reason);
+                showError("Disconnected", "Server closed the connection", "Press SPACE to return to menu");
+                gameState.state = "disconnected";
+            } else {
+                onDisconnect(reason);
+            }
         };
 
         gameState.socket.onerror = (error) => {
             gameState.state = "connection_error";
             console.error("WebSocket error:", error);
+            onDisconnect("WebSocket error");
             showError("Connection Error", `Failed to connect to ${gameState.serverAddress}`, "<button>Close</button>");
         };
 
     } catch (error) {
         console.error("Unknown connection error:", error);
-        showError("Unknown Connection Error", `Invalid server address: ${gameState.serverAddress}`, "Press SPACE to return to menu");
+        onDisconnect("Connection failed");
+        showError("Unknown connection Error", `Invalid server address: ${gameState.serverAddress}`, "Press SPACE to return to menu");
         gameState.state = "connection_error";
     }
 }
-function toggleSpeed(isFast){
-    if (gameState.isFast == isFast) {return}
-    gameState.isFast = isFast
-    // console.log("toggleSpeed : set to :", isFast)
-    if (gameState.socket) {
-        gameState.socket.send(JSON.stringify({ type: "is_fast", data: gameState.isFast}));
-    }
-}
+
+
 
 
 function handleServerMessage(data) {
@@ -210,16 +165,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-function setDirection(direction) {
-   if (direction && direction !== gameState.lastDirection) {
 
-        gameState.socket.send(JSON.stringify({
-            type: "direction",
-            data: direction
-        }));
-        gameState.lastDirection = direction;
-    }
-}
 
 function handleMovementInput() {
     if (!gameState.socket || !gameState.gameState || !gameState.gameState.snakes[gameState.playerId]?.alive) return;
@@ -247,6 +193,12 @@ function handleKeyDown(event) {
         toggleSpeed(true);
     }
 
+    if (event.key === "Escape") {
+        if (document.getElementById("help-screen").style.display === "flex") {
+            closeHelp();
+            event.preventDefault();
+        }
+    }
 
     gameState.keysPressed[event.key] = true;
 
@@ -418,6 +370,16 @@ function sendChatMessage() {
     }
 }
 
+function _addChatMessage(htmlText) {
+    gameState.chatMessages.push(htmlText);
+    if (gameState.chatMessages.length > 255) {
+        gameState.chatMessages.shift();
+    }
+
+    updateChatDisplay();
+    updateLastMessages();
+}
+
 function addChatMessage(data) {
     let message = "";
 
@@ -433,13 +395,7 @@ function addChatMessage(data) {
     }
 
 
-    gameState.chatMessages.push(message);
-    if (gameState.chatMessages.length > 255) {
-        gameState.chatMessages.shift();
-    }
-
-    updateChatDisplay();
-    updateLastMessages();
+    _addChatMessage(message)
 }
 
 function updateChatDisplay() {

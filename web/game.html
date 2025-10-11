@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Multiplayer Snake Game</title>
+    <title>Multiplayer snake</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="styles/game.css">
     <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="images/snake.png">
     <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate"/>
     <meta http-equiv="pragma" content="no-cache"/>
     <meta http-equiv="expires" content="0"/>
@@ -21,9 +22,9 @@
         </button>
 
     </div>
-    <div class="controls-info">
-        WASD: Move | T: Chat | TAB: Player list
-    </div>
+    <!--    <div class="controls-info">-->
+    <!--        WASD: Move | T: Chat | TAB: Player list-->
+    <!--    </div>-->
     <div class="menu-title">Multiplayer snake game</div>
     <div class="menu-subtitle">Hello!</div>
     <div id="play-form">
@@ -31,11 +32,16 @@
         <input type="text" id="color-input" class="menu-input" placeholder="Color">
         <input type="text" id="server-input" class="menu-input" placeholder="Server address">
         <button id="play-button" class="default-btn menu-button">Play</button>
+
     </div>
-    <div id="about"><a href="https://github.com/Arizel79/Multiplayer-snake-game">GitHub</a></div>
+
+    <div id="about">
+        <a href="https://github.com/Arizel79/Multiplayer-snake-game">GitHub</a>
+        <a href="javascript:showHelp()">How to play</a>
+    </div>
 </div>
 <div id="game-container">
-    <canvas id="game-canvas">Element not supported</canvas>
+    <canvas id="game-canvas"><h1>Error: canvas element not supported</h1></canvas>
 
 
     <div id="chat-container" class="chat-top">
@@ -47,7 +53,9 @@
         <div id="mini-chat-messages"></div>
     </div>
     <div id="player-info">
-        <div id="your-score">Score: <div id="your-score-value"></div></div>
+        <div id="your-score">Score:
+            <div id="your-score-value"></div>
+        </div>
     </div>
     <div id="tablist">
         <div id="tablist-title">Players list</div>
@@ -56,12 +64,11 @@
         <div id="tablist-players-list"></div>
     </div>
     <div id="mobile-controls">
-        <!-- WASD панель -->
         <div class="wasd-panel">
             <div>
                 <button id="btn-up" class="wasd-btn hud-btn">↑</button>
                 <button id="btn-left" class="wasd-btn hud-btn">←</button>
-                <button id="btn-center" class="wasd-btn hud-btn">@</button>
+                <button id="btn-center" class="wasd-btn hud-btn"></button>
                 <button id="btn-down" class="wasd-btn hud-btn">↓</button>
                 <button id="btn-right" class="wasd-btn hud-btn">→</button>
             </div>
@@ -72,7 +79,6 @@
             </div>
         </div>
 
-        <!-- Action панель -->
         <div class="action-panel">
             <button id="btn-chat" class="action-btn hud-btn">💬</button>
             <button id="btn-tab" class="action-btn hud-btn">👥</button>
@@ -94,10 +100,43 @@
     </div>
 
     <div id="alert-screen">
-        <div class="title"></div>
-        <div class="info-message"></div>
-        <div class="button-container">
-            <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+        <div class="like-alert-message-container">
+            <div class="title"></div>
+            <div class="info-message"></div>
+            <div class="button-container">
+                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+            </div>
+        </div>
+    </div>
+    <div id="help-screen">
+        <div class="screen-content">
+            <div class="title">How to Play</div>
+            <div class="info-message">
+                <h3>Controls:</h3>
+                <ul>
+                    <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
+                    <li><b>Space</b> or <b>Z</b> - Speed boost</li>
+                    <li><b>T</b> - Open chat</li>
+                    <li><b>TAB</b> - Show player list</li>
+                    <li><b>ESC</b> - Close chat/player list</li>
+                </ul>
+                <h3>Game Rules:</h3>
+                <ul>
+                    <li>Eat food to grow longer</li>
+                    <li>Avoid colliding with other snakes</li>
+                    <li>Don't hit the walls</li>
+                    <li>Long snakes cat move fast</li>
+                </ul>
+                <h3>Chat Commands:</h3>
+                <ul>
+                    <li><code>.clear</code> - Clear chat</li>
+                    <li><code>.quit</code> - Return to menu</li>
+                    <li><code>/kill</code> - Suicide</li>
+                </ul>
+            </div>
+            <div class="button-container">
+                <button class="default-btn info-button" onclick="closeHelp()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -108,16 +147,17 @@
             <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
         </div>
     </div>
-
-
     <div id="debug-info"></div>
 
 </div>
 
 </div>
+<script src="scripts/consts.js"></script>
 <script src="scripts/config.js"></script>
+<script src="scripts/init.js"></script>
 <script src="scripts/utils.js"></script>
 <script src="scripts/script.js"></script>
+<script src="scripts/game.js"></script>
 <script src="scripts/rendering.js"></script>
 <script src="scripts/mobile.js"></script>
 

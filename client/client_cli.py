@@ -38,7 +38,9 @@ class ClientCLI(ClientBase):
             """Рабочая функция потока ввода, считывает клавиши и помещает их в очередь"""
             while self.input_thread_running:
                 self.render()
-                key = self.screen.get_key(.001)  # Блокирующий вызов с небольшим таймаутом
+                key = self.screen.get_key(
+                    0.001
+                )  # Блокирующий вызов с небольшим таймаутом
                 if key is not None:
                     self.first_nandle_input(key)
 
@@ -81,10 +83,13 @@ class ClientCLI(ClientBase):
                 elif key == "`":
                     self.show_debug = not self.show_debug
 
-                elif key_ in ['t', "е"]:
+                elif key_ in ["t", "е"]:
                     self.is_open_chat = True
 
-                if self.new_direction is not None and self.new_direction != self.direction:
+                if (
+                    self.new_direction is not None
+                    and self.new_direction != self.direction
+                ):
                     # self.add_chat_message(str({"type": 'direction', "data": self.new_direction}))
                     self.input_queue.put_nowait(key)
                     self.direction = self.new_direction
@@ -100,7 +105,6 @@ class ClientCLI(ClientBase):
         elif self.state == "died":
             if key == " ":
                 self.input_queue.put_nowait(key)
-
 
     def quit_session(self):
         self.logger.debug("Exiting session...")
@@ -129,6 +133,7 @@ class ClientCLI(ClientBase):
         self.running = False
         self.is_game_session_now = False
         self.input_thread_running = False
+
     async def handle_input(self):
         # lf.state)
         try:
@@ -153,13 +158,13 @@ class ClientCLI(ClientBase):
                     else:
                         self.new_direction = None
                         if key_ in ["w", "ц"]:
-                            self.new_direction = 'up'
+                            self.new_direction = "up"
                         elif key_ in ["s", "ы"]:
-                            self.new_direction = 'down'
+                            self.new_direction = "down"
                         elif key_ in ["a", "ф"]:
-                            self.new_direction = 'left'
+                            self.new_direction = "left"
                         elif key_ in ["d", "в"]:
-                            self.new_direction = 'right'
+                            self.new_direction = "right"
                         elif key in ["Q"]:
                             self.logger.info("Received Q, exiting...")
                             self.running = False
@@ -168,12 +173,19 @@ class ClientCLI(ClientBase):
                         elif key == "`":
                             self.show_debug = not self.show_debug
 
-                        elif key_ in ['t', "е"]:
+                        elif key_ in ["t", "е"]:
                             self.is_open_chat = True
 
-                        if self.new_direction is not None and self.new_direction != self.direction:
+                        if (
+                            self.new_direction is not None
+                            and self.new_direction != self.direction
+                        ):
                             # self.add_chat_message(str({"type": 'direction', "data": self.new_direction}))
-                            await self.websocket.send(json.dumps({"type": 'direction', "data": self.new_direction}))
+                            await self.websocket.send(
+                                json.dumps(
+                                    {"type": "direction", "data": self.new_direction}
+                                )
+                            )
                             self.direction = self.new_direction
                             self.new_direction = None
                 elif self.state == "alert":
@@ -185,14 +197,15 @@ class ClientCLI(ClientBase):
 
                 elif self.state == "died":
                     if key == " ":
-                        await self.websocket.send(json.dumps({"type": 'respawn', "data": "lol"}))
+                        await self.websocket.send(
+                            json.dumps({"type": "respawn", "data": "lol"})
+                        )
         except Empty:
             pass  # Очередь пуста, новых клавиш нет
 
         except KeyboardInterrupt:
             self.logger.warning("KeyboardInterrupt!")
             # self.quit_session()
-
 
     def get_params(self, player_id, with_header=True):
         sn = self.game_state["snakes"][player_id]
@@ -209,13 +222,13 @@ Total deaths: {pl["deaths"]}
 
     async def wait_for_quit(self):
         while self.state != None:
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
             await self.handle_input()
         self.logger.debug("Wait_for_quit finished")
 
     async def wait_for_end_session(self):
         while self.is_game_session_now:
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
             await self.handle_input()
         self.logger.debug("wait_for_end_session finished")
 
@@ -224,18 +237,27 @@ Total deaths: {pl["deaths"]}
 
         # self.screen.clear()
         self.screen.clear()
-        if self.state == "game" and (not self.game_state  is None):
+        if self.state == "game" and (not self.game_state is None):
             self.render_game_world()
             x_, y_ = self.get_my_coords()
-            self.screen.set_text(0, 0, "<bold>Multiplayer snake game</bold>\n"
-                                       f"xy: {x_}, {y_}\n"
-                                       f"size: <bold><cyan>{str(self.game_state.get('snakes', {}).get(self.player_id, {}).get('size'))}</cyan></bold>",
-                                 TextStyle(Colors.WHITE, Colors.BLACK), parse_html=True)
+            self.screen.set_text(
+                0,
+                0,
+                "<bold>Multiplayer snake game</bold>\n"
+                f"xy: {x_}, {y_}\n"
+                f"size: <bold><cyan>{str(self.game_state.get('snakes', {}).get(self.player_id, {}).get('size'))}</cyan></bold>",
+                TextStyle(Colors.WHITE, Colors.BLACK),
+                parse_html=True,
+            )
 
             self.screen.set_text(
-                x, y,
-                f"^C to quit; h to help", parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR,
-                anchor_y=Anchors.DOWN_ANCHOR)
+                x,
+                y,
+                f"^C to quit; h to help",
+                parse_html=True,
+                anchor_x=Anchors.RIGHT_ANCHOR,
+                anchor_y=Anchors.DOWN_ANCHOR,
+            )
 
             self.render_chat()
 
@@ -272,7 +294,7 @@ Total deaths: {pl["deaths"]}
 
 <b>Prees SPACE to respawn</b>"""
             render_alert(self.screen, text)
-        elif self.state  == "main_menu":
+        elif self.state == "main_menu":
             text = f"""<green>{html.escape(self.ascii_art_in_menu)}</green>
 <green><dim>Multiplayer snake game</dim></green>
 <b>https://github.com/Arizel79/Multiplayer-snake-game</b>
@@ -290,11 +312,16 @@ Total deaths: {pl["deaths"]}
         if self.show_debug:
             pretty_str = self.game_state
             text = f"<cyan>DEBUG</cyan>\n{self.state}\n{pretty_str}\n\n{self.chat_messages}"
-            self.screen.set_text(x, 0, text, parse_html=True, anchor_x=Anchors.RIGHT_ANCHOR,
-                                 anchor_y=Anchors.UP_ANCHOR)
+            self.screen.set_text(
+                x,
+                0,
+                text,
+                parse_html=True,
+                anchor_x=Anchors.RIGHT_ANCHOR,
+                anchor_y=Anchors.UP_ANCHOR,
+            )
         # self.screen.set_str(0,0, f"State: {self.state}; {self.alert_message}")
         self.screen.update()
-
 
     def get_stilizate_name_color(self, player_id, text=None):
         color = self.game_state["players"].get(player_id, {})["color"]
@@ -317,7 +344,8 @@ Total deaths: {pl["deaths"]}
         elif subtype == "chat_message":
             if not from_user is None:
                 self.add_chat_message(
-                    f"{from_user}<white>:</white> {html.escape(message.get('data', None))}")
+                    f"{from_user}<white>:</white> {html.escape(message.get('data', None))}"
+                )
             elif from_user in ["", None]:
                 self.add_chat_message(f"{message.get('data', None)}")
 
@@ -351,14 +379,25 @@ Total deaths: {pl["deaths"]}
                 if len(i) > max_str:
                     max_str = len(i)
             tablist = "\n".join(tablist)
-            self.screen.draw_rectangle((x // 2) - (max_str // 2), 0, (x // 2) + (max_str // 2),
-                                       len(tablist.split("\n")), Symbol(" ", Colors.WHITE, Colors.BLACK, Styles.BLINK))
+            self.screen.draw_rectangle(
+                (x // 2) - (max_str // 2),
+                0,
+                (x // 2) + (max_str // 2),
+                len(tablist.split("\n")),
+                Symbol(" ", Colors.WHITE, Colors.BLACK, Styles.BLINK),
+            )
 
-            self.screen.set_text(x // 2, 0, tablist, TextStyle(Colors.WHITE, Colors.BLACK, Styles.BLINK),
-                                 parse_html=True,
-                                 anchor_x=Anchors.CENTER_X_ANCHOR, anchor_y=Anchors.UP_ANCHOR)
+            self.screen.set_text(
+                x // 2,
+                0,
+                tablist,
+                TextStyle(Colors.WHITE, Colors.BLACK, Styles.BLINK),
+                parse_html=True,
+                anchor_x=Anchors.CENTER_X_ANCHOR,
+                anchor_y=Anchors.UP_ANCHOR,
+            )
 
-    def get_snake_color_segment(self, color:dict, segment_n):
+    def get_snake_color_segment(self, color: dict, segment_n):
         n = segment_n
         head = color.get("head")
         body = color.get("body")
@@ -376,7 +415,8 @@ Total deaths: {pl["deaths"]}
 
         else:
             raise ValueError(
-                f"Snake color must be a str or list, but is is {color} with type {type(color)}")
+                f"Snake color must be a str or list, but is is {color} with type {type(color)}"
+            )
 
         if not color_str in self.SNAKE_COLORS:
             color_str = "white"
@@ -390,55 +430,65 @@ Total deaths: {pl["deaths"]}
         if self.game_state is None:
             return
         x1, y1, x2, y2 = self.game_state["map_borders"]
-        self.screen.draw_rectangle(*self.calc_coords(x1 - 1, y1 - 1), *self.calc_coords(x2 + 1, y2 + 1),
-                                   Symbol("X", Colors.BLACK, Colors.BLACK, Styles.BLINK),
-                                   isFill=False)
+        self.screen.draw_rectangle(
+            *self.calc_coords(x1 - 1, y1 - 1),
+            *self.calc_coords(x2 + 1, y2 + 1),
+            Symbol("X", Colors.BLACK, Colors.BLACK, Styles.BLINK),
+            isFill=False,
+        )
         # Death snakes
-        for snake_id, snake in self.game_state['snakes'].items():
+        for snake_id, snake in self.game_state["snakes"].items():
             if snake["alive"]:
                 continue
             # color = snake['color']
             death_symbol = Symbol("D", Colors.BLACK, Colors.BLACK, Styles.BLINK)
 
-            for i, segment in enumerate(snake['body'][::-1]):
+            for i, segment in enumerate(snake["body"][::-1]):
                 self.screen.set_symbol_obj(
-                    *self.calc_coords(segment['x'], segment['y']),
-                    death_symbol
+                    *self.calc_coords(segment["x"], segment["y"]), death_symbol
                 )
 
         # Food
-        for food in self.game_state['food']:
+        for food in self.game_state["food"]:
             self.screen.setSymbol(
-                *self.calc_coords(food['x'], food['y']),
-                '*',
-                TextStyle("red", "black", "bold")
+                *self.calc_coords(food["x"], food["y"]),
+                "*",
+                TextStyle("red", "black", "bold"),
             )
         # Alive snakes
-        for snake_id, snake in self.game_state['snakes'].items():
+        for snake_id, snake in self.game_state["snakes"].items():
             if not snake["alive"]:
                 continue
-            color = snake['color']
+            color = snake["color"]
             death_symbol = Symbol("D", Colors.BLACK, Colors.BLACK, Styles.BLINK)
 
-            for i, segment in enumerate(snake['body'][::-1]):
-                smbl = self.get_snake_color_segment(snake["color"], len(snake['body']) - i - 1)
-                self.screen.set_symbol_obj(
-                    *self.calc_coords(segment['x'], segment['y']),
-                    smbl
+            for i, segment in enumerate(snake["body"][::-1]):
+                smbl = self.get_snake_color_segment(
+                    snake["color"], len(snake["body"]) - i - 1
                 )
-
+                self.screen.set_symbol_obj(
+                    *self.calc_coords(segment["x"], segment["y"]), smbl
+                )
 
     def render_chat(self):
         x, y = self.screen.get_sizes()
         if self.is_open_chat:
-            self.screen.set_str(0, y - 1, f"> {self.chat_prompt.ljust(32)}",
-                                TextStyle(Colors.WHITE, Colors.BLACK, Styles.BLINK))
+            self.screen.set_str(
+                0,
+                y - 1,
+                f"> {self.chat_prompt.ljust(32)}",
+                TextStyle(Colors.WHITE, Colors.BLACK, Styles.BLINK),
+            )
 
         out = ""
         if self.is_open_chat:
-            lst = self.chat_messages[-min(self.MAX_SHOWN_MESSAGES_CHAT_ON, len(self.chat_messages)):]
+            lst = self.chat_messages[
+                -min(self.MAX_SHOWN_MESSAGES_CHAT_ON, len(self.chat_messages)) :
+            ]
         else:
-            lst = self.chat_messages[-min(self.MAX_SHOWN_MESSAGES_CHAT_OFF, len(self.chat_messages)):]
+            lst = self.chat_messages[
+                -min(self.MAX_SHOWN_MESSAGES_CHAT_OFF, len(self.chat_messages)) :
+            ]
 
         for i in lst:
             if self.is_open_chat:
@@ -446,9 +496,18 @@ Total deaths: {pl["deaths"]}
             else:
                 out += f"{i[:min(1024, len(i))]}\n"
 
-        self.screen.set_text(0, y - 1, out, anchor_x=Anchors.LEFT_ANCHOR,
-                             style=TextStyle(Colors.WHITE, Colors.BLACK, ),
-                             anchor_y=Anchors.DOWN_ANCHOR, parse_html=True)
+        self.screen.set_text(
+            0,
+            y - 1,
+            out,
+            anchor_x=Anchors.LEFT_ANCHOR,
+            style=TextStyle(
+                Colors.WHITE,
+                Colors.BLACK,
+            ),
+            anchor_y=Anchors.DOWN_ANCHOR,
+            parse_html=True,
+        )
 
 
 def prompt(sc, title="!prompt!", message="???", default="none"):
@@ -468,9 +527,9 @@ def prompt(sc, title="!prompt!", message="???", default="none"):
         sc.update()
 
         key = sc.wait_key(0)
-        if key == '\n':
+        if key == "\n":
             break
-        elif key == '\b' or key == '\x7f':  # backspace
+        elif key == "\b" or key == "\x7f":  # backspace
             text = text[:-1]
         elif isinstance(key, str) and len(key) == 1:
             text += key
@@ -478,7 +537,7 @@ def prompt(sc, title="!prompt!", message="???", default="none"):
 
 
 def remove_html_tags(text):
-    clean_text = re.sub(r'<[^>]*>', '', text)
+    clean_text = re.sub(r"<[^>]*>", "", text)
     return clean_text
 
 
@@ -486,11 +545,15 @@ def render_alert(scr: ConsoleScreen, full_text):
     x, y = scr.get_sizes()
     scr.clear()
     scr.set_text(
-        x // 2, y // 2,
-        full_text, parse_html=True, anchor_x=Anchors.CENTER_X_ANCHOR, anchor_y=Anchors.CENTER_Y_ANCHOR
+        x // 2,
+        y // 2,
+        full_text,
+        parse_html=True,
+        anchor_x=Anchors.CENTER_X_ANCHOR,
+        anchor_y=Anchors.CENTER_Y_ANCHOR,
     )
     scr.update()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Dont run this file, run client.py")

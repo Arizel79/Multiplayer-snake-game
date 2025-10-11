@@ -1,0 +1,27 @@
+.menu-input {
+    width: 300px;
+    padding: 8px;
+    margin: 5px;
+    color: var(--menu-input-text-color);
+    background-color: var(--menu-input-bg-color);
+    border: 1px solid  var(--menu-input-border-color);
+    border-radius: var(--border-radius);
+}
+
+input:focus {
+      border: 1px solid var(--menu-input-border-color-focus);
+}
+
+.menu-input {
+  width: 100%;
+  padding: 8px;
+  margin: 5px;
+  color: var(--menu-input-text-color);
+  background-color: var(--menu-input-bg-color);
+  border: 1px solid var(--menu-input-border-color);
+  border-radius: var(--border-radius);
+}
+
+.menu-input:focus {
+  border: 1px solid var(--menu-input-border-color-focus);
+}
