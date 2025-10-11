@@ -254,7 +254,6 @@ function showDeathScreen(data) {
 
 
     if (gameState.gameState && gameState.playerId) {
-        console.log(gameState.playerId);
         const player = gameState.gameState.players[gameState.playerId];
         const snake = gameState.gameState.snakes[gameState.playerId];
         let statsText = `
@@ -304,7 +303,6 @@ function closeAll() {
 
 
 function returnToMenu() {
-    console.log("Backing to main menu")
     disconnectFromServer();
     gameState.state = "main_menu";
     document.getElementById("main-menu").style.display = "flex";

@@ -8,7 +8,6 @@ function isTouchDevice() {
         (window.DocumentTouch && document instanceof DocumentTouch) ||
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
         (window.innerWidth <= 1024 && window.matchMedia("(any-hover: none)").matches));
-        console.log("IsTouchDevice: " + is_touch_device);
         return is_touch_device;
 }
 
