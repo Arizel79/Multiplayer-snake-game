@@ -86,80 +86,82 @@
     </div>
 
     <div id="death-screen">
-        <div class="screen-content">
-            <div class="title">You died</div>
-            <div class="info-message">
-                <div id="death-reason"></div>
-                <div id="death-player-stats-table-container"></div>
+        <div class="like-alert-message-container">
+            <div class="screen-content">
+                <div class="title">You died</div>
+                <div class="info-message">
+                    <div id="death-reason"></div>
+                    <div id="death-player-stats-table-container"></div>
+                </div>
+                <div class="button-container">
+                    <button class="default-btn info-button" onclick="respawn()">Respawn</button>
+                    <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+                </div>
             </div>
-            <div class="button-container">
-                <button class="default-btn info-button" onclick="respawn()">Respawn</button>
-                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+            </dev>
+        </div>
+
+        <div id="alert-screen">
+            <div class="like-alert-message-container">
+                <div class="title"></div>
+                <div class="info-message"></div>
+                <div class="button-container">
+                    <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+                </div>
             </div>
         </div>
-    </div>
+        <div id="help-screen">
+            <div class="screen-content">
+                <div class="title">How to Play</div>
+                <div class="info-message">
+                    <h3>Controls:</h3>
+                    <ul>
+                        <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
+                        <li><b>Space</b> or <b>Z</b> - Speed boost</li>
+                        <li><b>T</b> - Open chat</li>
+                        <li><b>TAB</b> - Show player list</li>
+                        <li><b>ESC</b> - Close chat/player list</li>
+                    </ul>
+                    <h3>Game Rules:</h3>
+                    <ul>
+                        <li>Eat food to grow longer</li>
+                        <li>Avoid colliding with other snakes</li>
+                        <li>Don't hit the walls</li>
+                        <li>Long snakes cat move fast</li>
+                    </ul>
+                    <h3>Chat Commands:</h3>
+                    <ul>
+                        <li><code>.clear</code> - Clear chat</li>
+                        <li><code>.quit</code> - Return to menu</li>
+                        <li><code>/kill</code> - Suicide</li>
+                    </ul>
+                </div>
+                <div class="button-container">
+                    <button class="default-btn info-button" onclick="closeHelp()">Close</button>
+                </div>
+            </div>
+        </div>
 
-    <div id="alert-screen">
-        <div class="like-alert-message-container">
+        <div id="error-screen">
             <div class="title"></div>
             <div class="info-message"></div>
             <div class="button-container">
                 <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
             </div>
         </div>
-    </div>
-    <div id="help-screen">
-        <div class="screen-content">
-            <div class="title">How to Play</div>
-            <div class="info-message">
-                <h3>Controls:</h3>
-                <ul>
-                    <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
-                    <li><b>Space</b> or <b>Z</b> - Speed boost</li>
-                    <li><b>T</b> - Open chat</li>
-                    <li><b>TAB</b> - Show player list</li>
-                    <li><b>ESC</b> - Close chat/player list</li>
-                </ul>
-                <h3>Game Rules:</h3>
-                <ul>
-                    <li>Eat food to grow longer</li>
-                    <li>Avoid colliding with other snakes</li>
-                    <li>Don't hit the walls</li>
-                    <li>Long snakes cat move fast</li>
-                </ul>
-                <h3>Chat Commands:</h3>
-                <ul>
-                    <li><code>.clear</code> - Clear chat</li>
-                    <li><code>.quit</code> - Return to menu</li>
-                    <li><code>/kill</code> - Suicide</li>
-                </ul>
-            </div>
-            <div class="button-container">
-                <button class="default-btn info-button" onclick="closeHelp()">Close</button>
-            </div>
-        </div>
-    </div>
+        <div id="debug-info"></div>
 
-    <div id="error-screen">
-        <div class="title"></div>
-        <div class="info-message"></div>
-        <div class="button-container">
-            <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
-        </div>
     </div>
-    <div id="debug-info"></div>
-
-</div>
-
 </div>
 <script src="scripts/consts.js"></script>
 <script src="scripts/config.js"></script>
 <script src="scripts/init.js"></script>
 <script src="scripts/utils.js"></script>
-<script src="scripts/script.js"></script>
+
+<script src="scripts/communication.js"></script>
 <script src="scripts/game.js"></script>
 <script src="scripts/rendering.js"></script>
 <script src="scripts/mobile.js"></script>
-
+<script src="scripts/script.js"></script>
 </body>
 </html>

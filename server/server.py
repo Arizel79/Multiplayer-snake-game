@@ -784,6 +784,8 @@ class Server:
         if (not head_str is None) and (not self.is_single_color_valid(head_str)):
             raise ValueError(f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}")
 
+        if len(ls) > MAX_PLAYER_COLOR_LENGHT:
+            raise ValueError(f"Color is too long: {len(ls)}, max: {MAX_PLAYER_COLOR_LENGHT}")
         for n, i in enumerate(ls):
             if not self.is_single_color_valid(i):
                 raise ValueError(
@@ -817,7 +819,7 @@ class Server:
                 name = player_info.get('name', 'Player')
                 name_valid = self.is_name_valid(name)
                 if not name_valid is True:
-                    self.logger.debug(f"{websocket.remote_address} choosen invalid name")
+                    self.logger.debug(f"{websocket.remote_address} choose invalid name")
                     await websocket.send(json.dumps({"type": "connection_error",
                                                      "data": f"Invalid name: {name_valid}"}))
                     return
@@ -827,7 +829,7 @@ class Server:
                     color = self.is_color_valid(color_str)
 
                 except ValueError as e:
-                    self.logger.debug(f"{websocket.remote_address} choosen invalid color: {e}")
+                    self.logger.debug(f"{websocket.remote_address} choose invalid color: {e}")
                     await websocket.send(json.dumps({"type": "connection_error",
                                                      "data": f"Invalid snake color '{color_str}'\n{e}"}))
                     return

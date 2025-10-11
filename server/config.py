@@ -28,6 +28,8 @@ BASE_VIEWPORT_HEIGHT = 50
 
 MIN_LENGHT_FAST_ON = 4
 
+MAX_PLAYER_COLOR_LENGHT = 16
+
 class FOOD_TYPES:
     default = 0
     death = 1

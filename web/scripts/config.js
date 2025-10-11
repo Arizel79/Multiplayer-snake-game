@@ -1,4 +1,4 @@
-// CLient config
+// Client config
 const CELL_SIZE = 20;
 
 const default_player_name = "";

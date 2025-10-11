@@ -127,7 +127,6 @@ function initMobileControlHandlers() {
     fastBtn.addEventListener('mouseleave', function() {
         toggleSpeed(false);
     });
-    ///
 
     let activeInterval = null;
 
@@ -175,9 +174,7 @@ if (document.readyState === 'loading') {
     initMobileControls();
 }
 
-// Также обрабатываем изменение размера окна
 window.addEventListener('resize', function() {
-    // При изменении размера окна проверяем, нужно ли показывать контролы
     const mobileControls = document.getElementById('mobile-controls');
     if (isTouchDevice()) {
         if (mobileControls.style.display !== 'block') {

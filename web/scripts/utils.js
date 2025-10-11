@@ -217,6 +217,83 @@ function closeHelp() {
     document.getElementById('help-screen').style.display = 'none';
 }
 
+function showAlert(title, message, instruction) {
+    closeAll();
+    gameState.alertData = { title, message, instruction };
+    document.querySelector('#alert-screen .title').textContent = title;
+    document.querySelector('#alert-screen .info-message').textContent = message;
+    // document.querySelector('#alert-screen .instruction').textContent = instruction;
+    document.querySelector('#alert-screen').style.display = "flex";
+}
+
+function showError(title, message) {
+    closeAlert();
+    gameState.errorData = { title, message};
+    document.querySelector('#error-screen .title').textContent = title;
+    document.querySelector('#error-screen .info-message').textContent = escapeHtml(message);
+    // document.querySelector('#error-screen .button').textContent = ;
+    document.querySelector('#error-screen').style.display = "flex";
+}
+
+function closeAlert() {
+    document.querySelector('#alert-screen').style.display = "none";
+}
+
+function closeDeath() {
+    document.querySelector('#death-screen').style.display = "none";
+}
+
+function closeError() {
+    document.querySelector('#error-screen').style.display = "none";
+    }
+
+
+function showDeathScreen(data) {
+    closeAll();
+    document.querySelector('#death-screen').style.display = "flex";
+
+
+    if (gameState.gameState && gameState.playerId) {
+        console.log(gameState.playerId);
+        const player = gameState.gameState.players[gameState.playerId];
+        const snake = gameState.gameState.snakes[gameState.playerId];
+        let statsText = `
+<div class="player-stats">
+    <table class="table-player-stats">
+        <thead>
+            <tr>
+                <th colspan="2">Player stats</th>
+            </tr>
+        </thead>
+        <tbody>
+           <tr>
+              <td>Size</td>
+              <td>${data.stats.size}</td>
+           </tr>
+           <tr>
+              <td>Max size</td>
+              <td>${data.stats.max_size}</td>
+           </tr>
+           <tr>
+              <td>Kills</td>
+              <td>${data.stats.kills}</td>
+           </tr>
+           <tr>
+              <td>Deaths</td>
+              <td>${data.stats.deaths}</td>
+           </tr>
+       </tbody>
+      </table>
+</div>`;
+
+        // document.querySelector("#death-screen .info-message").innerHTML = "convertCustomTagsToHtml(gameState.deathMessage) + statsText;
+         document.querySelector("#death-screen .info-message #death-reason").innerHTML = convertCustomTagsToHtml(gameState.deathMessage);
+         document.querySelector("#death-screen .info-message #death-player-stats-table-container").innerHTML = statsText;
+
+
+    }
+}
+
 function closeAll() {
     closeAlert();
     closeError();
@@ -225,3 +302,13 @@ function closeAll() {
     closeChat();
 }
 
+
+function returnToMenu() {
+    console.log("Backing to main menu")
+    disconnectFromServer();
+    gameState.state = "main_menu";
+    document.getElementById("main-menu").style.display = "flex";
+
+
+    closeAll();
+}
