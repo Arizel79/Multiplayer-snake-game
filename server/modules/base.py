@@ -1,113 +1,10 @@
-import argparse
-import asyncio
-import copy
-import json
-import logging
-import random
-import sys
-from collections import deque
-from dataclasses import dataclass
-from time import time
-from config import *
-
 import websockets
 
-websockets_logger = logging.getLogger('websockets')
-websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровень логирования если нужно
+from server.config import *
+from server.modules.dto import *
 
 
-@dataclass
-class Point:
-    x: int
-    y: int
-
-
-@dataclass
-class Food:
-    point: Point
-    type_: int
-    color: str
-    size: int
-
-
-@dataclass
-class Snake:
-    body: deque
-    direction: str
-    next_direction: str
-    color: str
-    name: str
-    size: int = 0
-    max_size: int = size
-    alive: bool = True
-    is_fast: bool = False
-    immortal: bool = False
-
-    def remove_segment(self, n=1, min_pop_size=2):
-        for i in range(n):
-            if len(self.body) > min_pop_size:
-                self.body.pop()
-                self.size = len(self.body)
-        if len(self.body) < MIN_LENGHT_FAST_ON:
-            self.is_fast = False
-
-    def add_segment(self, n=1):
-        if n < 0:
-            raise ValueError("Argument 'n' must be natural integer. ")
-        for i in range(n):
-            self.body.append(copy.copy(self.body[-1]))
-        self.size = len(self.body)
-        if len(self.body) > self.max_size:
-            self.max_size = len(self.body)
-
-
-@dataclass
-class Player:
-    player_id: str
-    name: str
-    color: str
-    alive: bool
-    deaths: int = 0
-    kills: int = 0
-    best_score: int = 0
-    last_score: int = 0
-
-
-@dataclass
-class Viewport:
-    center_x: int
-    center_y: int
-    width: int
-    height: int
-
-    @property
-    def left(self):
-        return self.center_x - self.width // 2
-
-    @property
-    def right(self):
-        return self.center_x + self.width // 2
-
-    @property
-    def top(self):
-        return self.center_y - self.height // 2
-
-    @property
-    def bottom(self):
-        return self.center_y + self.height // 2
-
-    def contains_point(self, point: Point) -> bool:
-        return (self.left <= point.x <= self.right and
-                self.top <= point.y <= self.bottom)
-
-    def intersects_snake(self, snake: Snake) -> bool:
-        for segment in snake.body:
-            if self.contains_point(segment):
-                return True
-        return False
-
-
-class Server:
+class BaseServer:
     def __init__(self, address, port, map_width=80, map_height=80, max_players=20,
                  server_name="Server", server_desc=None, logging_level="debug",
                  max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1, stealing_chanse_1percent=0.003,
@@ -155,7 +52,7 @@ class Server:
         self.last_fast_snake_move_time = time()
 
         self.logging_level = logging_level
-        self.setup_logger(__name__, "server/server.log", getattr(logging, self.logging_level))
+        self.setup_logger(__name__, "server.log", getattr(logging, self.logging_level))
         self.logger.info(f"Logging level: {self.logging_level}")
 
         self.base_viewport_width = BASE_VIEWPORT_WIDTH
@@ -907,7 +804,7 @@ class Server:
             self.tps = self.tps_counter / (current_time - self.last_tps_time)
             self.tps_counter = 0
             self.last_tps_time = current_time
-            if self.tps < 20:
+            if self.tps < 14:
                 self.logger.info(f"Server TPS (low): {self.tps:.1f}")
 
         for player_id, pl in self.players.items():
@@ -975,75 +872,3 @@ class Server:
                 await self.game_task
             except KeyboardInterrupt:
                 pass
-
-
-def get_random_id():
-    return hex(random.randint(0, 131_072))
-
-
-def positive_int(value):
-    val = int(value)
-    if val <= 0:
-        raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
-    return val
-
-
-async def run_server():
-    parser = argparse.ArgumentParser(description="Multiplayer Snake game by @Arizel79 (server)")
-    parser.add_argument('--host', type=str,
-                        help='Server host (default: 0.0.0.0)', default="0.0.0.0")
-    parser.add_argument('--port', "--p", type=int,
-                        help='Server port (default: 8090)', default=8090)
-    parser.add_argument('--server_name', type=str,
-                        help='Server name', default="Snake Server")
-    parser.add_argument('--server_desc', type=str,
-                        help='Description of server', default="This is server")
-    parser.add_argument('--max_players', type=positive_int,
-                        help='Max online players count', default=20)
-    parser.add_argument('--map_width', "--width", "--w", "--x_size", type=int,
-                        help='Width of server map', default=100)
-    parser.add_argument('--map_height', "--height", "--h", "--y_size", type=int,
-                        help='Height of server map',
-                        default=100)
-    parser.add_argument('--food_perc', type=int, help='Proportion food/map in perc', default=2)
-    parser.add_argument('--default_move_timeout', '--default_move', type=float,
-                        help='Timeout move snake (sec)',
-                        default=0.1)
-    parser.add_argument('--fast_move_timeout', '--fast_move', type=float,
-                        help='Timeout move fast snake (sec)',
-                        default=0.07)
-
-    parser.add_argument('--steal_chance', type=float,
-                        help='chance of stealing 1 percent of the body per tick',
-                        default=0.003)
-    parser.add_argument('--steal_chance_fast', type=float,
-                        help='chance of stealing 1 segment of the body per tick, if snake is fast',
-                        default=0.01)
-    parser.add_argument('--logging_level', '--log_lvl', type=str,
-                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-                        help='Level of logging', default="INFO")
-    args = parser.parse_args()
-
-    game_state = Server(address=args.host, port=args.port, map_width=args.map_width, map_height=args.map_height,
-                        max_players=args.max_players, server_name=args.server_name, server_desc=args.server_desc,
-                        logging_level=args.logging_level, max_food_perc=args.food_perc,
-                        default_move_timeout=args.default_move_timeout, fast_move_timeout=args.fast_move_timeout,
-                        stealing_chanse_1percent=args.steal_chance, fast_stealing_chance=args.steal_chance_fast)
-    try:
-        await game_state.run()
-    except asyncio.CancelledError:
-        pass
-    finally:
-        print("Server finished")
-
-
-def main():
-    try:
-        asyncio.run(run_server())
-    except KeyboardInterrupt:
-        print("\nKeyboardInterrupt. Server quit")
-        return
-
-
-if __name__ == '__main__':
-    main()
