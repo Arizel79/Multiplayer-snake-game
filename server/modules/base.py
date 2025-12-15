@@ -1,7 +1,9 @@
 import websockets
 
-from config import *
-from modules.dto import *
+from server.config import *
+from server.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
+from server.modules.dto import *
+from server.utils import get_random_id
 
 
 class BaseServer:
@@ -52,7 +54,7 @@ class BaseServer:
         self.last_fast_snake_move_time = time()
 
         self.logging_level = logging_level
-        self.setup_logger(__name__, "server.log", getattr(logging, self.logging_level))
+        self.setup_logger(__name__, getattr(logging, self.logging_level), "server.log")
         self.logger.info(f"Logging level: {self.logging_level}")
 
         self.base_viewport_width = BASE_VIEWPORT_WIDTH
@@ -195,7 +197,7 @@ class BaseServer:
         await self.broadcast_chat_message({"type": "set_server_desc",
                                            "data": self.server_desc})
 
-    def setup_logger(self, name, log_file, level=logging.INFO):
+    def setup_logger(self, name, level=logging.INFO, log_file=None):
         """Настройка логгера с выводом в консоль и файл."""
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
@@ -203,8 +205,9 @@ class BaseServer:
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
 
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
-        file_handler.setFormatter(file_formatter)
+        if not log_file is None:
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
+            file_handler.setFormatter(file_formatter)
 
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(console_formatter)
@@ -695,21 +698,24 @@ class BaseServer:
         return out
 
     async def handle_connection(self, websocket):
-        if len(self.players) >= self.max_players:
-            self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
-            await websocket.send(json.dumps({"type": "connection_error",
-                                             "data": f"Server is full ({len(self.players)} / {self.max_players})"}))
-            return
-        else:
-            self.logger.debug(f"{self.get_pretty_address(websocket)} is trying to connect to the server")
-        while True:
-            player_id = get_random_id()
-            if not (player_id in self.players.keys()):
-                self.logger.debug(f"{self.get_pretty_address(websocket)}`s player_id={player_id}")
-                break
-        self.connections[player_id] = websocket
-        await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
+
         try:
+            self.logger.info("ncc")
+            if len(self.players) >= self.max_players:
+                self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
+                await websocket.send(json.dumps({"type": "connection_error",
+                                                 "data": f"Server is full ({len(self.players)} / {self.max_players})"}))
+                return
+            else:
+                self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect to the server")
+            while True:
+                player_id = get_random_id()
+                if not (player_id in self.players.keys()):
+                    self.logger.debug(f"{self.get_pretty_address(websocket)}`s player_id={player_id}")
+                    break
+            self.connections[player_id] = websocket
+            await websocket.send(json.dumps({"player_id": player_id, "type": "player_id"}))
+
             try:
                 data = await websocket.recv()
                 player_info = json.loads(data)

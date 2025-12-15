@@ -3,7 +3,7 @@ import asyncio
 import logging
 import random
 
-from modules.base import BaseServer
+from server.modules.base import BaseServer
 
 websockets_logger = logging.getLogger('websockets')
 websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровень логирования если нужно
@@ -11,10 +11,6 @@ websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровен�
 
 class Server(BaseServer):
     pass
-
-
-def get_random_id():
-    return hex(random.randint(0, 131_072))
 
 
 def positive_int(value):
@@ -82,4 +78,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    raise Exception("DONT RUN THIS FILE< RUN MAIN>PY")
