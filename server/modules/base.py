@@ -1,7 +1,7 @@
 import websockets
 
-from server.config import *
-from server.modules.dto import *
+from config import *
+from modules.dto import *
 
 
 class BaseServer:

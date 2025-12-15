@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from time import time
 import websockets
 
-from server.config import MIN_LENGHT_FAST_ON
+from config import MIN_LENGHT_FAST_ON
 
 
 @dataclass

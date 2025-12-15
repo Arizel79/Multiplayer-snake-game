@@ -3,7 +3,7 @@ import asyncio
 import logging
 import random
 
-from server.modules.base import BaseServer
+from modules.base import BaseServer
 
 websockets_logger = logging.getLogger('websockets')
 websockets_logger.setLevel(logging.CRITICAL)  # Уменьшите уровень логирования если нужно
