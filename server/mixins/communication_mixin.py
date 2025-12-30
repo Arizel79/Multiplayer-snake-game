@@ -11,7 +11,10 @@ class CommunicationMixin(BaseMixin):
         return ":".join(str(i) for i in ws.remote_address)
 
     async def send_dict_to_player(self, player_id, dict_):
-        await self.connections[player_id].send(json.dumps(dict_))
+        try:
+            await self.connections[player_id].send(json.dumps(dict_))
+        except Exception as e:
+            self.logger.error(f"Error send to {player_id}: {e}")
 
     async def broadcast_chat_message(self, data):
         connections_ = copy.copy(self.connections)

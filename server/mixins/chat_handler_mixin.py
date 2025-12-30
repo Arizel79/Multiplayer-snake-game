@@ -1,16 +1,22 @@
-import json
-
 from server.mixins.base_mixin import *
 
 
 class ChatHandlerMixin(BaseMixin):
+    class PlayerNotFound(Exception):
+        pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",)}
+        self.ALL_ADMIN_COMMANDS = []
+        for k, v in self.ADMIN_COMMANDS.items():
+            self.ALL_ADMIN_COMMANDS += v
+
     async def handle_client_chat_message(self, player_id, message: str):
-        ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",)}
-        ALL_ADMIN_COMMANDS = []
-        for k, v in ADMIN_COMMANDS.items():
-            ALL_ADMIN_COMMANDS += v
 
         con = self.connections[player_id]
+
+        async def send_message(text):
+            await self.send_dict_to_player(player_id, {"type": "chat_message", "data": text})
 
         if message.startswith("/"):
             self.logger.info(
@@ -19,9 +25,8 @@ class ChatHandlerMixin(BaseMixin):
             lst = message.split()
             is_player_admin = self.players[player_id].is_admin
             if lst[0] == "/help":
-                await con.send(
-                    json.dumps({"type": "chat_message", "data": f"Help mesaage here?"})
-                )
+                await send_message(f"Help message here?")
+
             elif lst[0] == "/kill":
                 self.logger.info(
                     f"player {self.get_player(player_id)} want kill himself"
@@ -45,26 +50,51 @@ class ChatHandlerMixin(BaseMixin):
                     password = None
                 if self.admin_password and password == self.admin_password:
                     self.players[player_id].is_admin = True
-                    self.logger.info(f"Player {self.get_player(player_id)} are admin")
+                    self.logger.info(f"Player {self.get_player(player_id)} set to admin")
                     await self.send_dict_to_player(
-                        player_id, {"type": "chat_message", "data": "You are admin!"}
+                        player_id, {"type": "chat_message", "data": "You are admin now!"}
                     )
                 else:
                     self.logger.info(
                         f"Player {self.get_player(player_id)} send wrong admin password: {password}"
                     )
-                    await self.send_dict_to_player(
-                        player_id,
-                        {"type": "chat_message", "data": "Wrong admin password!"},
-                    )
+                    await send_message("Wrong admin password!")
 
-            elif lst[0] in ALL_ADMIN_COMMANDS:
+            elif lst[0] in self.ALL_ADMIN_COMMANDS:
                 if is_player_admin:
-                    self.logger.info("access allowed")
+                    self.logger.d("access allowed")
+                    await send_message("access allowed")
                 else:
                     self.logger.info("access denied")
-                if lst[0] in ADMIN_COMMANDS["kick"]:
-                    pass
+                    await send_message("access denied")
+                    return
+
+                if lst[0] in self.ADMIN_COMMANDS["kick"]:
+                    try:
+                        self.logger.info(f"Kicking {player_id} from server")
+                        target_player = self.get_player_by_name(lst[1])
+                        if not target_player:
+                            raise self.PlayerNotFound()
+                        await self.remove_player(target_player.player_id)
+                        await send_message(f"Player {player_id} kicked")
+                    except self.PlayerNotFound:
+                        await send_message(f"Player not found!")
+                    except Exception as e:
+                        self.logger.exception(e)
+
+                if lst[0] in self.ADMIN_COMMANDS["kill"]:
+                    try:
+                        self.logger.info(f"Killing {player_id}")
+                        target_player = self.get_player_by_name(lst[1])
+                        if not target_player:
+                            raise self.PlayerNotFound()
+                        await self.player_death(target_player.player_id, if_immortal=True)
+                        await send_message(f"Player {player_id} killed")
+                    except self.PlayerNotFound:
+                        await send_message(f"Player not found!")
+                    except Exception as e:
+                        self.logger.exception(e)
+
 
         else:
             self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")

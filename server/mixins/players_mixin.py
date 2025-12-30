@@ -78,7 +78,7 @@ class PlayersMixin(BaseMixin):
                 snake.next_direction = direction
 
     async def player_death(
-        self, player_id, reason: str = "No reason", if_immortal=False
+        self, player_id, reason: str = "Player %NAME% death", if_immortal=False
     ):
         if self.snakes[player_id].immortal and not if_immortal:
             return False
@@ -135,3 +135,10 @@ class PlayersMixin(BaseMixin):
         except KeyError:
             address = ""
         return f"{self.players[player_id].name}{address}"
+
+    def get_player_by_name(self, player_name):
+
+        for k, v in self.players.items():
+            if v.name == player_name:
+                return v
+

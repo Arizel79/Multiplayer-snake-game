@@ -112,8 +112,8 @@
 
   left: var(--chat-indent);
   width: 30%;
-  min-width: 200px;
-  max-width: 300px;
+  min-width: 300px;
+  max-width: 400px;
   overflow: hidden;
   background-color: var(--chat-bg-color);
   z-index: 2;
