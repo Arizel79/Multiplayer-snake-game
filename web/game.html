@@ -15,55 +15,55 @@
           content="width=device-width, initial-scale=0.5, minimum-scale=0.6, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 </head>
 <body>
+<!-- Обновленный about - теперь внутри main-menu, но после menu-form-container -->
 <div id="main-menu">
-    <div id="help-screen">
-        <div class="screen-content">
-            <div class="title">How to Play</div>
-            <div class="info-message">
-                <h3>Controls:</h3>
-                <ul>
-                    <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
-                    <li><b>Space</b> or <b>Z</b> - Speed boost</li>
-                    <li><b>T</b> - Open chat</li>
-                    <li><b>TAB</b> - Show player list</li>
-                    <li><b>ESC</b> - Close chat/player list</li>
-                </ul>
-                <h3>Game Rules:</h3>
-                <ul>
-                    <li>Eat food to grow longer</li>
-                    <li>Avoid colliding with other snakes</li>
-                    <li>Don't hit the walls</li>
-                    <li>Long snakes cat move fast</li>
-                </ul>
-                <h3>Chat Commands:</h3>
-                <ul>
-                    <li><code>.clear</code> - Clear chat</li>
-                    <li><code>.quit</code> - Return to menu</li>
-                    <li><code>/kill</code> - Suicide</li>
-                </ul>
-            </div>
-            <div class="button-container">
-                <button class="default-btn info-button" onclick="closeHelp()">Close</button>
-            </div>
-        </div>
-    </div>
+    <div id="help-screen">...</div>
 
     <div class="toggle-fullscreen">
-        <button id="fullscreen-button" onclick="toggleFullscreen()"><img alt="fullscreen"
-                                                                         src="https://static.vecteezy.com/system/resources/previews/019/858/696/non_2x/maximize-flat-color-outline-icon-free-png.png">
+        <button id="fullscreen-button" onclick="toggleFullscreen()">
+            <img alt="fullscreen"
+                 src="https://static.vecteezy.com/system/resources/previews/019/858/696/non_2x/maximize-flat-color-outline-icon-free-png.png">
         </button>
-
     </div>
 
     <div class="menu-title">Slyth</div>
-    <div class="menu-subtitle">Multiplayer snake game
-    </div>
-    <div id="play-form">
-        <input type="text" id="name-input" class="menu-input" placeholder="Player name">
-        <input type="text" id="color-input" class="menu-input" placeholder="Color">
-        <input type="text" id="server-input" class="menu-input" placeholder="Server address">
-        <button id="play-button" class="default-btn menu-button">Play</button>
+    <div class="menu-subtitle">Multiplayer snake game</div>
 
+    <div class="menu-form-container">
+        <!-- Внутри <div class="menu-form-container"> -->
+        <div class="side-panel left-panel">
+            <div class="panel-header">Game Rules</div>
+            <div class="panel-content">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed porttitor justo. Suspendisse placerat ut ante ut placerat. Donec non massa auctor, ultrices est pellentesque, porta ex. Nam at cursus ante. Curabitur porta ipsum nulla, sit amet iaculis magna fringilla ac. Vivamus faucibus massa ut purus sodales, nec aliquet felis aliquam. Nam gravida euismod interdum. Curabitur risus mauris, consequat quis facilisis id, interdum quis elit. Aliquam mollis ante justo, at mollis orci malesuada eget. Nulla suscipit id ante nec hendrerit. Vestibulum sodales, metus a bibendum ultrices, orci nulla auctor odio, ac facilisis mauris turpis eget tellus.
+
+Donec nec augue molestie, hendrerit tellus finibus, consectetur velit. Nam efficitur aliquet imperdiet. Curabitur et odio laoreet, auctor dui ac, vehicula lorem. Maecenas nisi purus, maximus eu ligula a, ultricies lacinia dui. Morbi feugiat blandit eleifend. Duis ut magna a magna rhoncus sagittis non eu dolor. Donec felis sem, sollicitudin malesuada urna ut, fringilla pretium sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam in finibus velit, sit amet lacinia sem. Nulla vel pharetra quam. Nulla quis lacinia nunc.
+
+Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non vestibulum ut, vestibulum in tellus. Pellentesque rutrum lacus mollis auctor porta. Donec molestie, enim et faucibus tincidunt, nunc quam condimentum elit, a bibendum felis arcu at lacus. Mauris ac sapien lacus. Ut pretium ligula a nunc vestibulum, sed vestibulum quam dapibus. Duis vitae volutpat urna. Duis porta orci tortor, sed suscipit orci consequat vitae. Etiam condimentum maximus risus mattis aliquam. Aliquam pulvinar varius lorem ut placerat. In molestie mattis libero, nec luctus quam facilisis at. Etiam erat erat, eleifend sed nisl id, ultricies ultrices dolor.
+            </div>
+        </div>
+
+        <div class="center-panel">
+            <div class="panel-header">Play</div>
+            <div class="panel-content">
+                <div id="play-form">
+                    <input type="text" id="name-input" class="menu-input" placeholder="Player name">
+                    <input type="text" id="color-input" class="menu-input" placeholder="Color">
+                    <input type="text" id="server-input" class="menu-input" placeholder="Server address">
+                    <button id="play-button" class="default-btn menu-button">Play</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel right-panel">
+            <div class="panel-header">Tips & Tricks</div>
+            <div class="panel-content">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed porttitor justo. Suspendisse placerat ut ante ut placerat. Donec non massa auctor, ultrices est pellentesque, porta ex. Nam at cursus ante. Curabitur porta ipsum nulla, sit amet iaculis magna fringilla ac. Vivamus faucibus massa ut purus sodales, nec aliquet felis aliquam. Nam gravida euismod interdum. Curabitur risus mauris, consequat quis facilisis id, interdum quis elit. Aliquam mollis ante justo, at mollis orci malesuada eget. Nulla suscipit id ante nec hendrerit. Vestibulum sodales, metus a bibendum ultrices, orci nulla auctor odio, ac facilisis mauris turpis eget tellus.
+
+Donec nec augue molestie, hendrerit tellus finibus, consectetur velit. Nam efficitur aliquet imperdiet. Curabitur et odio laoreet, auctor dui ac, vehicula lorem. Maecenas nisi purus, maximus eu ligula a, ultricies lacinia dui. Morbi feugiat blandit eleifend. Duis ut magna a magna rhoncus sagittis non eu dolor. Donec felis sem, sollicitudin malesuada urna ut, fringilla pretium sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam in finibus velit, sit amet lacinia sem. Nulla vel pharetra quam. Nulla quis lacinia nunc.
+
+Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non vestibulum ut, vestibulum in tellus. Pellentesque rutrum lacus mollis auctor porta. Donec molestie, enim et faucibus tincidunt, nunc quam condimentum elit, a bibendum felis arcu at lacus. Mauris ac sapien lacus. Ut pretium ligula a nunc vestibulum, sed vestibulum quam dapibus. Duis vitae volutpat urna. Duis porta orci tortor, sed suscipit orci consequat vitae. Etiam condimentum maximus risus mattis aliquam. Aliquam pulvinar varius lorem ut placerat. In molestie mattis libero, nec luctus quam facilisis at. Etiam erat erat, eleifend sed nisl id, ultricies ultrices dolor.
+            </div>
+        </div>
     </div>
 
     <div id="about">
