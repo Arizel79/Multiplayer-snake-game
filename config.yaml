@@ -20,4 +20,6 @@ fast_move_timeout: 0.1
 steal_chance: 0.005
 steal_chance_fast: 0.015
 
+admin_password: "aS22e_95rT5E_0s"
+
 logging_level: "INFO"

@@ -69,7 +69,8 @@ async def run_server():
             default_move_timeout=config.get('default_move_timeout', 0.1),
             fast_move_timeout=config.get('fast_move_timeout', 0.07),
             stealing_chanse_1percent=config.get('steal_chance', 0.003),
-            fast_stealing_chance=config.get('steal_chance_fast', 0.01)
+            fast_stealing_chance=config.get('steal_chance_fast', 0.01),
+            admin_password=config.get('admin_password'),
         )
     else:
         game_state = Server(

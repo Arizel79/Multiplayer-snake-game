@@ -60,6 +60,7 @@ class Player:
     kills: int = 0
     best_score: int = 0
     last_score: int = 0
+    is_admin: bool = False
 
 
 @dataclass

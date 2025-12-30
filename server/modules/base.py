@@ -7,82 +7,15 @@ from time import time
 
 import websockets
 
+from server.mixins.chat_handler_mixin import ChatHandlerMixin
+from server.mixins.utils_mixin import UtilsMixin
 from server.modules.config import *
 from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.dto import *
 from server.utils import get_random_id
 
 
-class BaseServer:
-    def __init__(self, address, port, map_width=80, map_height=80, max_players=20,
-                 server_name="Server", server_desc=None, logging_level="debug",
-                 max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1, stealing_chanse_1percent=0.003,
-                 fast_stealing_chance=0.5, viewport_width=BASE_VIEWPORT_WIDTH, viewport_height=BASE_VIEWPORT_HEIGHT):
-        self.port = port
-        self.address = address
-
-        self.width = map_width
-        self.height = map_height
-
-        self.snake_colors = DEAFAULT_SNAKE_COLORS
-
-        self.DEFAULT_MOVE_TIMEOUT = default_move_timeout
-        self.FAST_MOVE_TIMEOUT = fast_move_timeout
-        self.MIN_LENGHT_FAST_ON = MIN_LENGHT_FAST_ON
-
-        self.VALID_NAME_CHARS = VALID_NAME_CHARS
-
-        self.snakes = {}
-        self.food = {}
-        self.players = {}
-        self.max_players = max_players
-        self.connections = {}
-
-        if server_desc is None:
-            self.server_desc = f"<green>Welcome to our Server {server_name}!</green>"
-        else:
-            self.server_desc = server_desc
-
-        self.game_speed = 0.001
-        self.max_food_relative = max_food_perc / 100
-        self.max_food = (self.width * self.height) * self.max_food_relative
-
-        self.min_stealing_snake_size = DEFAULT_SNAKE_LENGHT + 1
-        self.stealing_chance = stealing_chanse_1percent
-        self.steal_percentage = 0.01
-
-        self.fast_stealing_chance = fast_stealing_chance
-        self.fast_steal_abs_size = 1
-
-        self.old_tick_time = time()
-        self.tick = 0.02
-
-        self.last_normal_snake_move_time = time()
-        self.last_fast_snake_move_time = time()
-
-        self.logging_level = logging_level
-        self.setup_logger(__name__, getattr(logging, self.logging_level), "server.log")
-        self.logger.info(f"Logging level: {self.logging_level}")
-
-        self.viewport_width = viewport_width
-        self.viewport_height = viewport_height
-        self.viewport_scale_factor = 1
-
-        self.spatial_grid = {}
-        self.grid_cell_size = 1
-
-        # TPS tracking
-        self.tps_counter = 0
-        self.last_tps_time = time()
-        self.tps = 0
-        self.tps_log_interval = 5
-
-        self._food_dict_cache = {}
-        self._snake_dict_cache = {}
-        self._last_cache_update = 0
-        self.cache_ttl = 0.05
-
-        self._send_cache = {}
+class BaseServer(ChatHandlerMixin, UtilsMixin):
 
     def get_color_for_segment(self, snake, segment_n):
         n = segment_n
@@ -204,26 +137,7 @@ class BaseServer:
         await self.broadcast_chat_message({"type": "set_server_desc",
                                            "data": self.server_desc})
 
-    def setup_logger(self, name, level=logging.INFO, log_file=None):
-        """Настройка логгера с выводом в консоль и файл."""
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(level)
 
-        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
-
-        if not log_file is None:
-            file_handler = logging.FileHandler(log_file, encoding="utf-8")
-            file_handler.setFormatter(file_formatter)
-            self.logger.addHandler(file_handler)
-
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(console_formatter)
-
-
-        self.logger.addHandler(console_handler)
-
-        return self.logger
 
     def get_all_food_count(self):
         food_count = 0
@@ -312,6 +226,9 @@ class BaseServer:
         except KeyError:
             address = ""
         return f"{self.players[player_id].name}{address}"
+
+    async def send_dict_to_player(self, player_id, dict_):
+        await self.connections[player_id].send(json.dumps(dict_))
 
     async def player_death(self, player_id, reason: str = "No reason", if_immortal=False):
         if self.snakes[player_id].immortal and not if_immortal:
@@ -604,28 +521,6 @@ class BaseServer:
 
         return f"<{color}>{text}</{color}>"
 
-    async def handle_client_chat_message(self, player_id, message: str):
-        con = self.connections[player_id]
-
-        if message.startswith("/"):
-            self.logger.info(f"{self.get_player(player_id)} issued server command: {message}")
-            lst = message.split()
-            if lst[0] == "/help":
-                await con.send(json.dumps({"type": "chat_message",
-                                           "data": f"Help mesaage here?"}))
-            elif lst[0] == "/kill":
-                self.logger.info(f"player {self.get_player(player_id)} want kill himself")
-                await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
-            elif lst[0] == "/kickme":
-                self.logger.info(f"player {self.get_player(player_id)} want kick himself from server")
-                await self.remove_player(player_id)
-        else:
-            self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")
-            name = self.players[player_id].name
-            await self.broadcast_chat_message(
-                {"type": "chat_message", "data": f"{message}",
-                 "from_user": f"{await self.get_stilizate_name_color(player_id)}"})
-
     async def handle_client_data(self, player_id: str, data: dict):
         self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
         if data["type"] == "direction":
@@ -719,11 +614,13 @@ class BaseServer:
 
                 pl_count = len(self.connections)
                 pl_count_max = self.max_players
-                self.logger.info(f"check max player for {self.get_pretty_address(websocket)}: {pl_count} >= {pl_count_max}")
+                self.logger.info(
+                    f"check max player for {self.get_pretty_address(websocket)}: {pl_count} >= {pl_count_max}")
 
                 if pl_count >= pl_count_max:
 
-                    self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
+                    self.logger.info(
+                        f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
                     await websocket.send(json.dumps({"type": "connection_error",
                                                      "data": f"Server is full ({pl_count} / {pl_count_max})"}))
                     return
@@ -890,7 +787,7 @@ class BaseServer:
         self.game_task = asyncio.create_task(self.game_loop())
         try:
             async with websockets.serve(self.handle_connection, self.address, self.port):
-                print(f"Server started at {self.address}:{self.port}")
+                self.logger.info(f"Server started at {self.address}:{self.port}")
                 await asyncio.Future()
 
         except Exception as e:
