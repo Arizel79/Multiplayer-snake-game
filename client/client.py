@@ -29,7 +29,7 @@ DEFAULT_CONFIG = {
     "player": f"player_{randint(0, 99999)}",
     "color": choice(ClientCLI.SNAKE_COLORS),
 }
-GAME_CONFIG_FILENAME = "client\game_config.json"
+GAME_CONFIG_FILENAME = r"client\game_config.json"
 
 
 async def run_client():
@@ -124,4 +124,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print("Dont run this file, run python client")
