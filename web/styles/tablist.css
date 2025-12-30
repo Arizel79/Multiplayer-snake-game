@@ -80,3 +80,12 @@
     background-color: #c62828;
     color: #ffcdd2;
 }
+
+/* Добавьте в конец файла: */
+#tablist-tps {
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #aaa;
+    padding: 0 5px;
+}

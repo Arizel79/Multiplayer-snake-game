@@ -17,6 +17,7 @@ function resizeCanvas() {
 
 
 function startGame() {
+    console.log("Starting game")
     gameState.playerName = document.getElementById("name-input").value.trim();
     gameState.playerColor = document.getElementById("color-input").value.trim();
     gameState.serverAddress = document.getElementById("server-input").value.trim();
@@ -65,7 +66,6 @@ function handleMovementInput() {
 
 }
 function handleKeyDown(event) {
-    console.log("handleKeyDown state before: " + gameState.state)
     if (gameState.showChat && event.key !== "Enter" && event.key !== "Escape") {
         return;
     }
@@ -105,9 +105,8 @@ function handleKeyDown(event) {
             break;
 
         case "main_menu":
-            console.log("handleKeyDown in2: " + gameState.state)
             if (event.key == "Enter") {
-                console.log("START GAME!")
+
                 startGame();
             }
             break;

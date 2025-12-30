@@ -193,6 +193,15 @@ function closeTablist() {
 
 function updateTablist() {
     if (!gameState.gameState) return;
+
+
+    const tpsElement = document.getElementById("tablist-tps");
+    if (tpsElement && gameState.gameState.tps !== undefined) {
+        tpsElement.innerHTML = `TPS: ${gameState.gameState.tps}`;
+    } else if (tpsElement) {
+        tpsElement.innerHTML = "TPS: N/A";
+    }
+
     const mySnake = gameState.gameState.snakes[gameState.playerId];
     const myPlayer = gameState.gameState.players[gameState.playerId];
 

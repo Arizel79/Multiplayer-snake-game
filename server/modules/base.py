@@ -484,7 +484,8 @@ class BaseServer:
             "snakes": {},
             "players": {},
             "food": [],
-            "is_partial": False
+            "is_partial": False,
+
         }
 
         return dict_
@@ -515,7 +516,8 @@ class BaseServer:
                 'width': viewport.width,
                 'height': viewport.height
             },
-            "is_partial": True
+            "is_partial": True,
+            "tps": round(self.tps, 1)
         }
 
         for visible_snake_id in visible_snake_ids:
@@ -825,7 +827,6 @@ class BaseServer:
                 self.logger.info(f"Server TPS (low): {self.tps:.1f}")
 
         for player_id, pl in self.players.items():
-            pass
             await self.sometimes_steal_body(player_id)
             await self.fast_snake_steal_body(player_id)
 
