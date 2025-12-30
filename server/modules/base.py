@@ -17,7 +17,7 @@ class BaseServer:
     def __init__(self, address, port, map_width=80, map_height=80, max_players=20,
                  server_name="Server", server_desc=None, logging_level="debug",
                  max_food_perc=10, default_move_timeout=0.3, fast_move_timeout=0.1, stealing_chanse_1percent=0.003,
-                 fast_stealing_chance=0.5):
+                 fast_stealing_chance=0.5, viewport_width=BASE_VIEWPORT_WIDTH, viewport_height=BASE_VIEWPORT_HEIGHT):
         self.port = port
         self.address = address
 
@@ -64,8 +64,8 @@ class BaseServer:
         self.setup_logger(__name__, getattr(logging, self.logging_level), "server.log")
         self.logger.info(f"Logging level: {self.logging_level}")
 
-        self.base_viewport_width = BASE_VIEWPORT_WIDTH
-        self.base_viewport_height = BASE_VIEWPORT_HEIGHT
+        self.viewport_width = viewport_width
+        self.viewport_height = viewport_height
         self.viewport_scale_factor = 1
 
         self.spatial_grid = {}
@@ -142,11 +142,11 @@ class BaseServer:
     def get_viewport_for_snake(self, snake: Snake) -> Viewport:
         """Возвращает область видимости для змеи"""
         if not snake.body:
-            return Viewport(0, 0, self.base_viewport_width, self.base_viewport_height)
+            return Viewport(0, 0, self.viewport_width, self.viewport_height)
 
         head = snake.body[0]
-        viewport_width = int(self.base_viewport_width * self.viewport_scale_factor)
-        viewport_height = int(self.base_viewport_height * self.viewport_scale_factor)
+        viewport_width = int(self.viewport_width * self.viewport_scale_factor)
+        viewport_height = int(self.viewport_height * self.viewport_scale_factor)
 
         return Viewport(head.x, head.y, viewport_width, viewport_height)
 
@@ -715,6 +715,7 @@ class BaseServer:
     async def handle_connection(self, websocket):
         try:
             if len(self.players) >= self.max_players:
+
                 self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
                 await websocket.send(json.dumps({"type": "connection_error",
                                                  "data": f"Server is full ({len(self.players)} / {self.max_players})"}))

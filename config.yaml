@@ -1,0 +1,23 @@
+host: "0.0.0.0"
+port: 8090
+
+server_name: "My Snake Server"
+server_desc: "This is my server"
+
+max_players: 1
+
+map_width: 256
+map_height: 256
+
+viewport_width: 90
+viewport_height: 90
+
+food_perc: 3
+
+default_move_timeout: 0.15
+fast_move_timeout: 0.1
+
+steal_chance: 0.005
+steal_chance_fast: 0.015
+
+logging_level: "INFO"

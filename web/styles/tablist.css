@@ -21,7 +21,7 @@
 #tablist-title {
     font-size: 130%;
     text-align: center;
-    margin-bottom: 10px;
+    margin: 2px;
 
 }
 #tablist-server-ip, #tablist-server-desc {
@@ -83,9 +83,9 @@
 
 /* Добавьте в конец файла: */
 #tablist-tps {
-    text-align: left;
+    text-align: center;
     font-size: 14px;
-    margin-bottom: 10px;
+    margin: 2px;
     color: #aaa;
     padding: 0 5px;
 }

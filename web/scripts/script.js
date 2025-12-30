@@ -53,17 +53,26 @@ function handleMovementInput() {
 
     let direction = null;
 
-    if (gameState.keysPressed["w"] ||  gameState.keysPressed["ц"] || gameState.keysPressed["ArrowUp"]) {
-        direction = "up";
-    } else if (gameState.keysPressed["s"] || gameState.keysPressed["ы"] ||  gameState.keysPressed["ArrowDown"]) {
-        direction = "down";
-    } else if (gameState.keysPressed["a"] || gameState.keysPressed["ф"] || gameState.keysPressed["ArrowLeft"]) {
-        direction = "left";
-    } else if (gameState.keysPressed["d"] ||  gameState.keysPressed["в"] || gameState.keysPressed["ArrowRight"]) {
-        direction = "right";
-    }
-    setDirection(direction);
+    const keyMappings = {
+        "up": ["w", "ц", "arrowup"],
+        "down": ["s", "ы", "arrowdown"],
+        "left": ["a", "ф", "arrowleft"],
+        "right": ["d", "в", "arrowright"]
+    };
 
+    for (const [dir, keys] of Object.entries(keyMappings)) {
+        for (const key of keys) {
+            if (key.startsWith("arrow")
+                ? gameState.keysPressed[key]
+                : gameState.keysPressed[key.toLowerCase()] || gameState.keysPressed[key.toUpperCase()]) {
+                direction = dir;
+                break;
+            }
+        }
+        if (direction) break;
+    }
+
+    setDirection(direction);
 }
 function handleKeyDown(event) {
     if (gameState.showChat && event.key !== "Enter" && event.key !== "Escape") {

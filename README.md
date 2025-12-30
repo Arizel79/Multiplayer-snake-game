@@ -1,4 +1,12 @@
-# Multiplayer snake game
+# Slyth - Multiplayer snake game
+```commandline
+ ____  _       _   _     
+/ ___|| |_   _| |_| |__  
+\___ \| | | | | __| '_ \ 
+ ___) | | |_| | |_| | | |
+|____/|_|\__, |\__|_| |_|
+         |___/           
+```
 Multiplayer snake game writen on python with support for 3 clients: web, console and pygame (gui)
 
 You can play [here](http://protein-gnu.gl.at.ply.gg:34472/game.html)
