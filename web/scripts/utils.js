@@ -227,7 +227,7 @@ function showAlert(title, message, instruction) {
 }
 
 function showError(title, message) {
-    closeAlert();
+    closeAll();
     gameState.errorData = { title, message};
     document.querySelector('#error-screen .title').textContent = title;
     document.querySelector('#error-screen .info-message').textContent = escapeHtml(message);
