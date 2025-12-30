@@ -4,7 +4,7 @@ port: 8090
 server_name: "My Snake Server"
 server_desc: "This is my server"
 
-max_players: 1
+max_players: 20
 
 map_width: 256
 map_height: 256

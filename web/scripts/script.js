@@ -131,7 +131,6 @@ function handleKeyDown(event) {
         case "paused":
             if (event.key == "Enter" || event.key == " ") {
                 returnToMenu();
-                console.log("returnToMenu!dad!")
             }
             break;
     }
