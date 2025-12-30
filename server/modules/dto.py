@@ -87,8 +87,7 @@ class Viewport:
         return self.center_y + self.height // 2
 
     def contains_point(self, point: Point) -> bool:
-        return (self.left <= point.x <= self.right and
-                self.top <= point.y <= self.bottom)
+        return self.left <= point.x <= self.right and self.top <= point.y <= self.bottom
 
     def intersects_snake(self, snake: Snake) -> bool:
         for segment in snake.body:

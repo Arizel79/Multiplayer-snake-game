@@ -13,8 +13,10 @@ class UtilsMixin(BaseMixin):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
-        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_formatter = logging.Formatter('[%(levelname)s] %(message)s')
+        file_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        console_formatter = logging.Formatter("[%(levelname)s] %(message)s")
 
         if not log_file is None:
             file_handler = logging.FileHandler(log_file, encoding="utf-8")
@@ -47,22 +49,31 @@ class UtilsMixin(BaseMixin):
 
         else:
             raise ValueError(
-                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}")
+                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}"
+            )
 
         out_color = color_str
         if out_color is None:
-            self.logger.warning(f"Unknown color: {color_str}; snake color: {snake['color']} ")
+            self.logger.warning(
+                f"Unknown color: {color_str}; snake color: {snake['color']} "
+            )
             out_color = "white"
 
         return out_color
 
     async def set_server_desc(self, server_desc):
         self.server_desc = server_desc
-        await self.broadcast_chat_message({"type": "set_server_desc",
-                                           "data": self.server_desc})
+        await self.broadcast_chat_message(
+            {"type": "set_server_desc", "data": self.server_desc}
+        )
 
     def get_map_rect(self):
-        x1, y1, x2, y2 = -(self.width // 2), -(self.height // 2), self.width // 2, self.height // 2
+        x1, y1, x2, y2 = (
+            -(self.width // 2),
+            -(self.height // 2),
+            self.width // 2,
+            self.height // 2,
+        )
         return x1, y1, x2, y2
 
     def get_all_player_names(self):
@@ -109,14 +120,19 @@ class UtilsMixin(BaseMixin):
             raise ValueError("Color is too big")
 
         if (not head_str is None) and (not self.is_single_color_valid(head_str)):
-            raise ValueError(f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}")
+            raise ValueError(
+                f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}"
+            )
 
         if len(ls) > MAX_PLAYER_COLOR_LENGHT:
-            raise ValueError(f"Color is too long: {len(ls)}, max: {MAX_PLAYER_COLOR_LENGHT}")
+            raise ValueError(
+                f"Color is too long: {len(ls)}, max: {MAX_PLAYER_COLOR_LENGHT}"
+            )
         for n, i in enumerate(ls):
             if not self.is_single_color_valid(i):
                 raise ValueError(
-                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
+                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}"
+                )
 
         out = {"body": ls}
         if not head_str is None:
@@ -166,10 +182,12 @@ class UtilsMixin(BaseMixin):
         y = random.randint(y1, y2)
         self.add_food(x, y)
 
-    def add_food(self, x, y, type_=FOOD_TYPES.default, color=DEFAULT_FOOD_COLOR, size=1):
+    def add_food(
+        self, x, y, type_=FOOD_TYPES.default, color=DEFAULT_FOOD_COLOR, size=1
+    ):
         if self.food.get((x, y)):
             return
-        self.food[(x, y)] = (Food(Point(x, y), type_=type_, color=color, size=size))
+        self.food[(x, y)] = Food(Point(x, y), type_=type_, color=color, size=size)
 
     def generate_food(self):
         while self.get_all_food_count() < self.max_food:

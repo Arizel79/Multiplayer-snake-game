@@ -57,14 +57,7 @@ def main():
 
     exclude_files = ["ra.py"]
 
-    exclude_dirs = [
-        ".venv",
-        ".venv1",
-        "gen",
-        "admin",
-        "edit_my_tasks",
-        "profile"
-    ]
+    exclude_dirs = [".venv", ".venv1", "gen", "admin", "edit_my_tasks", "profile"]
     read_files(directory, exclude_files, exclude_dirs)
 
 

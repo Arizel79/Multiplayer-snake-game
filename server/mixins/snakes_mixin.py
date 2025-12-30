@@ -11,7 +11,9 @@ class SnakesMixin(BaseMixin):
         if not snake.alive:
             return
 
-        should_move = (snake.is_fast and self.move_fast) or (not snake.is_fast and self.move_normal)
+        should_move = (snake.is_fast and self.move_fast) or (
+            not snake.is_fast and self.move_normal
+        )
         if not should_move:
             return
 
@@ -19,7 +21,12 @@ class SnakesMixin(BaseMixin):
         head = snake.body[0]
         new_head = Point(head.x, head.y)
 
-        direction_offsets = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
+        direction_offsets = {
+            "up": (0, -1),
+            "down": (0, 1),
+            "left": (-1, 0),
+            "right": (1, 0),
+        }
         dx, dy = direction_offsets[snake.direction]
         new_head.x += dx
         new_head.y += dy
@@ -42,7 +49,9 @@ class SnakesMixin(BaseMixin):
         cell_key = (cell_x, cell_y)
 
         if cell_key in self.spatial_grid:
-            for seg_x, seg_y, seg_player_id in self.spatial_grid[cell_key].get('snake_segments', set()):
+            for seg_x, seg_y, seg_player_id in self.spatial_grid[cell_key].get(
+                "snake_segments", set()
+            ):
                 if point.x == seg_x and point.y == seg_y:
                     if seg_player_id != player_id:
                         return True
@@ -56,7 +65,9 @@ class SnakesMixin(BaseMixin):
         """Полная проверка коллизий со всеми змеями на карте"""
 
         walls = self.get_map_rect()
-        if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
+        if not (
+            walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]
+        ):
             await self.player_death(player_id, "%NAME% crashed into the border")
             return True
 
@@ -65,7 +76,9 @@ class SnakesMixin(BaseMixin):
                 continue
 
             if other_snake.alive and self.point_in_snake_body(new_head, other_snake):
-                await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
+                await self.player_death(
+                    player_id, f"%NAME% crashed into {other_snake.name}"
+                )
                 self.players[other_id].kills += 1
                 return True
 
@@ -88,20 +101,22 @@ class SnakesMixin(BaseMixin):
 
     async def is_move_now(self, now):
 
-        move_normal = now >= self.last_normal_snake_move_time + self.DEFAULT_MOVE_TIMEOUT
+        move_normal = (
+            now >= self.last_normal_snake_move_time + self.DEFAULT_MOVE_TIMEOUT
+        )
         move_fast = now >= self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT
         return move_normal, move_fast
 
     def _snake_to_dict(self, snake: Snake):
         return {
-            'body': [{'x': p.x, "y": p.y} for p in snake.body],
-            'color': snake.color,
-            'name': snake.name,
-            'size': snake.size,
-            'max_size': snake.max_size,
-            'alive': snake.alive,
-            'direction': snake.direction,
-            'is_fast': snake.is_fast
+            "body": [{"x": p.x, "y": p.y} for p in snake.body],
+            "color": snake.color,
+            "name": snake.name,
+            "size": snake.size,
+            "max_size": snake.max_size,
+            "alive": snake.alive,
+            "direction": snake.direction,
+            "is_fast": snake.is_fast,
         }
 
     async def toggle_speed(self, player_id, is_fast):
@@ -123,11 +138,12 @@ class SnakesMixin(BaseMixin):
             color=self.players[player_id].color,
             name=self.players[player_id].name,
             alive=True,
-
         )
 
         sn.add_segment(lenght - 1)
-        self.logger.info(f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})")
+        self.logger.info(
+            f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})"
+        )
 
     async def respawn(self, player_id):
         await self.spawn(player_id)
@@ -141,9 +157,12 @@ class SnakesMixin(BaseMixin):
             if current_length > self.min_stealing_snake_size:
                 segments_to_remove = max(1, int(current_length * self.steal_percentage))
                 self.logger.debug(
-                    f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
+                    f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}"
+                )
 
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
+                snake.remove_segment(
+                    segments_to_remove, min_pop_size=self.min_stealing_snake_size
+                )
 
     async def fast_snake_steal_body(self, player_id):
         snake = self.snakes[player_id]
@@ -164,9 +183,18 @@ class SnakesMixin(BaseMixin):
                     point = snake.body[segment_index]
                     color = self.get_color_for_segment(snake, segment_index)
 
-                    self.add_food(point.x, point.y, type_=FOOD_TYPES.from_fast_snake, color=color, size=1)
+                    self.add_food(
+                        point.x,
+                        point.y,
+                        type_=FOOD_TYPES.from_fast_snake,
+                        color=color,
+                        size=1,
+                    )
 
                 self.logger.debug(
-                    f"FAST SPEED Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
+                    f"FAST SPEED Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}"
+                )
 
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
+                snake.remove_segment(
+                    segments_to_remove, min_pop_size=self.min_stealing_snake_size
+                )

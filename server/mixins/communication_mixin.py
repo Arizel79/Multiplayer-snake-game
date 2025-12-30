@@ -9,6 +9,7 @@ from server.mixins.base_mixin import BaseMixin
 class CommunicationMixin(BaseMixin):
     def get_addres_from_ws(self, ws):
         return ":".join(str(i) for i in ws.remote_address)
+
     async def send_dict_to_player(self, player_id, dict_):
         await self.connections[player_id].send(json.dumps(dict_))
 
@@ -28,7 +29,7 @@ class CommunicationMixin(BaseMixin):
         self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
         if data["type"] == "direction":
 
-            self.change_direction(player_id, data['data'])
+            self.change_direction(player_id, data["data"])
         elif data["type"] == "chat_message":
             await self.handle_client_chat_message(player_id, data["data"])
         elif data["type"] == "respawn":
@@ -36,8 +37,9 @@ class CommunicationMixin(BaseMixin):
         elif data["type"] == "is_fast":
             await self.toggle_speed(player_id, data["data"])
         else:
-            self.logger.warning(f"Unknown data type received from {self.get_player(player_id)}: {data}")
-
+            self.logger.warning(
+                f"Unknown data type received from {self.get_player(player_id)}: {data}"
+            )
 
     async def send_game_state_to_all(self):
         try:

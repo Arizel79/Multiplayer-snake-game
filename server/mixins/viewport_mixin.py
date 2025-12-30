@@ -9,9 +9,9 @@ class ViewportMixin(BaseMixin):
         for xy, food in self.food.items():
 
             if xy not in new_grid:
-                new_grid[xy] = {'food': [], 'snake_ids': set()}
+                new_grid[xy] = {"food": [], "snake_ids": set()}
 
-            new_grid[xy]['food'].append(food)
+            new_grid[xy]["food"].append(food)
 
         for player_id, snake in self.snakes.items():
             segments_to_check = [snake.body[0]]
@@ -24,9 +24,9 @@ class ViewportMixin(BaseMixin):
                 cell_key = (cell_x, cell_y)
 
                 if cell_key not in new_grid:
-                    new_grid[cell_key] = {'food': [], 'snake_ids': set()}
+                    new_grid[cell_key] = {"food": [], "snake_ids": set()}
 
-                new_grid[cell_key]['snake_ids'].add(player_id)
+                new_grid[cell_key]["snake_ids"].add(player_id)
 
         self.spatial_grid = new_grid
 
@@ -50,7 +50,12 @@ class ViewportMixin(BaseMixin):
         start_y = max(viewport.top // self.grid_cell_size, -self.height // 2)
         end_y = min(viewport.bottom // self.grid_cell_size, self.height // 2)
 
-        left, right, top, bottom = viewport.left, viewport.right, viewport.top, viewport.bottom
+        left, right, top, bottom = (
+            viewport.left,
+            viewport.right,
+            viewport.top,
+            viewport.bottom,
+        )
         spatial_grid = self.spatial_grid
 
         for cell_x in range(int(start_x), int(end_x) + 1):
@@ -59,15 +64,17 @@ class ViewportMixin(BaseMixin):
                 if cell_key in spatial_grid:
                     cell_data = spatial_grid[cell_key]
 
-                    for food in cell_data.get('food', []):
+                    for food in cell_data.get("food", []):
                         point = food.point
                         if left <= point.x <= right and top <= point.y <= bottom:
                             visible_food.append(food)
 
-                    for player_id in cell_data.get('snake_ids', set()):
+                    for player_id in cell_data.get("snake_ids", set()):
                         if player_id not in visible_snake_ids:
                             snake = self.snakes.get(player_id)
-                            if snake and self._snake_intersects_viewport_fast(snake, viewport):
+                            if snake and self._snake_intersects_viewport_fast(
+                                snake, viewport
+                            ):
                                 visible_snake_ids.add(player_id)
 
         return list(visible_snake_ids), visible_food
