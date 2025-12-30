@@ -1,14 +1,15 @@
 function connectToServer() {
     try {
+        console.log("Connecting to server " + gameState.serverAddress + "...");
         gameState.state = "connecting";
         showAlert("Connecting", "Server: " + gameState.serverAddress, "Wait...");
         gameState.socket = new WebSocket("ws://" + gameState.serverAddress);
-        gameState.state = "game"
+
 
         gameState.socket.onopen = () => {
             closeAll();
-            console.log("Connected to server");
-            _addChatMessage(convertCustomTagsToHtml("connected to " + gameState.serverAddress))
+            console.log("Connected to server: " + gameState.serverAddress);
+            _addChatMessage(convertCustomTagsToHtml("Connected to " + gameState.serverAddress))
             gameState.state = "game";
 
             gameState.socket.send(JSON.stringify({
@@ -17,6 +18,7 @@ function connectToServer() {
             }));
 
             gameLoop();
+            _addChatMessage("Disconnected from " + gameState.serverAddress);
         };
 
         gameState.socket.onmessage = (event) => {
@@ -25,47 +27,108 @@ function connectToServer() {
         };
 
         gameState.socket.onclose = (event) => {
-            console.log("Closing socket. State: " + gameState.state);
+            console.log("Socket closed. Code:", event.code, "Reason:", event.reason, "Was clean:", event.wasClean);
 
-            // Определяем причину отключения
             let reason = "Connection closed";
+            let errorCode = event.code;
+
             if (event.code === 1000) {
                 reason = "Normal closure";
             } else if (event.code === 1001) {
                 reason = "Server going away";
             } else if (event.code === 1006) {
                 reason = "Connection lost";
+            } else if (event.code === 1002) {
+                reason = "Protocol error";
+            } else if (event.code === 1003) {
+                reason = "Unsupported data";
+            } else if (event.code === 1005) {
+                reason = "No status received";
+            } else if (event.code === 1007) {
+                reason = "Invalid frame payload data";
+            } else if (event.code === 1008) {
+                reason = "Policy violation";
+            } else if (event.code === 1009) {
+                reason = "Message too big";
+            } else if (event.code === 1010) {
+                reason = "Missing extension";
+            } else if (event.code === 1011) {
+                reason = "Internal server error";
+            } else if (event.code === 1012) {
+                reason = "Service restart";
+            } else if (event.code === 1013) {
+                reason = "Try again later";
+            } else if (event.code === 1015) {
+                reason = "TLS handshake failed";
             }
 
-            if (gameState.state != "connection_error" && gameState.state != "main_menu") {
-                onDisconnect(reason);
-                showError("Disconnected", "Server closed the connection", "Press SPACE to return to menu");
-                gameState.state = "disconnected";
-            } else {
-                onDisconnect(reason);
+            if (!event.wasClean) {
+                reason += " (unclean disconnect)";
             }
+
+            if (event.reason) {
+                reason += `  ${event.reason}`;
+            }
+
+             if (gameState.state != "connection_error") {
+                onDisconnect(reason);
+                showDisconnectWindow("Disconnected", reason, errorCode);
+
+                gameState.state = "disconnected";
+                }
         };
 
         gameState.socket.onerror = (error) => {
-            gameState.state = "connection_error";
             console.error("WebSocket error:", error);
-            onDisconnect("WebSocket error");
-            showError("Connection Error", `Failed to connect to ${gameState.serverAddress}`, "<button>Close</button>");
+
+            let reason = "WebSocket error";
+            let errorCode = "UNKNOWN_ERROR";
+
+            if (error instanceof error) {
+                reason = error.message;
+                errorCode = error.code;
+            } else if (error.type) {
+                reason = `Error type: ${error.type}`;
+            }
+
+            if (gameState.state != "connection_error") {
+                showDisconnectWindow("Connection Error", reason, errorCode);
+                onDisconnect(reason);
+                gameState.state = "connection_error";
+            }
         };
 
     } catch (error) {
         console.error("Unknown connection error:", error);
-        onDisconnect("Connection failed");
-        showError("Unknown connection Error", `Invalid server address: ${gameState.serverAddress}`, "Press SPACE to return to menu");
-        gameState.state = "connection_error";
+
+        let reason = "Connection failed";
+        let errorCode = "INITIALIZATION_ERROR";
+
+        if (error instanceof Error) {
+            reason = error.message;
+        }
+
+        if (gameState.state != "connection_error") {
+                    showDisconnectWindow("Connection Error", reason, errorCode);
+                    onDisconnect(reason);
+                    gameState.state = "connection_error";
+        }
+
     }
+
 }
 
+function showDisconnectWindow(title, message, errorCode = null) {
+    let details = message;
 
+    if (errorCode) {
+        details += `. Error code: ${errorCode}`;
+    }
 
+    showError(title, details, false);
+}
 
 function handleServerMessage(data) {
-    //console.log("New packet:", data);
     switch (data.type) {
 
         case "player_id":
@@ -92,15 +155,46 @@ function handleServerMessage(data) {
             gameState.lastDirection = null
             gameState.deathMessage = data.data || "You died";
             showDeathScreen(data);
-
             break;
 
         case "connection_error":
+            console.log("server send connection_error: " + data.data)
+            showDisconnectWindow("Connection Error", data.data, "SERVER_SEND_ERROR");
             gameState.state = "connection_error"
-            showAlert("Connection Error", data.data, "Press SPACE to return to menu");
             break;
 
         default:
             console.log("Unknown message type:", data.type);
+    }
+}
+
+function onDisconnect(reason) {
+    console.log("Disconnected. Reason:", reason);
+    hidePauseMenu();
+
+    // Очищаем сокет
+    if (gameState.socket) {
+        gameState.socket.onopen = null;
+        gameState.socket.onmessage = null;
+        gameState.socket.onclose = null;
+        gameState.socket.onerror = null;
+
+        // Не пытаемся закрыть, если уже закрыт
+        if (gameState.socket.readyState === WebSocket.OPEN ||
+            gameState.socket.readyState === WebSocket.CONNECTING) {
+            try {
+                gameState.socket.close(1000, "Client disconnected");
+            } catch (e) {
+                console.error("Error closing socket:", e);
+            }
+        }
+
+        gameState.socket = null;
+    }
+
+    // Останавливаем игровой цикл если он был запущен
+    if (gameState.gameLoopId) {
+        cancelAnimationFrame(gameState.gameLoopId);
+        gameState.gameLoopId = null;
     }
 }

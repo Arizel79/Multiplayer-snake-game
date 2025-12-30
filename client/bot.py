@@ -62,7 +62,7 @@ async def run_bot(server, bot_name, bot_color):
 
 
 async def main():
-    num_bots = 200
+    num_bots = 500
     SERVER = "localhost:8090"
 
     tasks = []

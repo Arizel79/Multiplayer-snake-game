@@ -1,16 +1,8 @@
-import argparse
-import asyncio
 import copy
-import json
-import logging
-import random
-import sys
 from collections import deque
 from dataclasses import dataclass
-from time import time
-import websockets
 
-from server.config import MIN_LENGHT_FAST_ON
+from server.modules.config import MIN_LENGHT_FAST_ON
 
 
 @dataclass

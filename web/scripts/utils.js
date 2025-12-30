@@ -2,6 +2,7 @@
 
 
 const gameState = {
+    isPaused: false,
     state: "main_menu",
     canvas: null,
     ctx: null,
@@ -226,12 +227,15 @@ function showAlert(title, message, instruction) {
     document.querySelector('#alert-screen').style.display = "flex";
 }
 
-function showError(title, message) {
+function showError(title, message, escape_html=true) {
     closeAll();
+    if (escape_html) {
+        title = escapeHtml(title);
+        message = escapeHtml(message);
+    }
     gameState.errorData = { title, message};
-    document.querySelector('#error-screen .title').textContent = title;
-    document.querySelector('#error-screen .info-message').textContent = escapeHtml(message);
-    // document.querySelector('#error-screen .button').textContent = ;
+    document.querySelector('#error-screen .title').innerHTML = title;
+    document.querySelector('#error-screen .info-message').innerHTML = message;
     document.querySelector('#error-screen').style.display = "flex";
 }
 
@@ -299,14 +303,42 @@ function closeAll() {
     closeDeath();
     closeTablist();
     closeChat();
+    //hidePauseMenu();
 }
 
 
 function returnToMenu() {
+  gameState.isPaused = false;
     disconnectFromServer();
     gameState.state = "main_menu";
+    closeAll();
     document.getElementById("main-menu").style.display = "flex";
 
 
-    closeAll();
+
+}
+
+function showPauseMenu() {
+    if (gameState.state !== "game" || gameState.isPaused) return;
+
+    gameState.isPaused = true;
+
+    const pauseScreen = document.getElementById("pause-screen");
+    console.log("Pause menu show", pauseScreen.style.display);
+}
+
+function hidePauseMenu() {
+    console.log("Pause menu hide")
+    gameState.isPaused = false;
+    const pauseScreen = document.getElementById("pause-screen");
+    pauseScreen.style.display = "none";
+}
+
+function backToGame() {
+    hidePauseMenu();
+}
+
+function disconnectFromPauseMenu() {
+    hidePauseMenu();
+    returnToMenu();
 }

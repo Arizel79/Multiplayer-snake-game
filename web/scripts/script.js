@@ -1,9 +1,3 @@
-function onDisconnect() {
-    console.log("onDisconnect")
-    _addChatMessage(convertCustomTagsToHtml("disconnected from " + gameState.serverAddress))
-}
-
-
 function resizeCanvas() {
     const canvas = gameState.canvas;
     const container = canvas.parentElement;
@@ -53,7 +47,7 @@ function startGame() {
 
 
 function handleMovementInput() {
-    if (!gameState.socket || !gameState.gameState || !gameState.gameState.snakes[gameState.playerId]?.alive) return;
+    if (!gameState.socket || !gameState.gameState || !gameState.gameState.snakes[gameState.playerId]?.alive || gameState.isPaused) return;
 
     let direction = null;
 
@@ -69,7 +63,6 @@ function handleMovementInput() {
     setDirection(direction);
 
 }
-
 function handleKeyDown(event) {
     if (gameState.showChat && event.key !== "Enter" && event.key !== "Escape") {
         return;
@@ -87,53 +80,57 @@ function handleKeyDown(event) {
 
     gameState.keysPressed[event.key] = true;
 
-
-switch (gameState.state) {
-    case "game":
-        if (event.key == "t") {
-            event.preventDefault();
-            toggleChat();
-        } else if (event.key == "Tab") {
-            event.preventDefault();
-            toggleTablist();
-        } else if (event.key == "Escape") {
-            if (gameState.showChat) {
+    switch (gameState.state) {
+        case "game":
+            if (event.key == "t") {
+                event.preventDefault();
                 toggleChat();
-            } else if (gameState.showTablist) {
-                closeTablist();
+            } else if (event.key == "Tab") {
+                event.preventDefault();
+                toggleTablist();
+            } else if (event.key == "Escape") {
+                event.preventDefault();
+                if (gameState.showChat) {
+                    toggleChat();
+                } else if (gameState.showTablist) {
+                    closeTablist();
+                } else if (gameState.isPaused) {
+                    hidePauseMenu();
+                } else {
+                    showPauseMenu();
+                }
             }
-        }
-        break;
 
-    case "main_menu":
-        if (event.key == "Enter") {
-            startGame();
-        }
-        break;
+        case "main_menu":
+            if (event.key == "Enter") {
+                startGame();
+            }
+            break;
 
-    case "death":
-        if (event.key == "Enter" || event.key == " ") {
-            respawn();
-        }
-        break;
+        case "death":
+            if (event.key == "Enter" || event.key == " ") {
+                respawn();
+            }
+            break;
 
-    case "disconnected":
-    case "connection_error":
-        if (event.key == "Enter" || event.key == " ") {
-            returnToMenu();
-        }
-        break;
-}
-
-if (event.key == "i") {
-    toggleDebugInfo();
-}
-
-if (event.key == " ") {
-    if (document.getElementById("alert-screen").style.display === "flex") {
-        closeAlert();
+        case "disconnected":
+        case "connection_error":
+        case "paused":
+            if (event.key == "Enter" || event.key == " ") {
+                returnToMenu();
+            }
+            break;
     }
-}
+
+    if (event.key == "i") {
+        toggleDebugInfo();
+    }
+
+    if (event.key == " ") {
+        if (document.getElementById("alert-screen").style.display === "flex") {
+            closeAlert();
+        }
+    }
 }
 
 function handleKeyUp(event) {

@@ -1,6 +1,7 @@
 
 
 function toggleSpeed(isFast){
+    if (gameState.isPaused) return;
     if (gameState.isFast == isFast) {return}
     gameState.isFast = isFast
     if (gameState.socket) {
@@ -107,8 +108,7 @@ function sendChatMessage() {
                         returnToMenu();
                     }, 100);
                     return;
-            } else if (cmd === "/kill") {
-                gameState.socket.send(JSON.stringify({type: "kill_me"}));
+
             }
         } else {
             gameState.socket.send(JSON.stringify({
@@ -268,6 +268,7 @@ function respawn() {
         gameState.socket.send(JSON.stringify({ type: "respawn" }));
         closeAll();
         gameState.state = "game";
+        gameState.isPaused = false;
         gameLoop();
     }
 }

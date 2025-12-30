@@ -1,7 +1,14 @@
+import asyncio
+import json
+import logging
+import random
+import sys
+from time import time
+
 import websockets
 
-from server.config import *
-from server.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
+from server.modules.config import *
+from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.dto import *
 from server.utils import get_random_id
 
@@ -208,11 +215,12 @@ class BaseServer:
         if not log_file is None:
             file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setFormatter(file_formatter)
+            self.logger.addHandler(file_handler)
 
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(console_formatter)
 
-        self.logger.addHandler(file_handler)
+
         self.logger.addHandler(console_handler)
 
         return self.logger
@@ -258,6 +266,7 @@ class BaseServer:
         if player_id not in self.players.keys():
             return True
         self.logger.info(f"Player {self.get_player(player_id)} disconnected")
+        await self.connections[player_id].close()
         del self.connections[player_id]
         await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
                                            "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
@@ -604,6 +613,9 @@ class BaseServer:
                                            "data": f"Help mesaage here?"}))
             elif lst[0] == "/kill":
                 await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
+            elif lst[0] == "/kickme":
+                self.logger.info(f"player {self.get_player(player_id)} want kick himself")
+                await self.remove_player(player_id)
         else:
             self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")
             name = self.players[player_id].name
@@ -678,7 +690,7 @@ class BaseServer:
 
         ls = body_str.split(",")
 
-        if len(ls) > 20:
+        if len(ls) > 64:
             raise ValueError("Color is too big")
 
         if (not head_str is None) and (not self.is_single_color_valid(head_str)):
@@ -698,9 +710,7 @@ class BaseServer:
         return out
 
     async def handle_connection(self, websocket):
-
         try:
-            self.logger.info("ncc")
             if len(self.players) >= self.max_players:
                 self.logger.info(f"{self.get_pretty_address(websocket)} is trying to connect, but the server is full")
                 await websocket.send(json.dumps({"type": "connection_error",

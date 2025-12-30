@@ -16,37 +16,37 @@
 </head>
 <body>
 <div id="main-menu">
-            <div id="help-screen">
-            <div class="screen-content">
-                <div class="title">How to Play</div>
-                <div class="info-message">
-                    <h3>Controls:</h3>
-                    <ul>
-                        <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
-                        <li><b>Space</b> or <b>Z</b> - Speed boost</li>
-                        <li><b>T</b> - Open chat</li>
-                        <li><b>TAB</b> - Show player list</li>
-                        <li><b>ESC</b> - Close chat/player list</li>
-                    </ul>
-                    <h3>Game Rules:</h3>
-                    <ul>
-                        <li>Eat food to grow longer</li>
-                        <li>Avoid colliding with other snakes</li>
-                        <li>Don't hit the walls</li>
-                        <li>Long snakes cat move fast</li>
-                    </ul>
-                    <h3>Chat Commands:</h3>
-                    <ul>
-                        <li><code>.clear</code> - Clear chat</li>
-                        <li><code>.quit</code> - ReturЛn to menu</li>
-                        <li><code>/kill</code> - Suicide</li>
-                    </ul>
-                </div>
-                <div class="button-container">
-                    <button class="default-btn info-button" onclick="closeHelp()">Close</button>
-                </div>
+    <div id="help-screen">
+        <div class="screen-content">
+            <div class="title">How to Play</div>
+            <div class="info-message">
+                <h3>Controls:</h3>
+                <ul>
+                    <li><b>WASD</b> or <b>Arrow Keys</b> - Move your snake</li>
+                    <li><b>Space</b> or <b>Z</b> - Speed boost</li>
+                    <li><b>T</b> - Open chat</li>
+                    <li><b>TAB</b> - Show player list</li>
+                    <li><b>ESC</b> - Close chat/player list</li>
+                </ul>
+                <h3>Game Rules:</h3>
+                <ul>
+                    <li>Eat food to grow longer</li>
+                    <li>Avoid colliding with other snakes</li>
+                    <li>Don't hit the walls</li>
+                    <li>Long snakes cat move fast</li>
+                </ul>
+                <h3>Chat Commands:</h3>
+                <ul>
+                    <li><code>.clear</code> - Clear chat</li>
+                    <li><code>.quit</code> - ReturЛn to menu</li>
+                    <li><code>/kill</code> - Suicide</li>
+                </ul>
+            </div>
+            <div class="button-container">
+                <button class="default-btn info-button" onclick="closeHelp()">Close</button>
             </div>
         </div>
+    </div>
 
     <div class="toggle-fullscreen">
         <button id="fullscreen-button" onclick="toggleFullscreen()"><img alt="fullscreen"
@@ -129,28 +129,38 @@
                     <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
                 </div>
             </div>
-            </dev>
         </div>
+    </div>
 
-        <div id="alert-screen">
-            <div class="like-alert-message-container">
-                <div class="title"></div>
-                <div class="info-message"></div>
-                <div class="button-container">
-                    <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="error-screen">
+    <div id="alert-screen">
+        <div class="like-alert-message-container">
             <div class="title"></div>
             <div class="info-message"></div>
             <div class="button-container">
                 <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
             </div>
         </div>
-        <div id="debug-info"></div>
+    </div>
 
+
+    <div id="error-screen">
+        <div class="like-alert-message-container">
+            <div class="title"></div>
+            <div class="info-message"></div>
+            <div class="button-container">
+                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+            </div>
+        </div>
+    </div>
+    <div id="debug-info"></div>
+    <div id="pause-screen">
+        <div class="like-alert-message-container">
+            <div class="title">Paused</div>
+            <div class="info-message">AAA PAUSE MANU</div>
+            <div class="button-container">
+                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+            </div>
+        </div>
     </div>
 </div>
 <script src="scripts/consts.js"></script>
