@@ -129,6 +129,7 @@ function showDisconnectWindow(title, message, errorCode = null) {
 }
 
 function handleServerMessage(data) {
+    console.log(data)
     switch (data.type) {
 
         case "player_id":
@@ -170,16 +171,13 @@ function handleServerMessage(data) {
 
 function onDisconnect(reason) {
     console.log("Disconnected. Reason:", reason);
-    hidePauseMenu();
 
-    // Очищаем сокет
     if (gameState.socket) {
         gameState.socket.onopen = null;
         gameState.socket.onmessage = null;
         gameState.socket.onclose = null;
         gameState.socket.onerror = null;
 
-        // Не пытаемся закрыть, если уже закрыт
         if (gameState.socket.readyState === WebSocket.OPEN ||
             gameState.socket.readyState === WebSocket.CONNECTING) {
             try {
@@ -192,7 +190,6 @@ function onDisconnect(reason) {
         gameState.socket = null;
     }
 
-    // Останавливаем игровой цикл если он был запущен
     if (gameState.gameLoopId) {
         cancelAnimationFrame(gameState.gameLoopId);
         gameState.gameLoopId = null;

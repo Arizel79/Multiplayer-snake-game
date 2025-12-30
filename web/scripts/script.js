@@ -34,6 +34,7 @@ function startGame() {
     saveSettings();
     document.getElementById("main-menu").style.display = "none";
 
+    console.log("connecting to server (in startGame)")
     connectToServer();
     showLastMessages();
 }
@@ -64,6 +65,7 @@ function handleMovementInput() {
 
 }
 function handleKeyDown(event) {
+    console.log("handleKeyDown state before: " + gameState.state)
     if (gameState.showChat && event.key !== "Enter" && event.key !== "Escape") {
         return;
     }
@@ -100,9 +102,12 @@ function handleKeyDown(event) {
                     showPauseMenu();
                 }
             }
+            break;
 
         case "main_menu":
+            console.log("handleKeyDown in2: " + gameState.state)
             if (event.key == "Enter") {
+                console.log("START GAME!")
                 startGame();
             }
             break;
@@ -118,6 +123,7 @@ function handleKeyDown(event) {
         case "paused":
             if (event.key == "Enter" || event.key == " ") {
                 returnToMenu();
+                console.log("returnToMenu!dad!")
             }
             break;
     }

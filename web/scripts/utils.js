@@ -1,5 +1,5 @@
 
-
+let _state = "main_menu";
 
 const gameState = {
     isPaused: false,
@@ -28,6 +28,40 @@ const gameState = {
     alertData: null,
     isFast: false
 };
+
+// Определяем геттер и сеттер для state с логированием
+Object.defineProperty(gameState, 'state', {
+    get: function() {
+        return _state;
+    },
+    set: function(newState) {
+        const oldState = _state;
+        if (oldState !== newState) {
+            const timestamp = new Date().toISOString().split('T')[1].slice(0, -1); // HH:MM:SS.mmm
+            const stack = new Error().stack.split('\n').slice(2, 5).join('\n  '); // Убираем первые 2 строки (ошибка и сеттер)
+
+            console.group(`📝 State change at ${timestamp}`);
+            console.log(`🔄 ${oldState} → ${newState}`);
+            console.log(`🔍 Call stack:\n  ${stack}`);
+            console.groupEnd();
+
+            // Также можно вывести краткий лог
+            console.log(`🔄 gameState.state: ${oldState} → ${newState}`);
+        }
+        _state = newState;
+    },
+    enumerable: true,
+    configurable: true
+});
+
+// Добавьте также вспомогательную функцию для логирования изменений
+function logStateChange(oldState, newState, context = "") {
+    const timestamp = new Date().toLocaleTimeString('ru-RU', {
+        hour12: false,
+        fractionalSecondDigits: 3
+    });
+    console.log(`[${timestamp}] ${oldState} → ${newState} ${context ? `(${context})` : ''}`);
+}
 
 function loadSettings() {
     let json_settings = localStorage.getItem("snakeGameSettings");
@@ -308,6 +342,7 @@ function closeAll() {
 
 
 function returnToMenu() {
+        console.log("state -> main_menu")
   gameState.isPaused = false;
     disconnectFromServer();
     gameState.state = "main_menu";
@@ -319,12 +354,13 @@ function returnToMenu() {
 }
 
 function showPauseMenu() {
-    if (gameState.state !== "game" || gameState.isPaused) return;
+    closeAll();
 
     gameState.isPaused = true;
 
-    const pauseScreen = document.getElementById("pause-screen");
-    console.log("Pause menu show", pauseScreen.style.display);
+    const pauseScreen = document.getElementById("death-screen-1");
+    console.log("Pause menu show");
+    pauseScreen.style.display = "flex";
 }
 
 function hidePauseMenu() {

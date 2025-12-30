@@ -612,9 +612,10 @@ class BaseServer:
                 await con.send(json.dumps({"type": "chat_message",
                                            "data": f"Help mesaage here?"}))
             elif lst[0] == "/kill":
+                self.logger.info(f"player {self.get_player(player_id)} want kill himself")
                 await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
             elif lst[0] == "/kickme":
-                self.logger.info(f"player {self.get_player(player_id)} want kick himself")
+                self.logger.info(f"player {self.get_player(player_id)} want kick himself from server")
                 await self.remove_player(player_id)
         else:
             self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")

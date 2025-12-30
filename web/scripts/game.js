@@ -193,8 +193,15 @@ function closeTablist() {
 
 function updateTablist() {
     if (!gameState.gameState) return;
-    document.getElementById("your-score-value").innerHTML = gameState.gameState.snakes[gameState.playerId].size || -1;
+    const mySnake = gameState.gameState.snakes[gameState.playerId];
+    const myPlayer = gameState.gameState.players[gameState.playerId];
 
+    // Обновляем счет только если змея существует
+    if (mySnake) {
+        document.getElementById("your-score-value").innerHTML = mySnake.size || -1;
+    } else {
+        document.getElementById("your-score-value").innerHTML = -1;
+    }
     const players = gameState.gameState.players;
     const snakes = gameState.gameState.snakes;
 
