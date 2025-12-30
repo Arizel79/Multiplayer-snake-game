@@ -1,6 +1,6 @@
 /* styles.css */
 :root {
-  --font: 16px monospace, sans-serif;
+  --font: 19px monospace, sans-serif;
 
   --spacing-xs: 0.25rem;   /* 4px */
   --spacing-sm: 0.5rem;    /* 8px */
@@ -18,11 +18,11 @@
   --button-bg-color-hover: rgba(60, 60, 60, .8);
   --button-border-color: rgba(100, 100, 100, .8);
   --input-text-color: white;
-  --input-bg-color: black;
+  --input-bg-color: rgba(40, 40, 40, .8);
   --input-border-color: #aaa;
   --input-border-color-focus: #fff;
   --menu-input-text-color: white;
-  --menu-input-bg-color: black;
+  --menu-input-bg-color: rgba(30, 30,30, 1);
   --menu-input-border-color: #0a0;
   --menu-input-border-color-focus: #0f0;
   --highlight-text-color: #cc0000;

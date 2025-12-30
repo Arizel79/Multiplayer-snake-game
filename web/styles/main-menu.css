@@ -47,7 +47,7 @@
 /* Общие стили для всех колонок */
 .side-panel, .center-panel {
   flex: 1 1 12.5em; /* 200px */
-  min-width: 9.375em; /* 150px */
+  min-width: 21.375em; /* 150px */
   max-width: 21.875em; /* 350px */
   background-color: var(--pad-bg-color);
   border: 1px solid var(--pad-border-color);
@@ -181,33 +181,6 @@
   background: var(--button-bg-color-hover);
 }
 
-/* About section at the bottom */
-#about {
-  margin-top: 1.25em; /* 20px */
-  margin-bottom: 0.125em; /* 2px */
-  padding: 0.75em 1.5625em; /* 12px 25px */
-  color: var(--pad-text-color);
-  text-align: center;
-  width: auto;
-  background-color: var(--pad-bg-color);
-  border: 1px solid var(--pad-border-color);
-  border-radius: var(--border-radius);
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-/* Стили для ссылки в about */
-#about a {
-  color: var(--link-text-color);
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 0.875em; /* 14px */
-}
-
-#about a:hover {
-  color: var(--link-text-color-hover);
-  text-decoration: underline;
-}
 
 /* Responsive design - вертикальное расположение на узких экранах */
 @media (max-width: 68.75em) { /* 1100px */

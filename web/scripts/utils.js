@@ -281,24 +281,24 @@ function showDeathScreen(data) {
     <table class="table-player-stats">
         <thead>
             <tr>
-                <th colspan="2">Player stats</th>
+                <th colspan="2">Ваша статистика</th>
             </tr>
         </thead>
         <tbody>
            <tr>
-              <td>Size</td>
+              <td>Длина</td>
               <td>${data.stats.size}</td>
            </tr>
            <tr>
-              <td>Max size</td>
+              <td>Макс. длина</td>
               <td>${data.stats.max_size}</td>
            </tr>
            <tr>
-              <td>Kills</td>
+              <td>Убийства</td>
               <td>${data.stats.kills}</td>
            </tr>
            <tr>
-              <td>Deaths</td>
+              <td>Смерти</td>
               <td>${data.stats.deaths}</td>
            </tr>
        </tbody>

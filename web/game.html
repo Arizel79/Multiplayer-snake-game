@@ -1,89 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Slyth - The Snake Game</title>
+    <title>Slyth - Multiplayer Snake Game</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="styles/game.css">
     <meta charset="utf-8">
-    <link rel="icon" type="image/png" href="images/snake.png">
+    <link rel="icon" type="image/png" href="images/slyth-favicon.png">
     <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate"/>
     <meta http-equiv="pragma" content="no-cache"/>
     <meta http-equiv="expires" content="0"/>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <style> .side-panel ul { padding-left: 20px; margin-bottom: 10px; } </style>
     <meta name="viewport"
           content="width=device-width, initial-scale=0.5, minimum-scale=0.6, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 </head>
 <body>
-<!-- Обновленный about - теперь внутри main-menu, но после menu-form-container -->
 <div id="main-menu">
     <div id="help-screen">...</div>
 
     <div class="toggle-fullscreen">
         <button id="fullscreen-button" onclick="toggleFullscreen()">
-            <img alt="fullscreen"
+            <img alt="полный экран"
                  src="https://static.vecteezy.com/system/resources/previews/019/858/696/non_2x/maximize-flat-color-outline-icon-free-png.png">
         </button>
     </div>
 
     <div class="menu-title">Slyth</div>
-    <div class="menu-subtitle">Multiplayer snake game</div>
+    <div class="menu-subtitle">Многопользовательская змейка</div>
 
     <div class="menu-form-container">
-        <!-- Внутри <div class="menu-form-container"> -->
         <div class="side-panel left-panel">
-            <div class="panel-header">Game Rules</div>
+            <div class="panel-header">Как играть</div>
             <div class="panel-content">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed porttitor justo. Suspendisse placerat ut ante ut placerat. Donec non massa auctor, ultrices est pellentesque, porta ex. Nam at cursus ante. Curabitur porta ipsum nulla, sit amet iaculis magna fringilla ac. Vivamus faucibus massa ut purus sodales, nec aliquet felis aliquam. Nam gravida euismod interdum. Curabitur risus mauris, consequat quis facilisis id, interdum quis elit. Aliquam mollis ante justo, at mollis orci malesuada eget. Nulla suscipit id ante nec hendrerit. Vestibulum sodales, metus a bibendum ultrices, orci nulla auctor odio, ac facilisis mauris turpis eget tellus.
+                <h3>Цель игры</h3>
+                <p>Управляйте своей змейкой, чтобы есть еду и расти как можно дольше, избегая столкновений со стенами,
+                    другими змейками и собой.</p>
 
-Donec nec augue molestie, hendrerit tellus finibus, consectetur velit. Nam efficitur aliquet imperdiet. Curabitur et odio laoreet, auctor dui ac, vehicula lorem. Maecenas nisi purus, maximus eu ligula a, ultricies lacinia dui. Morbi feugiat blandit eleifend. Duis ut magna a magna rhoncus sagittis non eu dolor. Donec felis sem, sollicitudin malesuada urna ut, fringilla pretium sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam in finibus velit, sit amet lacinia sem. Nulla vel pharetra quam. Nulla quis lacinia nunc.
+                <h3>Управление</h3>
+                <ul>
+                    <li><strong>WASD</strong> - Движение змейки</li>
+                    <li><strong>T</strong> - Открыть чат</li>
+                    <li><strong>TAB</strong> - Список игроков</li>
+                    <li><strong>Пробел/Z</strong> - Быстрый режим (сжигает хвост)</li>
+                    <li><strong>ESC</strong> - Закрыть чат/список или пауза</li>
+                </ul>
 
-Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non vestibulum ut, vestibulum in tellus. Pellentesque rutrum lacus mollis auctor porta. Donec molestie, enim et faucibus tincidunt, nunc quam condimentum elit, a bibendum felis arcu at lacus. Mauris ac sapien lacus. Ut pretium ligula a nunc vestibulum, sed vestibulum quam dapibus. Duis vitae volutpat urna. Duis porta orci tortor, sed suscipit orci consequat vitae. Etiam condimentum maximus risus mattis aliquam. Aliquam pulvinar varius lorem ut placerat. In molestie mattis libero, nec luctus quam facilisis at. Etiam erat erat, eleifend sed nisl id, ultricies ultrices dolor.
+                <h3>Правила игры</h3>
+                <ul>
+                    <li>Каждая еда увеличивает длину змейки на 1</li>
+                    <li>Змейка медленно теряет длину, если ничего не ест</li>
+                    <li>Быстрый режим ускоряет движение, но быстрее уменьшает вашу змейку</li>
+                    <li>Столкновение со стенами, другими змейками или собой приводит к смерти</li>
+                    <li>Мёртвые змейки оставляют еду для других</li>
+                    <li>Чем длиннее змейка, тем выше счёт</li>
+                </ul>
+
+                <h3>Советы</h3>
+                <ul>
+                    <li>Используйте быстрый режим стратегически для побега</li>
+                    <li>Наблюдайте за паттернами движения других игроков</li>
+                    <li>Оставайтесь ближе к центру для большего пространства</li>
+                    <li>Общайтесь с другими игроками в чате для союзов (или отвлечения!)</li>
+                </ul>
+
             </div>
         </div>
 
         <div class="center-panel">
-            <div class="panel-header">Play</div>
+            <div class="panel-header">Играть</div>
             <div class="panel-content">
                 <div id="play-form">
-                    <input type="text" id="name-input" class="menu-input" placeholder="Player name">
-                    <input type="text" id="color-input" class="menu-input" placeholder="Color">
-                    <input type="text" id="server-input" class="menu-input" placeholder="Server address">
-                    <button id="play-button" class="default-btn menu-button">Play</button>
+                    <input type="text" id="name-input" class="menu-input" placeholder="Имя игрока">
+                    <input type="text" id="color-input" class="menu-input"
+                           placeholder="Цвет (например: red;green,lime)">
+                    <input type="text" id="server-input" class="menu-input" placeholder="Адрес сервера">
+                    <button id="play-button" class="default-btn menu-button">Играть</button>
+                </div>
+                <div class="color-examples" style="margin-top: 15px; font-size: 12px; color: #aaa;">
+                    <p><strong>Примеры цветов:</strong></p>
+                    <p>• red;green,lime (голова:красная, тело чередуется зелёный/лайм)</p>
+                    <p>• blue (однотонная синяя змейка)</p>
+                    <p>• yellow;orange,red (голова:жёлтая, тело чередуется оранжевый/красный)</p>
                 </div>
             </div>
         </div>
 
         <div class="side-panel right-panel">
-            <div class="panel-header">Tips & Tricks</div>
+            <div class="panel-header">Новости разработки</div>
             <div class="panel-content">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed porttitor justo. Suspendisse placerat ut ante ut placerat. Donec non massa auctor, ultrices est pellentesque, porta ex. Nam at cursus ante. Curabitur porta ipsum nulla, sit amet iaculis magna fringilla ac. Vivamus faucibus massa ut purus sodales, nec aliquet felis aliquam. Nam gravida euismod interdum. Curabitur risus mauris, consequat quis facilisis id, interdum quis elit. Aliquam mollis ante justo, at mollis orci malesuada eget. Nulla suscipit id ante nec hendrerit. Vestibulum sodales, metus a bibendum ultrices, orci nulla auctor odio, ac facilisis mauris turpis eget tellus.
+                <div class="news-item">
+                    <h3>🚀 Обновление 1.1</h3>
+                    <p><strong>Основные нововведения:</strong></p>
+                    <ul>
+                        <li>Улучшены сенсорные управления для мобильных устройств</li>
+                        <li>Добавлен раздел "Как играть"</li>
+                        <li>Оптимизирована производительность сервера</li>
+                        <li>Добавлен счётчик TPS (тиков в секунду)</li>
+                    </ul>
+                </div>
 
-Donec nec augue molestie, hendrerit tellus finibus, consectetur velit. Nam efficitur aliquet imperdiet. Curabitur et odio laoreet, auctor dui ac, vehicula lorem. Maecenas nisi purus, maximus eu ligula a, ultricies lacinia dui. Morbi feugiat blandit eleifend. Duis ut magna a magna rhoncus sagittis non eu dolor. Donec felis sem, sollicitudin malesuada urna ut, fringilla pretium sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nullam in finibus velit, sit amet lacinia sem. Nulla vel pharetra quam. Nulla quis lacinia nunc.
 
-Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non vestibulum ut, vestibulum in tellus. Pellentesque rutrum lacus mollis auctor porta. Donec molestie, enim et faucibus tincidunt, nunc quam condimentum elit, a bibendum felis arcu at lacus. Mauris ac sapien lacus. Ut pretium ligula a nunc vestibulum, sed vestibulum quam dapibus. Duis vitae volutpat urna. Duis porta orci tortor, sed suscipit orci consequat vitae. Etiam condimentum maximus risus mattis aliquam. Aliquam pulvinar varius lorem ut placerat. In molestie mattis libero, nec luctus quam facilisis at. Etiam erat erat, eleifend sed nisl id, ultricies ultrices dolor.
             </div>
         </div>
     </div>
 
-    <div id="about">
-        <a href="javascript:showHelp()">How to play</a>
+    <div id="footer">
     </div>
 </div>
 <div id="game-container">
-    <canvas id="game-canvas"><h1>Error: canvas element not supported</h1></canvas>
-
+    <canvas id="game-canvas"><h1>Ошибка: элемент canvas не поддерживается</h1></canvas>
 
     <div id="chat-container" class="chat-top">
         <div id="chat-messages"></div>
-        <input type="text" id="chat-input" placeholder="This is chat...">
+        <input type="text" id="chat-input" placeholder="Введите сообщение...">
     </div>
 
     <div id="mini-chat" class="chat-top">
         <div id="mini-chat-messages"></div>
     </div>
     <div id="player-info">
-        <div id="your-score">Score:
+        <div id="your-score">Счёт:
             <div id="your-score-value"></div>
         </div>
     </div>
@@ -106,7 +143,7 @@ Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non ve
         </div>
         <div class="fast-panel">
             <div>
-                <button id="btn-fast" class="fast-btn hud-btn">F</button>
+                <button id="btn-fast" class="fast-btn hud-btn">Б</button>
             </div>
         </div>
 
@@ -119,48 +156,44 @@ Maecenas bibendum eget ipsum nec imperdiet. Quisque risus nulla, bibendum non ve
     <div id="death-screen">
         <div class="like-alert-message-container">
             <div class="screen-content">
-                <div class="title">You died</div>
+                <div class="title">Вы умерли</div>
                 <div class="info-message">
                     <div id="death-reason"></div>
                     <div id="death-player-stats-table-container"></div>
                 </div>
                 <div class="button-container">
-                    <button class="default-btn info-button" onclick="respawn()">Respawn</button>
-                    <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+                    <button class="default-btn info-button" onclick="respawn()">Возродиться</button>
+                    <button class="default-btn info-button" onclick="returnToMenu()">В главное меню</button>
                 </div>
             </div>
         </div>
     </div>
-
 
     <div id="alert-screen">
         <div class="like-alert-message-container">
             <div class="title"></div>
             <div class="info-message"></div>
             <div class="button-container">
-                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+                <button class="default-btn info-button" onclick="returnToMenu()">В главное меню</button>
             </div>
         </div>
     </div>
-
 
     <div id="error-screen">
         <div class="like-alert-message-container">
             <div class="title"></div>
             <div class="info-message"></div>
             <div class="button-container">
-                <button class="default-btn info-button" onclick="returnToMenu()">Back to main menu</button>
+                <button class="default-btn info-button" onclick="returnToMenu()">В главное меню</button>
             </div>
         </div>
     </div>
     <div id="debug-info"></div>
-
 </div>
 <script src="scripts/consts.js"></script>
 <script src="scripts/config.js"></script>
 <script src="scripts/init.js"></script>
 <script src="scripts/utils.js"></script>
-
 <script src="scripts/communication.js"></script>
 <script src="scripts/game.js"></script>
 <script src="scripts/rendering.js"></script>

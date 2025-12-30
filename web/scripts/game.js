@@ -224,7 +224,7 @@ function updateTablist() {
     const aliveCount = Object.values(players).filter(p => p.alive).length;
     const deadCount = Object.keys(players).length - aliveCount;
     document.getElementById("tablist-players-count").innerHTML = `
-        All: ${Object.keys(players).length};   Alive: ${aliveCount};   Dead: ${deadCount};
+        Всего змеек: ${Object.keys(players).length};   Живых: ${aliveCount}; Мёртвых: ${deadCount};
     `;
 
     const table = document.createElement("table");
@@ -232,12 +232,12 @@ function updateTablist() {
     table.innerHTML = `
         <thead>
             <tr>
-                <th>Player</th>
-                <th>Status</th>
-                <th>Size</th>
-                <th>Max Size</th>
-                <th>Kills</th>
-                <th>Deaths</th>
+                <th>Игрок</th>
+                <th>Состояние</th>
+                <th>Длина</th>
+                <th>Макс. длина</th>
+                <th>Убийства</th>
+                <th>Смерти</th>
             </tr>
         </thead>
         <tbody></tbody>
