@@ -1,4 +1,7 @@
+import json
+
 from server.mixins.base_mixin import *
+
 
 class ChatHandlerMixin(BaseMixin):
     async def handle_client_chat_message(self, player_id, message: str):
@@ -54,4 +57,3 @@ class ChatHandlerMixin(BaseMixin):
             await self.broadcast_chat_message(
                 {"type": "chat_message", "data": f"{message}",
                  "from_user": f"{await self.get_stilizate_name_color(player_id)}"})
-

@@ -1,372 +1,26 @@
 import asyncio
 import json
-import logging
 import random
-import sys
 from time import time
 
 import websockets
 
 from server.mixins.chat_handler_mixin import ChatHandlerMixin
+from server.mixins.communication_mixin import CommunicationMixin
+from server.mixins.players_mixin import PlayersMixin
+from server.mixins.snakes_mixin import SnakesMixin
 from server.mixins.utils_mixin import UtilsMixin
+from server.mixins.viewport_mixin import ViewportMixin
 from server.modules.config import *
-from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.dto import *
 from server.utils import get_random_id
 
 
-class BaseServer(ChatHandlerMixin, UtilsMixin):
+class BaseServer(ChatHandlerMixin, UtilsMixin, ViewportMixin, CommunicationMixin, PlayersMixin, SnakesMixin):
 
-    def get_color_for_segment(self, snake, segment_n):
-        n = segment_n
-        color = snake.color
-        head = color.get("head")
-        body = color.get("body")
 
-        if type(body) == list:
-            if segment_n == 0 and (not head is None):
-                color_str = head
-            else:
-                if head is None:
-                    index = (segment_n) % len(body)
-                else:
-                    index = (segment_n - 1) % len(body)
 
-                color_str = body[index]
 
-        else:
-            raise ValueError(
-                f"Snake color must be a str or list, but is is {repr(snake['color'])} with type {type(snake['color'])}")
-
-        out_color = color_str
-        if out_color is None:
-            self.logger.warning(f"Unknown color: {color_str}; snake color: {snake['color']} ")
-            out_color = "white"
-
-        return out_color
-
-    def update_spatial_grid(self):
-        new_grid = {}
-
-        for xy, food in self.food.items():
-
-            if xy not in new_grid:
-                new_grid[xy] = {'food': [], 'snake_ids': set()}
-
-            new_grid[xy]['food'].append(food)
-
-        for player_id, snake in self.snakes.items():
-            segments_to_check = [snake.body[0]]
-            if len(snake.body) > 1:
-                segments_to_check.append(snake.body[-1])
-
-            for segment in segments_to_check:
-                cell_x = segment.x // self.grid_cell_size
-                cell_y = segment.y // self.grid_cell_size
-                cell_key = (cell_x, cell_y)
-
-                if cell_key not in new_grid:
-                    new_grid[cell_key] = {'food': [], 'snake_ids': set()}
-
-                new_grid[cell_key]['snake_ids'].add(player_id)
-
-        self.spatial_grid = new_grid
-
-    def get_viewport_for_snake(self, snake: Snake) -> Viewport:
-        """Возвращает область видимости для змеи"""
-        if not snake.body:
-            return Viewport(0, 0, self.viewport_width, self.viewport_height)
-
-        head = snake.body[0]
-        viewport_width = int(self.viewport_width * self.viewport_scale_factor)
-        viewport_height = int(self.viewport_height * self.viewport_scale_factor)
-
-        return Viewport(head.x, head.y, viewport_width, viewport_height)
-
-    def get_objects_in_viewport(self, viewport: Viewport):
-        visible_snake_ids = set()
-        visible_food = []
-
-        start_x = max(viewport.left // self.grid_cell_size, -self.width // 2)
-        end_x = min(viewport.right // self.grid_cell_size, self.width // 2)
-        start_y = max(viewport.top // self.grid_cell_size, -self.height // 2)
-        end_y = min(viewport.bottom // self.grid_cell_size, self.height // 2)
-
-        left, right, top, bottom = viewport.left, viewport.right, viewport.top, viewport.bottom
-        spatial_grid = self.spatial_grid
-
-        for cell_x in range(int(start_x), int(end_x) + 1):
-            for cell_y in range(int(start_y), int(end_y) + 1):
-                cell_key = (cell_x, cell_y)
-                if cell_key in spatial_grid:
-                    cell_data = spatial_grid[cell_key]
-
-                    for food in cell_data.get('food', []):
-                        point = food.point
-                        if left <= point.x <= right and top <= point.y <= bottom:
-                            visible_food.append(food)
-
-                    for player_id in cell_data.get('snake_ids', set()):
-                        if player_id not in visible_snake_ids:
-                            snake = self.snakes.get(player_id)
-                            if snake and self._snake_intersects_viewport_fast(snake, viewport):
-                                visible_snake_ids.add(player_id)
-
-        return list(visible_snake_ids), visible_food
-
-    def _snake_intersects_viewport_fast(self, snake: Snake, viewport: Viewport) -> bool:
-        """Быстрая проверка пересечения змеи с viewport"""
-        head = snake.body[0]
-        if viewport.contains_point(head):
-            return True
-
-        tail = snake.body[-1]
-        if viewport.contains_point(tail):
-            return True
-
-        if len(snake.body) > 2:
-            middle_idx = len(snake.body) // 2
-            middle = snake.body[middle_idx]
-            if viewport.contains_point(middle):
-                return True
-
-        return False
-
-    async def set_server_desc(self, server_desc):
-        self.server_desc = server_desc
-        await self.broadcast_chat_message({"type": "set_server_desc",
-                                           "data": self.server_desc})
-
-
-
-    def get_all_food_count(self):
-        food_count = 0
-        food_count += len(self.food)
-
-        for k, v in self.snakes.items():
-            food_count += len(v.body)
-        return food_count
-
-    def get_avalible_coords(self):
-        x1, y1, x2, y2 = self.get_map_rect()
-        while True:
-            x = random.randint(x1, x2)
-            y = random.randint(y1, y2)
-            p = (x, y)
-            if not p in self.food.keys():
-                break
-        return x, y
-
-    def get_addres_from_ws(self, ws):
-        return ":".join(str(i) for i in ws.remote_address)
-
-    async def add_player(self, player_id: str, name, color):
-        if player_id in self.snakes:
-            return False
-        self.players[player_id] = Player(
-            player_id=player_id,
-            name=name,
-            color=color,
-            alive=True)
-
-        await self.spawn(player_id)
-        await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
-                                           "data": f"<yellow>[</yellow><green>+</green><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>joined the game</yellow>"})
-        self.logger.info(
-            f"Connection {self.get_addres_from_ws(self.connections[player_id])} registred as {self.get_player(player_id)}")
-        return True
-
-    async def remove_player(self, player_id):
-        if player_id not in self.players.keys():
-            return True
-        self.logger.info(f"Player {self.get_player(player_id)} disconnected")
-        await self.connections[player_id].close()
-        del self.connections[player_id]
-        await self.broadcast_chat_message({"type": "chat_message", "subtype": "join/left",
-                                           "data": f"<yellow>[</yellow><red>-</red><yellow>]</yellow> {await self.get_stilizate_name_color(player_id)} <yellow>left the game</yellow>"})
-
-        if player_id in self.snakes:
-            del self.snakes[player_id]
-        if player_id in self.players:
-            del self.players[player_id]
-
-        self._send_cache.clear()
-
-        return True
-
-    def change_direction(self, player_id, direction):
-        if player_id in self.snakes:
-            snake = self.snakes[player_id]
-
-            if (direction == 'up' and snake.direction != 'down' and snake.next_direction != 'down') or \
-                    (direction == 'down' and snake.direction != 'up' and snake.next_direction != 'up') or \
-                    (direction == 'left' and snake.direction != 'right' and snake.next_direction != 'right') or \
-                    (direction == 'right' and snake.direction != 'left' and snake.next_direction != 'left'):
-                snake.next_direction = direction
-
-    def add_random_food(self):
-        x1, y1, x2, y2 = self.get_map_rect()
-        x = random.randint(x1, x2)
-        y = random.randint(y1, y2)
-        self.add_food(x, y)
-
-    def add_food(self, x, y, type_=FOOD_TYPES.default, color=DEFAULT_FOOD_COLOR, size=1):
-        if self.food.get((x, y)):
-            return
-        self.food[(x, y)] = (Food(Point(x, y), type_=type_, color=color, size=size))
-
-    def generate_food(self):
-        while self.get_all_food_count() < self.max_food:
-            self.add_random_food()
-
-    def get_player(self, player_id):
-
-        try:
-            address = "@" + self.get_addres_from_ws(self.connections[player_id])
-        except KeyError:
-            address = ""
-        return f"{self.players[player_id].name}{address}"
-
-    async def send_dict_to_player(self, player_id, dict_):
-        await self.connections[player_id].send(json.dumps(dict_))
-
-    async def player_death(self, player_id, reason: str = "No reason", if_immortal=False):
-        if self.snakes[player_id].immortal and not if_immortal:
-            return False
-        if not self.snakes[player_id].alive:
-            raise ValueError(f"Snake {player_id} is already death!")
-
-        sn = self.snakes[player_id]
-        pl = self.players[player_id]
-        self.snakes[player_id].alive = False
-        body = self.snakes[player_id].body
-
-        self.players[player_id].alive = False
-        self.players[player_id].deaths += 1
-
-        text = f'{reason.replace("%NAME%", await self.get_stilizate_name_color(player_id))}'
-        self.logger.info(f"Player {self.get_player(player_id)} death ({text})")
-
-        await self.connections[player_id].send(json.dumps({"type": "you_died", "data": text, "stats": {"size": sn.size,
-                                                                                                       "max_size": sn.max_size,
-                                                                                                       "deaths": pl.deaths,
-                                                                                                       "kills": pl.kills}}))
-        await self.broadcast_chat_message({"type": "chat_message", "subtype": "death_message",
-                                           "data": text, "player_id": player_id})
-        for n, i in enumerate(body):
-            self.add_food(i.x, i.y, type_=FOOD_TYPES.death, color=self.get_color_for_segment(sn, n))
-
-        return True
-
-    def get_map_rect(self):
-        x1, y1, x2, y2 = -(self.width // 2), -(self.height // 2), self.width // 2, self.height // 2
-        return x1, y1, x2, y2
-
-    def get_all_player_names(self):
-        lst = []
-        for k, v in self.players.items():
-            lst.append(v.name)
-        return lst
-
-    def is_name_valid(self, name: str):
-        if len(name) > 16:
-            return f'Name "{name}" is too long'
-        elif len(name) < 4:
-            return f'Name "{name}" is too short'
-
-        for i in name:
-            if i.lower() not in self.VALID_NAME_CHARS:
-                return f'Name "{name}" contain invalid characters'
-
-        if name.lower() in [i.lower() for i in self.get_all_player_names()]:
-            return f'Name "{name}" already in use'
-
-        return True
-
-    async def update_snake(self, player_id, snake):
-        if not snake.alive:
-            return
-
-        should_move = (snake.is_fast and self.move_fast) or (not snake.is_fast and self.move_normal)
-        if not should_move:
-            return
-
-        snake.direction = snake.next_direction
-        head = snake.body[0]
-        new_head = Point(head.x, head.y)
-
-        direction_offsets = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
-        dx, dy = direction_offsets[snake.direction]
-        new_head.x += dx
-        new_head.y += dy
-
-        if await self.check_collision(player_id, new_head, head):
-            return
-
-        food_key = (new_head.x, new_head.y)
-        if food_key in self.food:
-            del self.food[food_key]
-            snake.add_segment()
-
-        snake.body.appendleft(new_head)
-        snake.remove_segment()
-
-    def check_collision_fast(self, player_id, point):
-        """Быстрая проверка коллизий через spatial grid"""
-        cell_x = point.x // self.grid_cell_size
-        cell_y = point.y // self.grid_cell_size
-        cell_key = (cell_x, cell_y)
-
-        if cell_key in self.spatial_grid:
-            for seg_x, seg_y, seg_player_id in self.spatial_grid[cell_key].get('snake_segments', set()):
-                if point.x == seg_x and point.y == seg_y:
-                    if seg_player_id != player_id:
-                        return True
-                    else:
-                        snake = self.snakes[player_id]
-                        if point != snake.body[0]:
-                            return True
-        return False
-
-    async def check_collision(self, player_id, new_head, old_head):
-        """Полная проверка коллизий со всеми змеями на карте"""
-
-        walls = self.get_map_rect()
-        if not (walls[0] <= new_head.x <= walls[2] and walls[1] <= new_head.y <= walls[3]):
-            await self.player_death(player_id, "%NAME% crashed into the border")
-            return True
-
-        for other_id, other_snake in self.snakes.items():
-            if other_id == player_id:
-                continue
-
-            if other_snake.alive and self.point_in_snake_body(new_head, other_snake):
-                await self.player_death(player_id, f'%NAME% crashed into {other_snake.name}')
-                self.players[other_id].kills += 1
-                return True
-
-        snake = self.snakes.get(player_id)
-        if snake is None:
-            return
-        if self.point_in_snake_body(new_head, snake, exclude_head=True):
-            await self.player_death(player_id, "%NAME% crashed into his tail")
-            return True
-
-        return False
-
-    def point_in_snake_body(self, point, snake, exclude_head=False):
-        """Проверяет, находится ли точка в теле змеи"""
-        start_index = 1 if exclude_head else 0
-        for i in range(start_index, len(snake.body)):
-            if point.x == snake.body[i].x and point.y == snake.body[i].y:
-                return True
-        return False
-
-    async def is_move_now(self, now):
-
-        move_normal = now >= self.last_normal_snake_move_time + self.DEFAULT_MOVE_TIMEOUT
-        move_fast = now >= self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT
-        return move_normal, move_fast
 
     async def update(self):
         self.generate_food()
@@ -467,17 +121,7 @@ class BaseServer(ChatHandlerMixin, UtilsMixin):
             food_key = (food.point.x, food.point.y, food.color)
             self._food_dict_cache[food_key] = self._food_snake_to_dict(food)
 
-    def _snake_to_dict(self, snake: Snake):
-        return {
-            'body': [{'x': p.x, "y": p.y} for p in snake.body],
-            'color': snake.color,
-            'name': snake.name,
-            'size': snake.size,
-            'max_size': snake.max_size,
-            'alive': snake.alive,
-            'direction': snake.direction,
-            'is_fast': snake.is_fast
-        }
+
 
     def _food_snake_to_dict(self, food: Food):
         return {
@@ -497,115 +141,11 @@ class BaseServer(ChatHandlerMixin, UtilsMixin):
             "deaths": player.deaths
         }
 
-    async def broadcast_chat_message(self, data):
-        connections_ = copy.copy(self.connections)
-        to_send = json.dumps(data)
-        self.logger.debug(f"Broadcast data: {data}")
 
-        for player_id, ws in connections_.items():
 
-            try:
-                await ws.send(to_send)
-            except websockets.exceptions.ConnectionClosedOK as e:
-                pass
 
-    async def get_stilizate_name_color(self, player_id, text=None):
-        color = self.players.get(player_id, {}).color
-        if text == None:
-            text = self.players.get(player_id).name
 
-        if color in self.snake_colors:
-            pass
-        else:
-            color = "white"
 
-        return f"<{color}>{text}</{color}>"
-
-    async def handle_client_data(self, player_id: str, data: dict):
-        self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
-        if data["type"] == "direction":
-
-            self.change_direction(player_id, data['data'])
-        elif data["type"] == "chat_message":
-            await self.handle_client_chat_message(player_id, data["data"])
-        elif data["type"] == "respawn":
-            await self.respawn(player_id)
-        elif data["type"] == "is_fast":
-            await self.toggle_speed(player_id, data["data"])
-        else:
-            self.logger.warning(f"Unknown data type received from {self.get_player(player_id)}: {data}")
-
-    async def toggle_speed(self, player_id, is_fast):
-        sn = self.snakes[player_id]
-        if len(sn.body) < self.MIN_LENGHT_FAST_ON:
-            return
-
-        sn.is_fast = is_fast
-
-    async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
-        x, y = self.get_avalible_coords()
-        self.players[player_id].alive = True
-        body = deque([Point(x, y)])
-        direction = random.choice(DIRECTIONS)
-        sn = self.snakes[player_id] = Snake(
-            body=body,
-            direction=direction,
-            next_direction=direction,
-            color=self.players[player_id].color,
-            name=self.players[player_id].name,
-            alive=True,
-
-        )
-
-        sn.add_segment(lenght - 1)
-        self.logger.info(f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})")
-
-    async def respawn(self, player_id):
-        await self.spawn(player_id)
-
-    def get_pretty_address(self, websocket):
-        if len(websocket.remote_address) == 2:
-            return ":".join(str(i) for i in websocket.remote_address)
-        else:
-            return str(websocket.remote_address)
-
-    def is_single_color_valid(self, color):
-        if color in self.snake_colors:
-            return True
-        return False
-
-    def is_color_valid(self, color):
-        list_head_body = color.split(";", maxsplit=2)
-
-        if len(list_head_body) == 2:
-            head_str = list_head_body[0]
-            body_str = list_head_body[1]
-        elif len(list_head_body) == 1:
-            head_str = None
-            body_str = list_head_body[0]
-        else:
-            raise ValueError("Invalid head. Too many ';'")
-
-        ls = body_str.split(",")
-
-        if len(ls) > 64:
-            raise ValueError("Color is too big")
-
-        if (not head_str is None) and (not self.is_single_color_valid(head_str)):
-            raise ValueError(f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}")
-
-        if len(ls) > MAX_PLAYER_COLOR_LENGHT:
-            raise ValueError(f"Color is too long: {len(ls)}, max: {MAX_PLAYER_COLOR_LENGHT}")
-        for n, i in enumerate(ls):
-            if not self.is_single_color_valid(i):
-                raise ValueError(
-                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}")
-
-        out = {"body": ls}
-        if not head_str is None:
-            out["head"] = head_str
-            out["name_color"] = "white"
-        return out
 
     async def handle_connection(self, websocket):
         try:
@@ -687,44 +227,7 @@ class BaseServer(ChatHandlerMixin, UtilsMixin):
             self.logger.error("Unx")
             self.logger.exception(e)
 
-    async def sometimes_steal_body(self, player_id):
-        snake = self.snakes[player_id]
-        if not snake.alive:
-            return
-        if random.random() < self.stealing_chance:
-            current_length = len(snake.body)
-            if current_length > self.min_stealing_snake_size:
-                segments_to_remove = max(1, int(current_length * self.steal_percentage))
-                self.logger.debug(
-                    f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
 
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
-
-    async def fast_snake_steal_body(self, player_id):
-        snake = self.snakes[player_id]
-
-        if not snake.alive or not snake.is_fast:
-            return
-
-        if random.random() < self.fast_stealing_chance:
-            current_length = len(snake.body)
-            if current_length > self.min_stealing_snake_size:
-                segments_to_remove = max(1, int(self.fast_steal_abs_size))
-
-                for i in range(segments_to_remove):
-                    segment_index = current_length - i - 1
-                    if segment_index < 0:
-                        break
-
-                    point = snake.body[segment_index]
-                    color = self.get_color_for_segment(snake, segment_index)
-
-                    self.add_food(point.x, point.y, type_=FOOD_TYPES.from_fast_snake, color=color, size=1)
-
-                self.logger.debug(
-                    f"FAST SPEED Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}")
-
-                snake.remove_segment(segments_to_remove, min_pop_size=self.min_stealing_snake_size)
 
     async def on_tick(self):
         await self.update()
@@ -744,24 +247,7 @@ class BaseServer(ChatHandlerMixin, UtilsMixin):
 
         await self.send_game_state_to_all()
 
-    async def send_game_state_to_all(self):
-        try:
-            connections_ = copy.copy(self.connections)
-            for player_id, ws in connections_.items():
-                try:
 
-                    state = self.to_dict(player_id)
-                    if self._send_cache.get(player_id) != state:
-                        await ws.send(json.dumps(state))
-                        self._send_cache[player_id] = state
-
-                    else:
-                        pass
-                except websockets.exceptions.ConnectionClosedOK:
-                    pass
-        except Exception as e:
-            self.logger.error("Error in send_game_state_to_all:")
-            self.logger.exception(e)
 
     async def game_loop(self):
         try:
