@@ -47,8 +47,8 @@
 /* Общие стили для всех колонок */
 .side-panel, .center-panel {
   flex: 1 1 12.5em; /* 200px */
-  min-width: 21.375em; /* 150px */
-  max-width: 21.875em; /* 350px */
+  min-width: 15em; /* 150px */
+  max-width: 20em; /* 350px */
   background-color: var(--pad-bg-color);
   border: 1px solid var(--pad-border-color);
   border-radius: var(--border-radius);
@@ -94,7 +94,7 @@
 
 /* Боковые панели - ограниченная высота контента */
 .side-panel .panel-content {
-  max-height: 25em; /* 400px */
+  max-height: 250em; /* 400px */
 }
 
 /* Центральная панель - контент без ограничений */
@@ -106,8 +106,6 @@
   gap: 0.75em; /* 12px */
   padding: 0.9375em; /* 15px */
   /* Убраны все ограничения высоты */
-  min-height: auto;
-  max-height: none;
   height: auto;
 }
 
@@ -184,101 +182,6 @@
 
 /* Responsive design - вертикальное расположение на узких экранах */
 @media (max-width: 68.75em) { /* 1100px */
-  .menu-form-container {
-    flex-direction: column;
-    align-items: center;
-    max-width: 31.25em; /* 500px */
-    margin: 0 auto;
-    gap: 1.25em; /* 20px */
-    margin-bottom: 1.25em; /* 20px */
-  }
-
   .side-panel, .center-panel {
-    max-width: 31.25em; /* 500px */
-    width: 100%;
-    margin: 0;
-    min-width: 0;
+    max-width: 100%;
   }
-
-  /* Центральная панель на мобильных - БЕЗ ОГРАНИЧЕНИЙ */
-  .center-panel {
-    /* Убраны все ограничения высоты */
-    height: auto;
-  }
-
-  /* Боковые панели остаются ограниченной высоты */
-  .side-panel {
-    max-height: 25em; /* 400px */
-  }
-
-  .side-panel .panel-content {
-    max-height: 25em; /* 400px */
-  }
-
-  /* Контент центральной панели без ограничений */
-  .center-panel .panel-content {
-    min-height: auto;
-    max-height: none;
-    height: auto;
-  }
-
-  #about {
-    margin-top: 1.875em; /* 30px */
-    margin-bottom: 1.875em; /* 30px */
-  }
-}
-
-/* Для очень узких экранов */
-@media (max-width: 25em) { /* 400px */
-  .side-panel, .center-panel {
-    min-width: 0;
-    width: 95%;
-  }
-
-  /* Центральная панель без ограничений */
-  .center-panel {
-    height: auto;
-  }
-
-  .side-panel {
-    max-height: 25em; /* 400px */
-  }
-
-  .panel-content {
-    padding: 0.75em; /* 12px */
-  }
-
-  .side-panel .panel-content {
-    max-height: 25em; /* 400px */
-  }
-
-  /* Контент центральной панели без ограничений */
-  .center-panel .panel-content {
-    min-height: auto;
-    max-height: none;
-    height: auto;
-    padding: 0.75em; /* 12px */
-    gap: 0.625em; /* 10px */
-  }
-
-  .menu-input {
-    width: 95%;
-  }
-
-  #play-button {
-    width: 100%;
-  }
-
-  .menu-title {
-    font-size: 2em;
-  }
-
-  .menu-subtitle {
-    font-size: 1em;
-  }
-
-  #about {
-    padding: 0.625em 1.25em; /* 10px 20px */
-    margin: 1.5625em 0; /* 25px 0 */
-  }
-}

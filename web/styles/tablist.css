@@ -4,7 +4,8 @@
     left: 50%;
     transform: translate(-50%);
     min-width: 400px;
-    width: 600px;
+    width: 800px;
+    max-width: 100%;
 
     background-color: var(--pad-bg-color);
     border: 1px solid var(--pad-border-color);

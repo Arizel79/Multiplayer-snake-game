@@ -6,8 +6,8 @@ server_desc: "This is my server"
 
 max_players: 20
 
-map_width: 256
-map_height: 256
+map_width: 64
+map_height: 64
 
 viewport_width: 90
 viewport_height: 90

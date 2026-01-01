@@ -120,17 +120,22 @@
 .wasd-btn {
     width: 90px;
     height: 90px;
+        max-width: 4rem;
+    max-height: 4rem;
     border-radius: 50%;
 }
 .action-btn {
     margin-bottom: 0;
     width: 50px;
     height: 50px;
+
     border-radius: 50%;
 }
 .fast-btn {
     width: 110px;
     height: 110px;
+    max-width: 5rem;
+    max-height: 5rem;
     border-radius: 50%;
 }
 
