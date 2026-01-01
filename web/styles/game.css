@@ -159,3 +159,35 @@ position: absolute;
 }
 
 
+
+/* footer */
+/* Стили для футера главного меню */
+#main-menu-footer {
+  margin-top: 20px;
+  padding: 15px;
+  text-align: center;
+  color: var(--pad-text-color);
+  font-size: 0.9em;
+  width: 100%;
+  border-top: 1px solid var(--pad-border-color);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+#main-menu-footer a {
+  color: var(--link-text-color);
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+#main-menu-footer a:hover {
+  color: var(--link-text-color-hover);
+  text-decoration: underline;
+}
+
+.footer-links {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}

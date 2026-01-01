@@ -138,9 +138,10 @@
 
 /* Play button */
 #play-button {
-  width: 100%;
   padding: 0.625em; /* 10px */
   margin: 0;
+    width: 100%; /* Добавить эту строку */
+  min-width: 0; /* Добавить эту строку */
   font-size: 1em; /* 16px */
   font-weight: bold;
   box-sizing: border-box;
