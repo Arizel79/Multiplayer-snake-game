@@ -19,8 +19,8 @@ class ViewportMixin(BaseMixin):
                 segments_to_check.append(snake.body[-1])
 
             for segment in segments_to_check:
-                cell_x = segment.x // self.grid_cell_size
-                cell_y = segment.y // self.grid_cell_size
+                cell_x = segment.x // self.config.grid_cell_size
+                cell_y = segment.y // self.config.grid_cell_size
                 cell_key = (cell_x, cell_y)
 
                 if cell_key not in new_grid:
@@ -31,13 +31,12 @@ class ViewportMixin(BaseMixin):
         self.spatial_grid = new_grid
 
     def get_viewport_for_snake(self, snake: Snake) -> Viewport:
-        """Возвращает область видимости для змеи"""
         if not snake.body:
-            return Viewport(0, 0, self.viewport_width, self.viewport_height)
+            return Viewport(0, 0, self.config.viewport_width, self.config.viewport_height)
 
         head = snake.body[0]
-        viewport_width = int(self.viewport_width * self.viewport_scale_factor)
-        viewport_height = int(self.viewport_height * self.viewport_scale_factor)
+        viewport_width = int(self.config.viewport_width * self.config.viewport_scale_factor)
+        viewport_height = int(self.config.viewport_height * self.config.viewport_scale_factor)
 
         return Viewport(head.x, head.y, viewport_width, viewport_height)
 
@@ -45,10 +44,10 @@ class ViewportMixin(BaseMixin):
         visible_snake_ids = set()
         visible_food = []
 
-        start_x = max(viewport.left // self.grid_cell_size, -self.width // 2)
-        end_x = min(viewport.right // self.grid_cell_size, self.width // 2)
-        start_y = max(viewport.top // self.grid_cell_size, -self.height // 2)
-        end_y = min(viewport.bottom // self.grid_cell_size, self.height // 2)
+        start_x = max(viewport.left // self.config.grid_cell_size, -self.config.width // 2)
+        end_x = min(viewport.right // self.config.grid_cell_size, self.config.width // 2)
+        start_y = max(viewport.top // self.config.grid_cell_size, -self.config.height // 2)
+        end_y = min(viewport.bottom // self.config.grid_cell_size, self.config.height // 2)
 
         left, right, top, bottom = (
             viewport.left,
@@ -80,7 +79,6 @@ class ViewportMixin(BaseMixin):
         return list(visible_snake_ids), visible_food
 
     def _snake_intersects_viewport_fast(self, snake: Snake, viewport: Viewport) -> bool:
-        """Быстрая проверка пересечения змеи с viewport"""
         head = snake.body[0]
         if viewport.contains_point(head):
             return True

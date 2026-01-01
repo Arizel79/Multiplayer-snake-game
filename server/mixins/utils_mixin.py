@@ -69,10 +69,10 @@ class UtilsMixin(BaseMixin):
 
     def get_map_rect(self):
         x1, y1, x2, y2 = (
-            -(self.width // 2),
-            -(self.height // 2),
-            self.width // 2,
-            self.height // 2,
+            -(self.config.width // 2),
+            -(self.config.height // 2),
+            self.config.width // 2,
+            self.config.height // 2,
         )
         return x1, y1, x2, y2
 
@@ -89,7 +89,7 @@ class UtilsMixin(BaseMixin):
             return f'Name "{name}" is too short'
 
         for i in name:
-            if i.lower() not in self.VALID_NAME_CHARS:
+            if i.lower() not in self.config.VALID_NAME_CHARS:
                 return f'Name "{name}" contain invalid characters'
 
         if name.lower() in [i.lower() for i in self.get_all_player_names()]:
@@ -98,7 +98,7 @@ class UtilsMixin(BaseMixin):
         return True
 
     def is_single_color_valid(self, color):
-        if color in self.snake_colors:
+        if color in self.config.snake_colors:
             return True
         return False
 
@@ -121,7 +121,7 @@ class UtilsMixin(BaseMixin):
 
         if (not head_str is None) and (not self.is_single_color_valid(head_str)):
             raise ValueError(
-                f"Color head is invalid. Valid color options: {', '.join(self.snake_colors)}"
+                f"Color head is invalid. Valid color options: {', '.join(self.config.snake_colors)}"
             )
 
         if len(ls) > MAX_PLAYER_COLOR_LENGHT:
@@ -131,7 +131,7 @@ class UtilsMixin(BaseMixin):
         for n, i in enumerate(ls):
             if not self.is_single_color_valid(i):
                 raise ValueError(
-                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.snake_colors)}"
+                    f"Color option № {n + 1} is invalid. Valid color options: {', '.join(self.config.snake_colors)}"
                 )
 
         out = {"body": ls}
@@ -155,7 +155,7 @@ class UtilsMixin(BaseMixin):
         if text == None:
             text = self.players.get(player_id).name
 
-        if color in self.snake_colors:
+        if color in self.config.snake_colors:
             pass
         else:
             color = "white"
@@ -194,5 +194,5 @@ class UtilsMixin(BaseMixin):
         self.food[(x, y)] = Food(Point(x, y), type_=type_, color=color, size=size)
 
     def generate_food(self):
-        while self.get_all_food_count() < self.max_food:
+        while self.get_all_food_count() < self.config.max_food:
             self.add_random_food()

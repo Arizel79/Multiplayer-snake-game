@@ -6,6 +6,7 @@ import yaml
 from server.modules.config import *
 
 from server.modules.base import BaseServer
+from server.modules.config_obj import ServerConfig
 
 websockets_logger = logging.getLogger("websockets")
 websockets_logger.setLevel(logging.CRITICAL)
@@ -48,7 +49,7 @@ async def run_server():
 
         config_default_mode = config_snake.get("default_mode", {})
         config_fast_mode = config_snake.get("fast_mode", {})
-        game_state = Server(
+        config_obj = ServerConfig(
             address=config_server.get("host", "0.0.0.0"),
             port=config_server.get("port", 8090),
             map_width=config_map.get("width", 100),
@@ -68,7 +69,7 @@ async def run_server():
 
             default_stealing_chance=config_default_mode.get("steal_chance", 0.003),
 
-            default_snake_lenght=config_snake.get("default_length", 0.003),
+            default_snake_length=config_snake.get("default_length", 0.003),
 
             fast_move_enable=config_fast_mode.get("enable", False),
             fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
@@ -76,6 +77,10 @@ async def run_server():
 
             admin_password=config_server.get("admin_password"),
         )
+
+
+        game_state = Server(config=config_obj)
+
     else:
         raise ValueError("No config file specified")
 

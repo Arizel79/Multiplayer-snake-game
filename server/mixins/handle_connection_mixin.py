@@ -13,7 +13,7 @@ class HandleConnectionMixin(BaseMixin):
                 player_id = None
 
                 pl_count = len(self.connections)
-                pl_count_max = self.max_players
+                pl_count_max = self.config.max_players
                 self.logger.debug(
                     f"check max player for {self.get_pretty_address(websocket)}: {pl_count} >= {pl_count_max}"
                 )
@@ -88,7 +88,7 @@ class HandleConnectionMixin(BaseMixin):
                     await self.add_player(player_id, name, color)
                     await websocket.send(
                         json.dumps(
-                            {"type": "set_server_desc", "data": self.server_desc}
+                            {"type": "set_server_desc", "data": self.config.server_desc}
                         )
                     )
 

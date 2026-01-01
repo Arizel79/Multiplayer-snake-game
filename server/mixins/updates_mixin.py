@@ -9,7 +9,7 @@ class UpdatesMixin(BaseMixin):
 
         self.tps_counter += 1
         current_time = time()
-        if current_time - self.last_tps_time >= self.tps_log_interval:
+        if current_time - self.last_tps_time >= self.config.tps_log_interval:
             self.tps = self.tps_counter / (current_time - self.last_tps_time)
             self.tps_counter = 0
             self.last_tps_time = current_time

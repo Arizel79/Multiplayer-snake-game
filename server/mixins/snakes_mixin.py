@@ -44,8 +44,8 @@ class SnakesMixin(BaseMixin):
 
     def check_collision_fast(self, player_id, point):
         """Быстрая проверка коллизий через spatial grid"""
-        cell_x = point.x // self.grid_cell_size
-        cell_y = point.y // self.grid_cell_size
+        cell_x = point.x // self.config.grid_cell_size
+        cell_y = point.y // self.config.grid_cell_size
         cell_key = (cell_x, cell_y)
 
         if cell_key in self.spatial_grid:
@@ -102,9 +102,9 @@ class SnakesMixin(BaseMixin):
     async def is_move_now(self, now):
 
         move_normal = (
-            now >= self.last_normal_snake_move_time + self.DEFAULT_MOVE_TIMEOUT
+            now >= self.last_normal_snake_move_time + self.config.DEFAULT_MOVE_TIMEOUT
         )
-        move_fast = now >= self.last_fast_snake_move_time + self.FAST_MOVE_TIMEOUT
+        move_fast = now >= self.last_fast_snake_move_time + self.config.FAST_MOVE_TIMEOUT
         return move_normal, move_fast
 
     def _snake_to_dict(self, snake: Snake):
@@ -120,18 +120,18 @@ class SnakesMixin(BaseMixin):
         }
 
     async def toggle_speed(self, player_id, is_fast):
-        if not self.fast_move_enable:
+        if not self.config.fast_move_enable:
             self.logger.debug("Not toggle speed, fast move disable")
             return
         sn = self.snakes[player_id]
-        if len(sn.body) < self.MIN_LENGHT_FAST_ON:
+        if len(sn.body) < self.config.MIN_LENGHT_FAST_ON:
             return
 
         sn.is_fast = is_fast
 
     async def spawn(self, player_id, lenght=None):
         if not lenght:
-            lenght = self.default_snake_lenght
+            lenght = self.config.default_snake_length
         x, y = self.get_avalible_coords()
         self.players[player_id].alive = True
         body = deque([Point(x, y)])
@@ -157,16 +157,16 @@ class SnakesMixin(BaseMixin):
         snake = self.snakes[player_id]
         if not snake.alive:
             return
-        if random.random() < self.stealing_chance:
+        if random.random() < self.config.stealing_chance:
             current_length = len(snake.body)
-            if current_length > self.min_stealing_snake_size:
-                segments_to_remove = max(1, int(current_length * self.steal_percentage))
+            if current_length > self.config.min_stealing_snake_size:
+                segments_to_remove = max(1, int(current_length * self.config.steal_percentage))
                 self.logger.debug(
-                    f"Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}"
+                    f"Stole {segments_to_remove} segments ({self.config.steal_percentage * 100}%) from {self.get_player(player_id)}"
                 )
 
                 snake.remove_segment(
-                    segments_to_remove, min_pop_size=self.min_stealing_snake_size
+                    segments_to_remove, min_pop_size=self.config.min_stealing_snake_size
                 )
 
     async def fast_snake_steal_body(self, player_id):
@@ -175,10 +175,10 @@ class SnakesMixin(BaseMixin):
         if not snake.alive or not snake.is_fast:
             return
 
-        if random.random() < self.fast_stealing_chance:
+        if random.random() < self.config.fast_stealing_chance:
             current_length = len(snake.body)
-            if current_length > self.min_stealing_snake_size:
-                segments_to_remove = max(1, int(self.fast_steal_abs_size))
+            if current_length > self.config.min_stealing_snake_size:
+                segments_to_remove = max(1, int(self.config.fast_steal_abs_size))
 
                 for i in range(segments_to_remove):
                     segment_index = current_length - i - 1
@@ -197,9 +197,9 @@ class SnakesMixin(BaseMixin):
                     )
 
                 self.logger.debug(
-                    f"FAST SPEED Stole {segments_to_remove} segments ({self.steal_percentage * 100}%) from {self.get_player(player_id)}"
+                    f"FAST SPEED Stole {segments_to_remove} segments ({self.config.steal_percentage * 100}%) from {self.get_player(player_id)}"
                 )
 
                 snake.remove_segment(
-                    segments_to_remove, min_pop_size=self.min_stealing_snake_size
+                    segments_to_remove, min_pop_size=self.config.min_stealing_snake_size
                 )

@@ -6,8 +6,9 @@ from server.mixins.base_mixin import *
 class ChatHandlerMixin(BaseMixin):
     class PlayerNotFound(Exception):
         pass
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",)}
         self.ALL_ADMIN_COMMANDS = []
         for k, v in self.ADMIN_COMMANDS.items():

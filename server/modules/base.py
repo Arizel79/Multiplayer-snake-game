@@ -58,17 +58,23 @@ class BaseServer(
     async def game_loop(self):
         try:
             while True:
-                now = time()
+                try:
+                    now = time()
 
-                if now >= self.old_tick_time + self.tick:
-                    self.old_tick_time = now
-                    await self.on_tick()
+                    if now >= self.old_tick_time + self.config.tick:
+                        self.old_tick_time = now
+                        await self.on_tick()
 
-                    # Optional: Warn if TPS is too low
-                    # if hasattr(self, 'tps') and self.tps < 20 and self.tps > 0:
-                    #     self.logger.warning(f"Low TPS: {self.tps:.2f}")
+                        # Optional: Warn if TPS is too low
+                        # if hasattr(self, 'tps') and self.tps < 20 and self.tps > 0:
+                        #     self.logger.warning(f"Low TPS: {self.tps:.2f}")
 
-                await asyncio.sleep(self.game_speed)
+                    await asyncio.sleep(self.config.game_speed)
+                except Exception as e:
+                    self.logger.error(f"Error in game_loop: {e}")
+                    self.logger.exception(e)
+        except asyncio.CancelledError as e:
+            self.logger.exception(e)
         except Exception as e:
             self.logger.error("Game loop error:")
             self.logger.exception(e)
@@ -79,9 +85,9 @@ class BaseServer(
         self.game_task = asyncio.create_task(self.game_loop())
         try:
             async with websockets.serve(
-                    self.handle_connection, self.address, self.port
+                    self.handle_connection, self.config.address, self.config.port
             ):
-                self.logger.info(f"Server started at {self.address}:{self.port}")
+                self.logger.info(f"Server started at {self.config.address}:{self.config.port}")
                 await asyncio.Future()
 
         except Exception as e:
