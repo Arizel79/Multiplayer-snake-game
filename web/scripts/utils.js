@@ -358,12 +358,12 @@ function disconnectFromPauseMenu() {
     hidePauseMenu();
     returnToMenu();
 }
-
 function updateLeaderboard() {
     if (!gameState.gameState || !gameState.gameState.leaderboard) return;
 
     const leaderboard = gameState.gameState.leaderboard;
     const container = document.getElementById('leaderboard-list');
+    const currentPlayerId = gameState.playerId; // Получаем ID текущего игрока
 
     if (!leaderboard || Object.keys(leaderboard).length === 0) {
         container.innerHTML = '<div class="leaderboard-entry">No players</div>';
@@ -381,8 +381,13 @@ function updateLeaderboard() {
 
     topEntries.forEach(([position, player]) => {
         const color = player.name_color ? getColorValue(player.name_color) : COLORS.white;
+
+        // Определяем, является ли этот игрок текущим игроком
+        const isCurrentPlayer = currentPlayerId && player.id === currentPlayerId;
+        const entryClass = isCurrentPlayer ? 'leaderboard-entry leaderboard-entry-me' : 'leaderboard-entry';
+
         html += `
-            <div class="leaderboard-entry">
+            <div class="${entryClass}">
                 <span class="leaderboard-position">${position}.</span>
                 <span class="leaderboard-name" style="color: ${color}">
                     ${escapeHtml(player.name)}

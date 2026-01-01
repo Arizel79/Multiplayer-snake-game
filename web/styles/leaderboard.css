@@ -33,6 +33,10 @@
     border-radius: 3px;
 }
 
+.leaderboard-entry-me {
+    font-weight: bold;
+}
+
 .leaderboard-entry:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
@@ -42,8 +46,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 70%;
+    max-width: 100%;
 }
+
+.leaderboard-entry-me .leaderboard-name {
+
+}
+
+
 
 .leaderboard-score {
     color: white;

@@ -139,7 +139,7 @@ class UtilsMixin(BaseMixin):
             out["head"] = head_str
             out["name_color"] = head_str
         else:
-            out["name_color"] = "white"
+            out["name_color"] = ls[0]
 
         assert out.get("name_color")
         return out
