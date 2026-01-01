@@ -31,24 +31,26 @@ class SendGameStateMixin(BaseMixin):
                 player = self.players.get(player_id)
 
                 if player:
-                    snakes_data.append({
-                        'id': player_id,
-                        'name': player.name,
-                        'score': snake.size,
-                        'name_color': player.color["name_color"],
-                    })
+                    snakes_data.append(
+                        {
+                            "id": player_id,
+                            "name": player.name,
+                            "score": snake.size,
+                            "name_color": player.color["name_color"],
+                        }
+                    )
 
-        snakes_data.sort(key=lambda x: x['score'], reverse=True)
+        snakes_data.sort(key=lambda x: x["score"], reverse=True)
 
         top_snakes = snakes_data[:limit]
 
         leaderboard = {}
         for i, snake_data in enumerate(top_snakes, 1):
             leaderboard[i] = {
-                'name': snake_data['name'],
-                'score': snake_data['score'],
-                'name_color': snake_data['name_color'],
-                'id': snake_data['id']
+                "name": snake_data["name"],
+                "score": snake_data["score"],
+                "name_color": snake_data["name_color"],
+                "id": snake_data["id"],
             }
 
         self._leaderboard_cache = leaderboard

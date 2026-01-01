@@ -14,8 +14,8 @@ def read_files(root_dir, exclude_files=None, exclude_dirs=None):
             if (
                 filename.endswith(".html")
                 or filename.endswith(".js")
-                or filename.endswith(".css") or filename.endswith(".py")
-
+                or filename.endswith(".css")
+                or filename.endswith(".py")
             ):
                 full_path = os.path.join(dirpath, filename)
                 rel_path = os.path.relpath(full_path, root_dir)

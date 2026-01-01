@@ -1,9 +1,9 @@
 import argparse
 import asyncio
 import logging
-import random
+import sys
+
 import yaml
-from server.modules.config import *
 
 from server.modules.base import BaseServer
 from server.modules.config_obj import ServerConfig
@@ -27,18 +27,28 @@ def get_full_parser():
     parser = argparse.ArgumentParser(
         description="Multiplayer Snake game by @Arizel79 (server)"
     )
-    parser.add_argument("--config-file", type=str, help="Path to config file (YAML)")
+    parser.add_argument(
+        "--config-file",
+        type=str,
+        help="Path to config file (YAML)",
+        default="config.yaml",
+    )
 
     return parser
 
 
-async def run_server():
+def load_yaml_config(config_file):
+    with open(config_file, "r") as f:
+        config = yaml.safe_load(f)
+    return config
+
+
+def run_server():
     parser = get_full_parser()
     args = parser.parse_args()
 
     if args.config_file:
-        with open(args.config_file, "r") as f:
-            config = yaml.safe_load(f)
+        config = load_yaml_config(args.config_file)
 
         config_server = config.get("server", {})
         config_game = config.get("game", {})
@@ -56,49 +66,38 @@ async def run_server():
             map_height=config_map.get("height", 100),
             viewport_width=config_viewport.get("width", 100),
             viewport_height=config_viewport.get("height", 100),
-
             max_players=config_server.get("max_players", 20),
             server_name=config_server.get("server_name", "Snake Server"),
             server_desc=config_server.get("server_desc", "This is server"),
-
             logging_level=config_logging.get("level", "INFO"),
-
             max_food_perc=config_map.get("food_perc", 2),
-
             default_move_timeout=config_default_mode.get("move_timeout", 0.1),
-
             default_stealing_chance=config_default_mode.get("steal_chance", 0.003),
-
             default_snake_length=config_snake.get("default_length", 0.003),
-
             fast_move_enable=config_fast_mode.get("enable", False),
             fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
             fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
-
             admin_password=config_server.get("admin_password"),
         )
 
-
-        game_state = Server(config=config_obj)
+        server = Server(config=config_obj)
 
     else:
         raise ValueError("No config file specified")
 
-    try:
-        await game_state.run()
-    except asyncio.CancelledError:
-        pass
-    finally:
-        print("Server finished")
+    async def async_main(server):
+        await server.run()
+
+    asyncio.run(async_main(server))
 
 
 def main():
     try:
-        asyncio.run(run_server())
+        run_server()
     except KeyboardInterrupt:
         print("\nKeyboardInterrupt. Server quit")
         return
 
 
 if __name__ == "__main__":
-    raise Exception("DONT RUN THIS FILE< RUN MAIN>PY")
+    sys.exit("Don`t run this file, run main.py")

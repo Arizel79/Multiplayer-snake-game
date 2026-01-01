@@ -104,7 +104,9 @@ class SnakesMixin(BaseMixin):
         move_normal = (
             now >= self.last_normal_snake_move_time + self.config.DEFAULT_MOVE_TIMEOUT
         )
-        move_fast = now >= self.last_fast_snake_move_time + self.config.FAST_MOVE_TIMEOUT
+        move_fast = (
+            now >= self.last_fast_snake_move_time + self.config.FAST_MOVE_TIMEOUT
+        )
         return move_normal, move_fast
 
     def _snake_to_dict(self, snake: Snake):
@@ -160,7 +162,9 @@ class SnakesMixin(BaseMixin):
         if random.random() < self.config.stealing_chance:
             current_length = len(snake.body)
             if current_length > self.config.min_stealing_snake_size:
-                segments_to_remove = max(1, int(current_length * self.config.steal_percentage))
+                segments_to_remove = max(
+                    1, int(current_length * self.config.steal_percentage)
+                )
                 self.logger.debug(
                     f"Stole {segments_to_remove} segments ({self.config.steal_percentage * 100}%) from {self.get_player(player_id)}"
                 )

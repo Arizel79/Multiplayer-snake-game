@@ -101,10 +101,10 @@ class HandleConnectionMixin(BaseMixin):
                             self.logger.exception(e)
 
                 except (
-                        json.JSONDecodeError,
-                        websockets.exceptions.ConnectionClosedError,
-                        websockets.exceptions.ConnectionClosedOK,
-                        websockets.exceptions.InvalidMessage,
+                    json.JSONDecodeError,
+                    websockets.exceptions.ConnectionClosedError,
+                    websockets.exceptions.ConnectionClosedOK,
+                    websockets.exceptions.InvalidMessage,
                 ) as e:
                     self.logger.warning(f"{type(e).__name__}: {e}")
                     await websocket.close()

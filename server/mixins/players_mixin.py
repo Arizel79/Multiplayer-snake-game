@@ -141,4 +141,3 @@ class PlayersMixin(BaseMixin):
         for k, v in self.players.items():
             if v.name == player_name:
                 return v
-

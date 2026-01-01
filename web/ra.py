@@ -20,8 +20,8 @@ def read_files(root_dir, exclude_files=None, exclude_dirs=None):
             if (
                 filename.endswith(".py")
                 or filename.endswith(".html")
-                    or filename.endswith(".css")
-                    or filename.endswith(".js")
+                or filename.endswith(".css")
+                or filename.endswith(".js")
                 or filename.endswith(".txt")
                 or filename.endswith(".ftl")
             ):

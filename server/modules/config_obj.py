@@ -6,27 +6,27 @@ from server.modules.dataclasses import *
 
 
 class ServerConfig:
-    def __init__(self,
-                 address,
-                 port,
-                 map_width=80,
-                 map_height=80,
-                 max_players=20,
-                 server_name="Server",
-                 server_desc=None,
-                 logging_level="debug",
-                 max_food_perc=10,
-                 default_move_timeout=0.3,
-                 fast_move_enable=False,
-                 fast_move_timeout=0.1,
-
-                 default_snake_length=1,
-
-                 default_stealing_chance=0.003,
-                 fast_stealing_chance=0.5,
-                 viewport_width=BASE_VIEWPORT_WIDTH,
-                 viewport_height=BASE_VIEWPORT_HEIGHT,
-                 admin_password=None, ):
+    def __init__(
+        self,
+        address,
+        port,
+        map_width=80,
+        map_height=80,
+        max_players=20,
+        server_name="Server",
+        server_desc=None,
+        logging_level="debug",
+        max_food_perc=10,
+        default_move_timeout=0.3,
+        fast_move_enable=False,
+        fast_move_timeout=0.1,
+        default_snake_length=1,
+        default_stealing_chance=0.003,
+        fast_stealing_chance=0.5,
+        viewport_width=BASE_VIEWPORT_WIDTH,
+        viewport_height=BASE_VIEWPORT_HEIGHT,
+        admin_password=None,
+    ):
         self.port = port
         self.address = address
 
@@ -76,7 +76,5 @@ class ServerConfig:
         self.grid_cell_size = 1
 
         # TPS tracking
-
-
 
         self.tps_log_interval = 5

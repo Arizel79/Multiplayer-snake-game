@@ -60,19 +60,24 @@ async def run_bot(server, bot_name, bot_color):
     finally:
         bot.logger.info(f"Bot {bot_name} finished")
 
+
 COLORS = ["red", "green", "yellow", "cyan", "blue"]
+
 
 def get_color():
     def r():
         return random.choice(COLORS)
+
     return f"{r()};{r()}"
+
+
 async def main():
     num_bots = 30
     SERVER = "localhost:8090"
 
     tasks = []
     for i in range(num_bots):
-        name = "bot_" + ''.join(random.choices('0123456789abcdef', k=12))
+        name = "bot_" + "".join(random.choices("0123456789abcdef", k=12))
         tasks.append(
             asyncio.create_task(
                 run_bot(

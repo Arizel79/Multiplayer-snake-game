@@ -32,11 +32,17 @@ class ViewportMixin(BaseMixin):
 
     def get_viewport_for_snake(self, snake: Snake) -> Viewport:
         if not snake.body:
-            return Viewport(0, 0, self.config.viewport_width, self.config.viewport_height)
+            return Viewport(
+                0, 0, self.config.viewport_width, self.config.viewport_height
+            )
 
         head = snake.body[0]
-        viewport_width = int(self.config.viewport_width * self.config.viewport_scale_factor)
-        viewport_height = int(self.config.viewport_height * self.config.viewport_scale_factor)
+        viewport_width = int(
+            self.config.viewport_width * self.config.viewport_scale_factor
+        )
+        viewport_height = int(
+            self.config.viewport_height * self.config.viewport_scale_factor
+        )
 
         return Viewport(head.x, head.y, viewport_width, viewport_height)
 
@@ -44,10 +50,18 @@ class ViewportMixin(BaseMixin):
         visible_snake_ids = set()
         visible_food = []
 
-        start_x = max(viewport.left // self.config.grid_cell_size, -self.config.width // 2)
-        end_x = min(viewport.right // self.config.grid_cell_size, self.config.width // 2)
-        start_y = max(viewport.top // self.config.grid_cell_size, -self.config.height // 2)
-        end_y = min(viewport.bottom // self.config.grid_cell_size, self.config.height // 2)
+        start_x = max(
+            viewport.left // self.config.grid_cell_size, -self.config.width // 2
+        )
+        end_x = min(
+            viewport.right // self.config.grid_cell_size, self.config.width // 2
+        )
+        start_y = max(
+            viewport.top // self.config.grid_cell_size, -self.config.height // 2
+        )
+        end_y = min(
+            viewport.bottom // self.config.grid_cell_size, self.config.height // 2
+        )
 
         left, right, top, bottom = (
             viewport.left,

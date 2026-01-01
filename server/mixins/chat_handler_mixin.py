@@ -6,6 +6,7 @@ from server.mixins.base_mixin import *
 class ChatHandlerMixin(BaseMixin):
     class PlayerNotFound(Exception):
         pass
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -21,7 +22,9 @@ class ChatHandlerMixin(BaseMixin):
         async def send_message(text, is_error=False):
             if is_error:
                 text = f"<red>{html.escape(text)}</red>"
-            await self.send_dict_to_player(player_id, {"type": "chat_message", "data": text})
+            await self.send_dict_to_player(
+                player_id, {"type": "chat_message", "data": text}
+            )
 
         if message.startswith("/"):
             self.logger.info(
@@ -55,9 +58,12 @@ class ChatHandlerMixin(BaseMixin):
                     password = None
                 if self.admin_password and password == self.admin_password:
                     self.players[player_id].is_admin = True
-                    self.logger.info(f"Player {self.get_player(player_id)} set to admin")
+                    self.logger.info(
+                        f"Player {self.get_player(player_id)} set to admin"
+                    )
                     await self.send_dict_to_player(
-                        player_id, {"type": "chat_message", "data": "You are admin now!"}
+                        player_id,
+                        {"type": "chat_message", "data": "You are admin now!"},
                     )
                 else:
                     self.logger.info(
@@ -92,13 +98,14 @@ class ChatHandlerMixin(BaseMixin):
                         target_player = self.get_player_by_name(lst[1])
                         if not target_player:
                             raise self.PlayerNotFound()
-                        await self.player_death(target_player.player_id, if_immortal=True)
+                        await self.player_death(
+                            target_player.player_id, if_immortal=True
+                        )
                         await send_message(f"Player {player_id} killed")
                     except self.PlayerNotFound:
                         await send_message(f"Player not found!", is_error=True)
                     except Exception as e:
                         self.logger.exception(e)
-
 
         else:
             self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")

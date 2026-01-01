@@ -15,11 +15,11 @@ from server.utils import get_random_id
 
 
 class BaseMixin:
-    def __init__(
-        self, config: ServerConfig
-    ):
+    def __init__(self, config: ServerConfig):
         self.config = config
-        self.setup_logger(__name__, getattr(logging, self.config.logging_level), "server.log")
+        self.setup_logger(
+            __name__, getattr(logging, self.config.logging_level), "server.log"
+        )
         self.logger.info(f"Logging level: {self.config.logging_level}")
 
         self.last_normal_snake_move_time = time()
