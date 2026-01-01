@@ -13,7 +13,7 @@ from server.mixins.snakes_mixin import SnakesMixin
 from server.mixins.updates_mixin import UpdatesMixin
 from server.mixins.utils_mixin import UtilsMixin
 from server.mixins.viewport_mixin import ViewportMixin
-from server.modules.dto import *
+from server.modules.dataclasses import *
 from server.utils import get_random_id
 
 

@@ -2,7 +2,7 @@ import json
 
 from server.mixins.base_mixin import BaseMixin
 from server.modules.config import *
-from server.modules.dto import *
+from server.modules.dataclasses import *
 
 
 class PlayersMixin(BaseMixin):

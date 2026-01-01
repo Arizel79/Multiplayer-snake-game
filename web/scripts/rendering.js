@@ -293,8 +293,8 @@ function getNeonGlowColor(snake, index, defaultColor) {
             const textX = screenX + cellSize / 2;
             const textY = screenY - 5;
 
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(0,0,0,.5)';
+            ctx.lineWidth = 9;
             ctx.strokeText(snake.name, textX, textY);
 
             ctx.fillText(snake.name, textX, textY);

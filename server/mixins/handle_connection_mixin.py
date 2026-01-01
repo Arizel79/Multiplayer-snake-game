@@ -14,7 +14,7 @@ class HandleConnectionMixin(BaseMixin):
 
                 pl_count = len(self.connections)
                 pl_count_max = self.max_players
-                self.logger.info(
+                self.logger.debug(
                     f"check max player for {self.get_pretty_address(websocket)}: {pl_count} >= {pl_count_max}"
                 )
 

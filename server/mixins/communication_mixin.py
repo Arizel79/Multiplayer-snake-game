@@ -60,5 +60,4 @@ class CommunicationMixin(BaseMixin):
                 except websockets.exceptions.ConnectionClosedOK:
                     pass
         except Exception as e:
-            self.logger.error("Error in send_game_state_to_all:")
-            self.logger.exception(e)
+            self.logger.error(f"Error in send_game_state_to_all: {e}")

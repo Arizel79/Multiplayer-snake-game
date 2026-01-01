@@ -9,7 +9,7 @@ import websockets
 
 from server.modules.config import *
 from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
-from server.modules.dto import *
+from server.modules.dataclasses import *
 from server.utils import get_random_id
 
 

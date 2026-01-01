@@ -1,5 +1,5 @@
 from server.mixins.base_mixin import BaseMixin
-from server.modules.dto import *
+from server.modules.dataclasses import *
 
 
 class ViewportMixin(BaseMixin):
