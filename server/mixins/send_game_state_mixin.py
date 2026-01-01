@@ -5,8 +5,56 @@ from server.modules.dataclasses import *
 
 
 class SendGameStateMixin(BaseMixin):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._leaderboard_cache = {}
+        self._last_leaderboard_update = 0
+        self.leaderboard_cache_ttl = 0.5
+
+    def _get_leaderboard(self, limit=10):
+        """Получение топа змеек по размеру"""
+        current_time = time()
+
+        # Обновляем кэш раз в leaderboard_cache_ttl секунд
+        if current_time - self._last_leaderboard_update > self.leaderboard_cache_ttl:
+            self._update_leaderboard_cache(limit)
+            self._last_leaderboard_update = current_time
+
+        return self._leaderboard_cache
+
+    def _update_leaderboard_cache(self, limit=10):
+        """Обновление кэша leaderboard"""
+        snakes_data = []
+        for player_id, snake in self.snakes.items():
+            if snake.alive:  # Только живые змейки
+                player = self.players.get(player_id)
+                if player:
+                    snakes_data.append({
+                        'id': player_id,
+                        'name': player.name,
+                        'score': snake.size,
+                        'name_color': player.color["name_color"],
+                    })
+
+        snakes_data.sort(key=lambda x: x['score'], reverse=True)
+
+        top_snakes = snakes_data[:limit]
+
+        leaderboard = {}
+        for i, snake_data in enumerate(top_snakes, 1):
+            leaderboard[i] = {
+                'name': snake_data['name'],
+                'score': snake_data['score'],
+                'name_color': snake_data['name_color'],
+                'id': snake_data['id']
+            }
+
+        self._leaderboard_cache = leaderboard
+
     def to_dict(self, player_id: str = None):
-        return self._get_partial_state(player_id)
+        state = self._get_partial_state(player_id)
+
+        return state
 
     def _get_full_state(self):
         """Полное состояние игры (существующая логика)"""
@@ -47,6 +95,7 @@ class SendGameStateMixin(BaseMixin):
                 "width": viewport.width,
                 "height": viewport.height,
             },
+            "leaderboard": self._get_leaderboard(),
             "is_partial": True,
             "tps": round(self.tps, 1),
         }

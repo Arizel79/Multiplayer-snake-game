@@ -4,17 +4,18 @@ import json
 import websockets
 
 from server.mixins.base_mixin import BaseMixin
-
-
 class CommunicationMixin(BaseMixin):
     def get_addres_from_ws(self, ws):
         return ":".join(str(i) for i in ws.remote_address)
 
     async def send_dict_to_player(self, player_id, dict_):
+        await self.send_dict_to_ws(self.connections[player_id], dict_)
+
+    async def send_dict_to_ws(self, ws, dict_):
         try:
-            await self.connections[player_id].send(json.dumps(dict_))
+            await ws.send(json.dumps(dict_))
         except Exception as e:
-            self.logger.error(f"Error send to {player_id}: {e}")
+            self.logger.error(f"Error send to {ws}: {e}")
 
     async def broadcast_chat_message(self, data):
         connections_ = copy.copy(self.connections)
@@ -24,7 +25,7 @@ class CommunicationMixin(BaseMixin):
         for player_id, ws in connections_.items():
 
             try:
-                await ws.send(to_send)
+                await self.send_dict_to_ws(ws, to_send)
             except websockets.exceptions.ConnectionClosedOK as e:
                 pass
 
@@ -50,14 +51,13 @@ class CommunicationMixin(BaseMixin):
             for player_id, ws in connections_.items():
                 try:
 
-                    state = self.to_dict(player_id)
-                    if self._send_cache.get(player_id) != state:
-                        await ws.send(json.dumps(state))
-                        self._send_cache[player_id] = state
+                    state_to_send = self.to_dict(player_id)
+                    if self._send_cache_for_players.get(player_id) != state_to_send:
+                        await self.send_dict_to_ws(ws, state_to_send)
+                        self._send_cache_for_players[player_id] = state_to_send
 
-                    else:
-                        pass
                 except websockets.exceptions.ConnectionClosedOK:
                     pass
         except Exception as e:
             self.logger.error(f"Error in send_game_state_to_all: {e}")
+            self.logger.exception(e)

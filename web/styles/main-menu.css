@@ -136,6 +136,7 @@
   border: 1px solid var(--menu-input-border-color-focus);
 }
 
+
 /* Play button */
 #play-button {
   padding: 0.625em; /* 10px */
@@ -147,6 +148,9 @@
   box-sizing: border-box;
 }
 
+.color-examples {
+    width: 100%;
+}
 /* Side panel content */
 .side-panel .panel-content p {
   margin-bottom: 0.5em; /* 8px */

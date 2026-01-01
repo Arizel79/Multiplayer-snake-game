@@ -45,7 +45,7 @@ class PlayersMixin(BaseMixin):
         if player_id in self.players:
             del self.players[player_id]
 
-        self._send_cache.clear()
+        self._send_cache_for_players.clear()
 
         return True
 

@@ -18,7 +18,7 @@ function connectToServer() {
             }));
 
             gameLoop();
-            _addChatMessage("Disconnected from " + gameState.serverAddress);
+
         };
 
         gameState.socket.onmessage = (event) => {
@@ -27,6 +27,7 @@ function connectToServer() {
         };
 
         gameState.socket.onclose = (event) => {
+            _addChatMessage("Disconnected from " + gameState.serverAddress);
             console.log("Socket closed. Code:", event.code, "Reason:", event.reason, "Was clean:", event.wasClean);
 
             let reason = "Connection closed";
@@ -129,6 +130,7 @@ function showDisconnectWindow(title, message, errorCode = null) {
 }
 
 function handleServerMessage(data) {
+    console.log(data)
     switch (data.type) {
 
         case "player_id":

@@ -100,4 +100,4 @@ class BaseMixin:
         self._last_cache_update = 0
         self.cache_ttl = 0.05
 
-        self._send_cache = {}
+        self._send_cache_for_players = {}

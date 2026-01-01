@@ -342,14 +342,12 @@ function showPauseMenu() {
 
     const pauseScreen = document.getElementById("death-screen-1");
     console.log("Pause menu show");
-    pauseScreen.style.display = "flex";
 }
 
 function hidePauseMenu() {
     console.log("Pause menu hide")
     gameState.isPaused = false;
     const pauseScreen = document.getElementById("pause-screen");
-    pauseScreen.style.display = "none";
 }
 
 function backToGame() {

@@ -135,7 +135,7 @@ class UtilsMixin(BaseMixin):
                 )
 
         out = {"body": ls}
-        if not head_str is None:
+        if not head_str:
             out["head"] = head_str
             out["name_color"] = "white"
         return out
