@@ -4,6 +4,8 @@ import json
 import websockets
 
 from server.mixins.base_mixin import BaseMixin
+
+
 class CommunicationMixin(BaseMixin):
     def get_addres_from_ws(self, ws):
         return ":".join(str(i) for i in ws.remote_address)
@@ -13,21 +15,22 @@ class CommunicationMixin(BaseMixin):
 
     async def send_dict_to_ws(self, ws, dict_):
         try:
-            await ws.send(json.dumps(dict_))
+            assert isinstance(dict_, dict), f"dict_ is not a dict: {repr(dict_)}"
+            assert dict_.get("type")
+
+            to_send = json.dumps(dict_)
+            await ws.send(to_send)
         except Exception as e:
             self.logger.error(f"Error send to {ws}: {e}")
+            self.logger.exception(e)
 
     async def broadcast_chat_message(self, data):
         connections_ = copy.copy(self.connections)
-        to_send = json.dumps(data)
-        self.logger.debug(f"Broadcast data: {data}")
+
+        self.logger.info(f"Broadcast data: {data}")
 
         for player_id, ws in connections_.items():
-
-            try:
-                await self.send_dict_to_ws(ws, to_send)
-            except websockets.exceptions.ConnectionClosedOK as e:
-                pass
+            await self.send_dict_to_ws(ws, data)
 
     async def handle_client_data(self, player_id: str, data: dict):
         self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")

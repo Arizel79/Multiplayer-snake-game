@@ -358,3 +358,42 @@ function disconnectFromPauseMenu() {
     hidePauseMenu();
     returnToMenu();
 }
+
+function updateLeaderboard() {
+    if (!gameState.gameState || !gameState.gameState.leaderboard) return;
+
+    const leaderboard = gameState.gameState.leaderboard;
+    const container = document.getElementById('leaderboard-list');
+
+    if (!leaderboard || Object.keys(leaderboard).length === 0) {
+        container.innerHTML = '<div class="leaderboard-entry">No players</div>';
+        return;
+    }
+
+    let html = '';
+
+    // Преобразуем leaderboard из объекта в массив и сортируем по позиции
+    const entries = Object.entries(leaderboard);
+    entries.sort((a, b) => parseInt(a[0]) - parseInt(b[0])); // Сортировка по ключу (позиции)
+
+    // Ограничиваем количество отображаемых записей (например, топ-10)
+    const topEntries = entries.slice(0, 10);
+
+    topEntries.forEach(([position, player]) => {
+        const color = player.name_color ? getColorValue(player.name_color) : COLORS.white;
+        html += `
+            <div class="leaderboard-entry">
+                <span class="leaderboard-position">${position}.</span>
+                <span class="leaderboard-name" style="color: ${color}">
+                    ${escapeHtml(player.name)}
+                </span>
+                <span class="leaderboard-score">${player.score}</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // Показываем leaderboard только если есть игроки
+    document.getElementById('leaderboard').style.display = topEntries.length > 0 ? 'block' : 'none';
+}

@@ -135,9 +135,13 @@ class UtilsMixin(BaseMixin):
                 )
 
         out = {"body": ls}
-        if not head_str:
+        if head_str:
             out["head"] = head_str
+            out["name_color"] = head_str
+        else:
             out["name_color"] = "white"
+
+        assert out.get("name_color")
         return out
 
     def get_pretty_address(self, websocket):

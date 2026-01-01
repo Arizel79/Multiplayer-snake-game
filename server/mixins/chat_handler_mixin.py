@@ -1,3 +1,5 @@
+import html
+
 from server.mixins.base_mixin import *
 
 
@@ -15,7 +17,9 @@ class ChatHandlerMixin(BaseMixin):
 
         con = self.connections[player_id]
 
-        async def send_message(text):
+        async def send_message(text, is_error=False):
+            if is_error:
+                text = f"<red>{html.escape(text)}</red>"
             await self.send_dict_to_player(player_id, {"type": "chat_message", "data": text})
 
         if message.startswith("/"):
@@ -27,7 +31,7 @@ class ChatHandlerMixin(BaseMixin):
             if lst[0] == "/help":
                 await send_message(f"Help message here?")
 
-            elif lst[0] == "/kill":
+            elif lst[0] == "/killme":
                 self.logger.info(
                     f"player {self.get_player(player_id)} want kill himself"
                 )
@@ -58,15 +62,14 @@ class ChatHandlerMixin(BaseMixin):
                     self.logger.info(
                         f"Player {self.get_player(player_id)} send wrong admin password: {password}"
                     )
-                    await send_message("Wrong admin password!")
+                    await send_message("Wrong admin password!", is_error=True)
 
             elif lst[0] in self.ALL_ADMIN_COMMANDS:
                 if is_player_admin:
-                    self.logger.d("access allowed")
-                    await send_message("access allowed")
+                    self.logger.info("access allowed")
                 else:
                     self.logger.info("access denied")
-                    await send_message("access denied")
+                    await send_message("Access denied!", is_error=True)
                     return
 
                 if lst[0] in self.ADMIN_COMMANDS["kick"]:
@@ -78,7 +81,7 @@ class ChatHandlerMixin(BaseMixin):
                         await self.remove_player(target_player.player_id)
                         await send_message(f"Player {player_id} kicked")
                     except self.PlayerNotFound:
-                        await send_message(f"Player not found!")
+                        await send_message(f"Player not found!", is_error=True)
                     except Exception as e:
                         self.logger.exception(e)
 
@@ -91,7 +94,7 @@ class ChatHandlerMixin(BaseMixin):
                         await self.player_death(target_player.player_id, if_immortal=True)
                         await send_message(f"Player {player_id} killed")
                     except self.PlayerNotFound:
-                        await send_message(f"Player not found!")
+                        await send_message(f"Player not found!", is_error=True)
                     except Exception as e:
                         self.logger.exception(e)
 

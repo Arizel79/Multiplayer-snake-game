@@ -1,0 +1,59 @@
+/* Leaderboard */
+#leaderboard {
+    position: absolute;
+    top: var(--leaderboard-indent);
+    right: var(--leaderboard-indent);
+    background-color: var(--leaderboard-bg-color);
+    border: var(--leaderboard-border);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.7em;
+    color: white;
+    z-index: 4;
+    max-width: 250px;
+    min-width: 150px;
+    backdrop-filter: blur(2px);
+}
+
+.leaderboard-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--text-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 5px;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.leaderboard-entry:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-name {
+    color: inherit; /* цвет будет задаваться через style */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+}
+
+.leaderboard-score {
+    color: white;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.leaderboard-position {
+    margin-right: 8px;
+    font-weight: bold;
+    color: #aaa;
+    min-width: 20px;
+}

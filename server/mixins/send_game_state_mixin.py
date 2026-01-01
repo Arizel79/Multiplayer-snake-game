@@ -24,10 +24,12 @@ class SendGameStateMixin(BaseMixin):
 
     def _update_leaderboard_cache(self, limit=10):
         """Обновление кэша leaderboard"""
+
         snakes_data = []
         for player_id, snake in self.snakes.items():
-            if snake.alive:  # Только живые змейки
+            if snake.alive:
                 player = self.players.get(player_id)
+
                 if player:
                     snakes_data.append({
                         'id': player_id,

@@ -130,7 +130,6 @@ function showDisconnectWindow(title, message, errorCode = null) {
 }
 
 function handleServerMessage(data) {
-    console.log(data)
     switch (data.type) {
 
         case "player_id":
@@ -140,6 +139,8 @@ function handleServerMessage(data) {
         case "game_state":
             gameState.gameState = data;
             updateTablist();
+
+            updateLeaderboard();
             break;
 
         case "chat_message":

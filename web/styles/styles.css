@@ -34,6 +34,7 @@
   --link-text-color: #00ff00;
   --link-text-color-hover: #99ff00;
   --menu-bg-color: rgba(17, 17, 17, .7);
+
   --chat-indent: 0.4em;
   --chat-scrollbar-width: 0.1em;
   --chat-scrollbar-color: rgba(100, 100, 100, 0.7);
@@ -42,6 +43,10 @@
   --chat-input-bg-color: rgba(0, 0, 0, 0.3);
   --chat-bg-color: rgba(30, 30, 30, 0.8);
   --mini-chat-bg-color: rgba(30, 30, 30, 0.0);
+
+  --leaderboard-indent:  0.4em;
+  --leaderboard-bg-color: rgba(30, 30, 30, 0.8);
+  --leaderboard-border:  0 solid rgba(255, 255, 255, 0.2);
 }
 
 * {
