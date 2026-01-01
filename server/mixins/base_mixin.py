@@ -26,8 +26,12 @@ class BaseMixin:
         logging_level="debug",
         max_food_perc=10,
         default_move_timeout=0.3,
+        fast_move_enable=False,
         fast_move_timeout=0.1,
-        stealing_chanse_1percent=0.003,
+
+            default_snake_lenght=1,
+
+        default_stealing_chance=0.003,
         fast_stealing_chance=0.5,
         viewport_width=BASE_VIEWPORT_WIDTH,
         viewport_height=BASE_VIEWPORT_HEIGHT,
@@ -62,12 +66,15 @@ class BaseMixin:
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
 
-        self.min_stealing_snake_size = DEFAULT_SNAKE_LENGHT + 1
-        self.stealing_chance = stealing_chanse_1percent
+        self.min_stealing_snake_size = 1
+        self.stealing_chance = default_stealing_chance
         self.steal_percentage = 0.01
 
+        self.fast_move_enable = fast_move_enable
         self.fast_stealing_chance = fast_stealing_chance
         self.fast_steal_abs_size = 1
+
+        self.default_snake_lenght = default_snake_lenght
 
         self.old_tick_time = time()
         self.tick = 0.02
@@ -75,7 +82,7 @@ class BaseMixin:
         self.last_normal_snake_move_time = time()
         self.last_fast_snake_move_time = time()
 
-        self.logging_level = logging_level
+        self.logging_level = logging_level.upper()
         self.setup_logger(__name__, getattr(logging, self.logging_level), "server.log")
         self.logger.info(f"Logging level: {self.logging_level}")
 

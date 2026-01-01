@@ -60,7 +60,10 @@ async def run_bot(server, bot_name, bot_color):
     finally:
         bot.logger.info(f"Bot {bot_name} finished")
 
+COLORS = ["red", "green", "yellow", "cyan", "blue"]
 
+def get_color():
+    return random.choice(COLORS)
 async def main():
     num_bots = 30
     SERVER = "localhost:8090"
@@ -72,7 +75,7 @@ async def main():
                 run_bot(
                     server=SERVER,
                     bot_name=f"BOT_{str(i)}_{random.randint(0, 100_000)}",
-                    bot_color="red;green,lime",
+                    bot_color=get_color(),
                 )
             )
         )

@@ -120,13 +120,18 @@ class SnakesMixin(BaseMixin):
         }
 
     async def toggle_speed(self, player_id, is_fast):
+        if not self.fast_move_enable:
+            self.logger.debug("Not toggle speed, fast move disable")
+            return
         sn = self.snakes[player_id]
         if len(sn.body) < self.MIN_LENGHT_FAST_ON:
             return
 
         sn.is_fast = is_fast
 
-    async def spawn(self, player_id, lenght=DEFAULT_SNAKE_LENGHT):
+    async def spawn(self, player_id, lenght=None):
+        if not lenght:
+            lenght = self.default_snake_lenght
         x, y = self.get_avalible_coords()
         self.players[player_id].alive = True
         body = deque([Point(x, y)])

@@ -27,66 +27,7 @@ def get_full_parser():
         description="Multiplayer Snake game by @Arizel79 (server)"
     )
     parser.add_argument("--config-file", type=str, help="Path to config file (YAML)")
-    parser.add_argument("--host", type=str, help="Server host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, help="Server port", default=8090)
-    parser.add_argument(
-        "--server_name", type=str, help="Server name", default="Snake Server"
-    )
-    parser.add_argument(
-        "--server_desc",
-        type=str,
-        help="Description of server",
-        default="This is server",
-    )
-    parser.add_argument(
-        "--max_players", type=positive_int, help="Max online players count", default=20
-    )
-    parser.add_argument(
-        "--map_width", type=int, help="Width of server map", default=100
-    )
-    parser.add_argument(
-        "--map_height", type=int, help="Height of server map", default=100
-    )
-    parser.add_argument(
-        "--viewport_width", type=int, help="Width of players viewport", default=100
-    )
-    parser.add_argument(
-        "--viewport_height", type=int, help="Height of players viewport", default=100
-    )
-    parser.add_argument(
-        "--food_perc", type=int, help="Proportion food/map in perc", default=2
-    )
-    parser.add_argument(
-        "--default_move_timeout",
-        type=float,
-        help="Timeout move snake (sec)",
-        default=0.1,
-    )
-    parser.add_argument(
-        "--fast_move_timeout",
-        type=float,
-        help="Timeout move fast snake (sec)",
-        default=0.07,
-    )
-    parser.add_argument(
-        "--steal_chance",
-        type=float,
-        help="chance of stealing 1 percent of the body per tick",
-        default=0.003,
-    )
-    parser.add_argument(
-        "--steal_chance_fast",
-        type=float,
-        help="chance of stealing 1 segment of the body per tick, if snake is fast",
-        default=0.01,
-    )
-    parser.add_argument(
-        "--logging_level",
-        type=str,
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Level of logging",
-        default="INFO",
-    )
+
     return parser
 
 
@@ -98,42 +39,45 @@ async def run_server():
         with open(args.config_file, "r") as f:
             config = yaml.safe_load(f)
 
+        config_server = config.get("server", {})
+        config_game = config.get("game", {})
+        config_map = config_game.get("game", {})
+        config_viewport = config_game.get("viewport", {})
+        config_snake = config_game.get("snake", {})
+        config_logging = config.get("logging", {})
+
+        config_default_mode = config_snake.get("default_mode", {})
+        config_fast_mode = config_snake.get("fast_mode", {})
         game_state = Server(
-            address=config.get("host", "0.0.0.0"),
-            port=config.get("port", 8090),
-            map_width=config.get("map_width", 100),
-            map_height=config.get("map_height", 100),
-            viewport_width=config.get("viewport_width", 100),
-            viewport_height=config.get("viewport_height", 100),
-            max_players=config.get("max_players", 20),
-            server_name=config.get("server_name", "Snake Server"),
-            server_desc=config.get("server_desc", "This is server"),
-            logging_level=config.get("logging_level", "INFO"),
-            max_food_perc=config.get("food_perc", 2),
-            default_move_timeout=config.get("default_move_timeout", 0.1),
-            fast_move_timeout=config.get("fast_move_timeout", 0.07),
-            stealing_chanse_1percent=config.get("steal_chance", 0.003),
-            fast_stealing_chance=config.get("steal_chance_fast", 0.01),
-            admin_password=config.get("admin_password"),
+            address=config_server.get("host", "0.0.0.0"),
+            port=config_server.get("port", 8090),
+            map_width=config_map.get("width", 100),
+            map_height=config_map.get("height", 100),
+            viewport_width=config_viewport.get("width", 100),
+            viewport_height=config_viewport.get("height", 100),
+
+            max_players=config_server.get("max_players", 20),
+            server_name=config_server.get("server_name", "Snake Server"),
+            server_desc=config_server.get("server_desc", "This is server"),
+
+            logging_level=config_logging.get("level", "INFO"),
+
+            max_food_perc=config_map.get("food_perc", 2),
+
+            default_move_timeout=config_default_mode.get("move_timeout", 0.1),
+
+            default_stealing_chance=config_default_mode.get("steal_chance", 0.003),
+
+            default_snake_lenght=config_snake.get("default_length", 0.003),
+
+            fast_move_enable=config_fast_mode.get("enable", False),
+            fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
+            fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
+
+            admin_password=config_server.get("admin_password"),
         )
     else:
-        game_state = Server(
-            address=args.host,
-            port=args.port,
-            map_width=args.map_width,
-            map_height=args.map_height,
-            viewport_width=args.viewport_width,
-            viewport_height=args.viewport_height,
-            max_players=args.max_players,
-            server_name=args.server_name,
-            server_desc=args.server_desc,
-            logging_level=args.logging_level,
-            max_food_perc=args.food_perc,
-            default_move_timeout=args.default_move_timeout,
-            fast_move_timeout=args.fast_move_timeout,
-            stealing_chanse_1percent=args.steal_chance,
-            fast_stealing_chance=args.steal_chance_fast,
-        )
+        raise ValueError("No config file specified")
 
     try:
         await game_state.run()
