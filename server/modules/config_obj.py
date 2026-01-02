@@ -16,6 +16,7 @@ class ServerConfig:
         server_name="Server",
         server_desc=None,
         logging_level="debug",
+            logging_file=None,
         max_food_perc=10,
         default_move_timeout=0.3,
         fast_move_enable=False,
@@ -68,6 +69,9 @@ class ServerConfig:
         self.tick = 0.02
 
         self.logging_level = logging_level.upper()
+        self.logging_file = logging_file
+        if not self.logging_file:
+            self.logging_file = None
 
         self.viewport_width = viewport_width
         self.viewport_height = viewport_height

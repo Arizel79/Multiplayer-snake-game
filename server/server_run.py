@@ -67,6 +67,7 @@ def run_server():
             server_name=config_server.get("name", "Snake Server"),
             server_desc=config_server.get("description", "This is server"),
             logging_level=config_logging.get("level", "INFO"),
+            logging_file=config_logging.get("file"),
             max_food_perc=config_map.get("food_perc", 2),
             default_move_timeout=config_default_mode.get("move_timeout", 0.1),
             default_stealing_chance=config_default_mode.get("steal_chance", 0.003),

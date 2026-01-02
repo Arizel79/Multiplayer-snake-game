@@ -1,14 +1,17 @@
+import asyncio
 import json
 
 import websockets
 
 from server.mixins.base_mixin import BaseMixin
+from server.modules.config import TIMEOUT_WAIT_PLAYER_INFO
 from server.utils import get_random_id
 
 
 class HandleConnectionMixin(BaseMixin):
 
     async def handle_registration(self, ws):
+        is_ok = False
         self.logger.info(f"registration {ws}...")
         player_id = None
 
@@ -47,7 +50,12 @@ class HandleConnectionMixin(BaseMixin):
         )
 
         try:
-            data = await ws.recv()
+
+            try:
+                data = await asyncio.wait_for(ws.recv(), timeout=TIMEOUT_WAIT_PLAYER_INFO)
+            except asyncio.TimeoutError as e:
+                self.logger.info(f"Wait player info timeout ({TIMEOUT_WAIT_PLAYER_INFO})")
+                return
             player_info = json.loads(data)
             is_slyth_game = player_info.get("slyth_game", False)
             if not is_slyth_game:
@@ -56,7 +64,7 @@ class HandleConnectionMixin(BaseMixin):
             name = player_info.get("name", "Player")
             name_valid = self.is_name_valid(name)
             if not name_valid is True:
-                self.logger.debug(f"{ws.remote_address} choose invalid name")
+                self.logger.debug(f"{self.get_pretty_address(ws)} choose invalid name")
                 await self.send_dict_to_ws(
                     ws,
                     {
@@ -91,12 +99,12 @@ class HandleConnectionMixin(BaseMixin):
             await self.send_dict_to_ws(
                 ws, {"type": "set_map_borders", "data": self.get_map_borders()}
             )
+            is_ok = True
             return player_id
         except Exception as e:
             self.logger.exception(e)
         finally:
-            self.logger.info("reg end")
-
+            self.logger.debug(f"Registration {self.get_pretty_address(ws)} finished: {is_ok}")
 
     async def handle_connection(self, ws):
 
@@ -104,15 +112,12 @@ class HandleConnectionMixin(BaseMixin):
             ws.max_size = 1024 * 1024  # 1MB
 
             player_id = await self.handle_registration(ws)
-            self.logger.info(f"oid: {player_id}")
             if not player_id:
-                self.logger.info("no pl id ret")
                 return
 
             try:
 
                 async for message in ws:
-                    self.logger.info("wait msg ")
                     try:
                         data = json.loads(message)
                         await self.handle_client_data(player_id, data)
@@ -135,7 +140,6 @@ class HandleConnectionMixin(BaseMixin):
             self.logger.exception(e)
 
         finally:
-            self.logger.info("finn")
             if player_id:
                 await self.remove_player(player_id)
 
