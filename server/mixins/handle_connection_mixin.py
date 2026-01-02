@@ -92,6 +92,12 @@ class HandleConnectionMixin(BaseMixin):
                         )
                     )
 
+                    await websocket.send(
+                        json.dumps(
+                            {"type": "set_map_borders", "data": self.get_map_borders()}
+                        )
+                    )
+
                     async for message in websocket:
                         try:
                             data = json.loads(message)

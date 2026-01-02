@@ -42,7 +42,7 @@ function renderGrid(center) {
     const width = canvas.width;
     const height = canvas.height;
 
-    const borders = gameState.gameState.map_borders;
+    const borders = gameState.map_borders;
     const cellSize = CELL_SIZE;
 
     ctx.strokeStyle = COLORS.grid;
@@ -78,10 +78,14 @@ function renderBorders(center) {
     const width = canvas.width;
     const height = canvas.height;
 
-    const borders = gameState.gameState.map_borders;
+    const borders = gameState.map_borders;
     const cellSize = CELL_SIZE;
 
     ctx.fillStyle = COLORS.border;
+
+    if (borders === undefined || borders === null) {
+        return
+    }
 
     for (let x = borders[0] - 1; x <= borders[2] + 1; x++) {
         let screenX = width / 2 + (x - center.x) * cellSize;

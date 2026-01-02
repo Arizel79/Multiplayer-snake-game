@@ -5,15 +5,11 @@ import sys
 
 import yaml
 
-from server.modules.base import BaseServer
+from server.modules.base import Server
 from server.modules.config_obj import ServerConfig
 
 websockets_logger = logging.getLogger("websockets")
 websockets_logger.setLevel(logging.CRITICAL)
-
-
-class Server(BaseServer):
-    pass
 
 
 def positive_int(value):
@@ -51,8 +47,9 @@ def run_server():
         config = load_yaml_config(args.config_file)
 
         config_server = config.get("server", {})
+        config_chat = config_server.get("chat", {})
         config_game = config.get("game", {})
-        config_map = config_game.get("game", {})
+        config_map = config_game.get("map", {})
         config_viewport = config_game.get("viewport", {})
         config_snake = config_game.get("snake", {})
         config_logging = config.get("logging", {})
@@ -67,8 +64,8 @@ def run_server():
             viewport_width=config_viewport.get("width", 100),
             viewport_height=config_viewport.get("height", 100),
             max_players=config_server.get("max_players", 20),
-            server_name=config_server.get("server_name", "Snake Server"),
-            server_desc=config_server.get("server_desc", "This is server"),
+            server_name=config_server.get("name", "Snake Server"),
+            server_desc=config_server.get("description", "This is server"),
             logging_level=config_logging.get("level", "INFO"),
             max_food_perc=config_map.get("food_perc", 2),
             default_move_timeout=config_default_mode.get("move_timeout", 0.1),
@@ -78,6 +75,8 @@ def run_server():
             fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
             fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
             admin_password=config_server.get("admin_password"),
+            enable_chat=config_chat.get("enable", True),
+            max_chat_message_length=config_chat.get("max_message_length", True),
         )
 
         server = Server(config=config_obj)

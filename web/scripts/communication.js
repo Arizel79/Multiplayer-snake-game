@@ -152,6 +152,10 @@ console.log(data)
             gameState.serverDescription = data.data;
             break;
 
+        case "set_map_borders":
+            gameState.map_borders = data.data;
+            break;
+
         case "you_died":
             console.log("You died: " + data.data)
             gameState.state = "death"

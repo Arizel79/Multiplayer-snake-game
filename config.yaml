@@ -4,29 +4,33 @@ server:
   name: "Slyth Server"
   description: "Welcome to the server!"
   max_players: 20
-  admin_password: ""
-  logging_level: "INFO"
+  admin_password: "a3_W9dF8eQiM"
+
   tps_log_interval: 5
+
+  chat:
+    enable: false
+    max_message_length: 5
 
 game:
   map:
-    width: 100
-    height: 100
-    food_perc: 5
+    width: 500
+    height: 500
+    food_perc: 0.5
   viewport:
     width: 100
     height: 75
     scale_factor: 1.0
   snake:
     default_length: 1
-    min_length_fast_mode: 4
+    min_length_fast_mode: 1
     default_mode:
       move_timeout: 0.1
-      steal_chance: 0.003
+      steal_chance: 0.005
     fast_mode:
       enable: true
       move_timeout: 0.05
-      stealing_chance: 0.1
+      steal_chance: 0.01
 
 logging:
   level: "debug"

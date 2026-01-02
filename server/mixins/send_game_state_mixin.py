@@ -64,7 +64,7 @@ class SendGameStateMixin(BaseMixin):
         """Полное состояние игры (существующая логика)"""
         dict_ = {
             "type": "game_state",
-            "map_borders": [i for i in self.get_map_rect()],
+            # "map_borders": [i for i in self.get_map_rect()],
             "snakes": {},
             "players": {},
             "food": [],
@@ -76,6 +76,7 @@ class SendGameStateMixin(BaseMixin):
     def _get_partial_state(self, player_id: str):
         """Оптимизированная версия с кэшированием"""
         if player_id not in self.snakes:
+            self.logger.warning(f"{player_id} not in snakes")
             return self._get_full_state()
 
         snake = self.snakes[player_id]
@@ -89,7 +90,7 @@ class SendGameStateMixin(BaseMixin):
 
         dict_ = {
             "type": "game_state",
-            "map_borders": self._cached_map_borders,
+            # "map_borders": self._cached_map_borders,
             "snakes": {},
             "players": {},
             "food": [],
@@ -123,9 +124,12 @@ class SendGameStateMixin(BaseMixin):
 
         return dict_
 
+    def get_map_borders(self):
+        return list(self.get_map_rect())
+
     def _update_caches(self):
         """Обновление кэшей"""
-        self._cached_map_borders = list(self.get_map_rect())
+        self._cached_map_borders = self.get_map_borders
 
         self._snake_dict_cache = {}
         for player_id, snake in self.snakes.items():

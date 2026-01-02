@@ -12,7 +12,6 @@ class CommunicationMixin(BaseMixin):
 
     async def send_dict_to_player(self, player_id, dict_):
         await self.send_dict_to_ws(self.connections[player_id], dict_)
-
     async def send_dict_to_ws(self, ws, dict_):
         try:
             assert isinstance(dict_, dict), f"dict_ is not a dict: {repr(dict_)}"
@@ -23,6 +22,7 @@ class CommunicationMixin(BaseMixin):
         except Exception as e:
             self.logger.error(f"Error send to {ws}: {e}")
             self.logger.exception(e)
+            await ws.close()
 
     async def broadcast_chat_message(self, data):
         connections_ = copy.copy(self.connections)

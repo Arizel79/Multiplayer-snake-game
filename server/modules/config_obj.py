@@ -26,7 +26,10 @@ class ServerConfig:
         viewport_width=BASE_VIEWPORT_WIDTH,
         viewport_height=BASE_VIEWPORT_HEIGHT,
         admin_password=None,
+            enable_chat=True,
+            max_chat_message_length=100
     ):
+
         self.port = port
         self.address = address
 
@@ -78,3 +81,6 @@ class ServerConfig:
         # TPS tracking
 
         self.tps_log_interval = 5
+
+        self.enable_chat = enable_chat
+        self.max_chat_message_length = max_chat_message_length

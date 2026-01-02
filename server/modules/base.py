@@ -14,7 +14,7 @@ from server.mixins.utils_mixin import UtilsMixin
 from server.mixins.viewport_mixin import ViewportMixin
 
 
-class BaseServer(
+class Server(
     ChatHandlerMixin,
     UtilsMixin,
     ViewportMixin,

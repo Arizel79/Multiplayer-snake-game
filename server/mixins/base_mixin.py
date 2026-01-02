@@ -46,3 +46,5 @@ class BaseMixin:
         self.players = {}
 
         self.connections = {}
+
+        self.logger.info(f"{self.config.fast_stealing_chance=}")
