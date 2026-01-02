@@ -247,7 +247,7 @@ class ClientBase(ABC):
 
     async def on_connect(self):
         await self.websocket.send(
-            json.dumps({"name": self.player_name, "color": self.color})
+            json.dumps({"name": self.player_name, "color": self.color, "slyth_game": True})
         )
         self.state = "game"
 

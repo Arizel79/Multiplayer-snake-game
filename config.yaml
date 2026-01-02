@@ -16,7 +16,7 @@ game:
   map:
     width: 500
     height: 500
-    food_perc: 0.5
+    food_perc: 4
   viewport:
     width: 100
     height: 75

@@ -14,7 +14,8 @@ function connectToServer() {
 
             gameState.socket.send(JSON.stringify({
                 name: gameState.playerName,
-                color: gameState.playerColor
+                color: gameState.playerColor,
+                slyth_game: true
             }));
 
             gameLoop();

@@ -76,8 +76,7 @@ class SendGameStateMixin(BaseMixin):
     def _get_partial_state(self, player_id: str):
         """Оптимизированная версия с кэшированием"""
         if player_id not in self.snakes:
-            self.logger.warning(f"{player_id} not in snakes")
-            return self._get_full_state()
+            return
 
         snake = self.snakes[player_id]
         viewport = self.get_viewport_for_snake(snake)

@@ -56,8 +56,8 @@ class ChatHandlerMixin(BaseMixin):
                 except IndexError:
                     password = None
                 if (
-                        self.config.admin_password
-                        and password == self.config.admin_password
+                    self.config.admin_password
+                    and password == self.config.admin_password
                 ):
                     self.players[player_id].is_admin = True
                     self.logger.info(
@@ -113,21 +113,32 @@ class ChatHandlerMixin(BaseMixin):
         else:
             name = self.players[player_id].name
             if not self.config.enable_chat and (not self.players[player_id].is_admin):
-                self.logger.debug(f"{self.get_player(player_id)} tries write to chat but it disabled (message: {message})")
-                await self.send_dict_to_player(player_id, {
-                    "type": "chat_message",
-                    "data": f"<red>Chat disabled</red>",
-                })
+                self.logger.debug(
+                    f"{self.get_player(player_id)} tries write to chat but it disabled (message: {message})"
+                )
+                await self.send_dict_to_player(
+                    player_id,
+                    {
+                        "type": "chat_message",
+                        "data": f"<red>Chat disabled</red>",
+                    },
+                )
                 return
 
             if len(message) > self.config.max_chat_message_length:
-                size_comment = f"{len(message)}, max: {self.config.max_chat_message_length}"
+                size_comment = (
+                    f"{len(message)}, max: {self.config.max_chat_message_length}"
+                )
                 self.logger.debug(
-                    f"{self.get_player(player_id)} tries write to chat but message too long ({size_comment}) (message: {message})")
-                await self.send_dict_to_player(player_id, {
-                    "type": "chat_message",
-                    "data": f"<red>Message to long ({size_comment})</red>",
-                })
+                    f"{self.get_player(player_id)} tries write to chat but message too long ({size_comment}) (message: {message})"
+                )
+                await self.send_dict_to_player(
+                    player_id,
+                    {
+                        "type": "chat_message",
+                        "data": f"<red>Message to long ({size_comment})</red>",
+                    },
+                )
                 return
             self.logger.info(f"{self.get_player(player_id)} writes in chat: {message}")
 

@@ -12,6 +12,7 @@ class CommunicationMixin(BaseMixin):
 
     async def send_dict_to_player(self, player_id, dict_):
         await self.send_dict_to_ws(self.connections[player_id], dict_)
+
     async def send_dict_to_ws(self, ws, dict_):
         try:
             assert isinstance(dict_, dict), f"dict_ is not a dict: {repr(dict_)}"
@@ -21,7 +22,6 @@ class CommunicationMixin(BaseMixin):
             await ws.send(to_send)
         except Exception as e:
             self.logger.error(f"Error send to {ws}: {e}")
-            self.logger.exception(e)
             await ws.close()
 
     async def broadcast_chat_message(self, data):
@@ -33,20 +33,24 @@ class CommunicationMixin(BaseMixin):
             await self.send_dict_to_ws(ws, data)
 
     async def handle_client_data(self, player_id: str, data: dict):
-        self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
-        if data["type"] == "direction":
+        try:
+            self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
+            if data["type"] == "direction":
 
-            self.change_direction(player_id, data["data"])
-        elif data["type"] == "chat_message":
-            await self.handle_client_chat_message(player_id, data["data"])
-        elif data["type"] == "respawn":
-            await self.respawn(player_id)
-        elif data["type"] == "is_fast":
-            await self.toggle_speed(player_id, data["data"])
-        else:
-            self.logger.warning(
-                f"Unknown data type received from {self.get_player(player_id)}: {data}"
-            )
+                self.change_direction(player_id, data["data"])
+            elif data["type"] == "chat_message":
+                await self.handle_client_chat_message(player_id, data["data"])
+            elif data["type"] == "respawn":
+                await self.respawn(player_id)
+            elif data["type"] == "is_fast":
+                await self.toggle_speed(player_id, data["data"])
+            else:
+                self.logger.warning(
+                    f"Unknown data type received from {self.get_player(player_id)}: {data}"
+                )
+
+        except KeyError as e:
+            self.logger.debug(f"KeyError: {e}")
 
     async def send_game_state_to_all(self):
         try:
@@ -55,6 +59,8 @@ class CommunicationMixin(BaseMixin):
                 try:
 
                     state_to_send = self.to_dict(player_id)
+                    if not state_to_send:
+                        continue
                     if self._send_cache_for_players.get(player_id) != state_to_send:
                         await self.send_dict_to_ws(ws, state_to_send)
                         self._send_cache_for_players[player_id] = state_to_send
