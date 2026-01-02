@@ -172,6 +172,9 @@ class ClientBase(ABC):
         if data.get("type", None) == "game_state":
             self.game_state = data
 
+        elif data.get("type", None) == "set_map_borders":
+            self.map_borders = data.get("data")
+
         elif data.get("type", None) == "set_server_desc":
             self.server_desc = data["data"]
 
@@ -183,6 +186,7 @@ class ClientBase(ABC):
 
         elif data.get("type", None) == "you_died":
             await self.on_my_death(data)
+
         else:
             assert False, data
 

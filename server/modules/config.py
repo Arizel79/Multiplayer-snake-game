@@ -8,7 +8,7 @@ VALID_NAME_CHARS = ascii_letters + digits + "_"
 DEFAULT_SNAKE_LENGTH = 20
 DIRECTIONS = ["right", "down", "left", "up"]
 
-TIMEOUT_WAIT_PLAYER_INFO = 2
+TIMEOUT_WAIT_PLAYER_INFO = 20
 
 DEAFAULT_SNAKE_COLORS = [
     "red",

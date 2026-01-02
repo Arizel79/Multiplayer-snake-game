@@ -5,7 +5,6 @@ import websockets
 
 from server.mixins.base_mixin import BaseMixin
 from server.modules.config import TIMEOUT_WAIT_PLAYER_INFO
-from server.utils import get_random_id
 
 
 class HandleConnectionMixin(BaseMixin):
@@ -38,7 +37,7 @@ class HandleConnectionMixin(BaseMixin):
                 f"{self.get_pretty_address(ws)} is trying to connect to the server"
             )
         while True:
-            player_id = get_random_id()
+            player_id = self.get_random_id()
             if not (player_id in self.players.keys()):
                 self.logger.debug(
                     f"{self.get_pretty_address(ws)}`s player_id={player_id}"

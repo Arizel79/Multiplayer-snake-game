@@ -11,7 +11,6 @@ from server.modules.config import *
 from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.config_obj import ServerConfig
 from server.modules.dataclasses import *
-from server.utils import get_random_id
 
 
 class BaseMixin:

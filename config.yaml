@@ -14,8 +14,8 @@ server:
 
 game:
   map:
-    width: 500
-    height: 500
+    width: 256
+    height: 256
     food_perc: 4
   viewport:
     width: 100

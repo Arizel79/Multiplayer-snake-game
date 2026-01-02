@@ -186,6 +186,9 @@ class UtilsMixin(BaseMixin):
         y = random.randint(y1, y2)
         self.add_food(x, y)
 
+    def get_random_id(self):
+        return hex(random.randint(0, 131_072))
+
     def add_food(
         self, x, y, type_=FOOD_TYPES.default, color=DEFAULT_FOOD_COLOR, size=1
     ):
