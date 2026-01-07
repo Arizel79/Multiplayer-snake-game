@@ -1,34 +1,27 @@
-# Slyth - Multiplayer snake game
+# Slyth - Snake game
 ```commandline
  ____  _       _   _     
 / ___|| |_   _| |_| |__  
 \___ \| | | | | __| '_ \ 
  ___) | | |_| | |_| | | |
 |____/|_|\__, |\__|_| |_|
-         |___/           
+         |___/ Slyth
 ```
-Multiplayer snake game writen on python with support for 3 clients: web, console and pygame (gui)
-
-You can play [here](http://protein-gnu.gl.at.ply.gg:34472/game.html)
+Multiplayer snake game writen on Python
 
 TO-DO:
 - [x] Server
-- [x] Console client (ascii graphics)
-- [x] GUI client (pygame library)
 - [x] Web client (writen on JS)
+- [x] Text chat
 - [x] Mobile web client (optimize for mobile devices)
+- [x] Leaderboard
+- [ ] Reactions (like emoji, when you press num keyboard shows emoji above your snake head)
+
 
 See [screenshots](#Screenshots)
 
 #### Web client:
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/81801295-ee96-4db3-b9d6-70d0ce11ce7d" />
-
-#### Pygame (GUI) client:
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/d2c518b2-3367-42f4-b9f5-d4a54ed92396" />
-
-#### Console client:
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/4db69f3d-ed6b-4dab-9ce2-f843b1358994" />
-
 
 # Server
 Tested on python 3.11
@@ -36,15 +29,15 @@ Tested on python 3.11
 ```
 git clone https://github.com/Arizel79/Multiplayer-snake-game.git
 cd Multiplayer-snake-game
-python3 -m venv server/.venv
-source server/.venv/bin/activate
+python3 -m venv \.venv
+source server/.venv/bin/activate # on Windows: .\.venv\Scripts\activate
 pip install -r server/requirements.txt
 ```
 ### Run server
+You can edit `config.yaml` to setup server
 ```
-python3 server --port 8090 
+python3 main.py
 ```
-`python3 server -h` for server running options
 
 # Client
 ### Web client:
@@ -52,24 +45,18 @@ python3 server --port 8090
 2. Enter player name, color and server address
 3. Click "Play"
 
-### GUI client:
-```
-python3 client --name TestPlayer --color white;red,green,blue --mode gui
-```
-### Console client:
-```
-python3 client --name TestPlayer --color white;red,green,blue --mode cli
-```
 ### How to play
 Controls:
 * WASD - move snake
 * space - move faster
 * T - open chat 
 * ESC - close chat
+* TAB - open players list
 
 Chat commands:
 * `.q` - disconnect from server
-* `/kill` - kill self
+* `/killme` - kill self
+* `/kickme` - kick self
 
 # Screenshots
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/194b622d-94a1-45e5-8cfd-6bbfe53a6858" />

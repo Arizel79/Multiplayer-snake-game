@@ -22,7 +22,7 @@ class PlayersMixin(BaseMixin):
             }
         )
         self.logger.info(
-            f"Connection {self.get_addres_from_ws(self.connections[player_id])} registred as {self.get_player(player_id)}"
+            f"Connection {self.get_addres_from_ws(self.connections[player_id])} registered as {self.get_player(player_id)}"
         )
         return True
 

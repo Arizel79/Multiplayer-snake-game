@@ -34,3 +34,4 @@ game:
 
 logging:
   level: "debug"
+  file: "server.log"
