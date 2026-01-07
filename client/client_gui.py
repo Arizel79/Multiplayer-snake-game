@@ -670,10 +670,10 @@ github.com/Arizel79/Multiplayer-snake-game
         width, height = self.screen.get_size()
 
         for x in range(
-            self.game_state["map_borders"][0], self.game_state["map_borders"][2] + 1
+            self.map_borders[0], self.map_borders[2] + 1
         ):
             for y in range(
-                self.game_state["map_borders"][1], self.game_state["map_borders"][3] + 1
+                self.map_borders[1], self.map_borders[3] + 1
             ):
                 screen_x = width // 2 + (x - center_x) * cell_size
                 screen_y = height // 2 + (y - center_y) * cell_size
@@ -726,7 +726,7 @@ github.com/Arizel79/Multiplayer-snake-game
         center_x, center_y = self.get_visible_area_center()
         width, height = self.screen.get_size()
 
-        min_x, min_y, max_x, max_y = self.game_state["map_borders"]
+        min_x, min_y, max_x, max_y = self.map_borders
         for x in [min_x - 1, max_x + 1]:
             for y in range(min_y - 1, max_y + 2):
                 screen_x = width // 2 + (x - center_x) * cell_size
