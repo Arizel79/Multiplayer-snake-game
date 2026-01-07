@@ -22,9 +22,9 @@ class MainMixin(BaseMixin):
                 await asyncio.Future()
 
         except Exception as e:
-            self.logger.error("Error (run):")
+            self.logger.error("Error in run():")
             self.logger.exception(e)
-            self.logger.critical(f"SERVER CRASHED. Error: {type(e).__name__}: {e}")
+            self.logger.critical(f"Server crashed: {type(e).__name__}: {e}")
 
         finally:
             self.logger.debug("Canceling main loop task...")

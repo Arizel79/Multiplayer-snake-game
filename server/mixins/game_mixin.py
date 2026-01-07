@@ -22,7 +22,7 @@ class GameMixin(BaseMixin):
                     self.logger.error(f"Error in game_loop: {e}")
                     self.logger.exception(e)
         except asyncio.CancelledError as e:
-            self.logger.exception(e)
+            self.logger.debug("CancelledError in game_loop")
         except Exception as e:
             self.logger.error("Game loop error:")
             self.logger.exception(e)
