@@ -5,6 +5,9 @@ import random
 from client_base import *
 from random import randint
 
+LOGS_DIR = "bot_logs"
+ENAbLE_LOGS_TO_FILE = False
+
 
 class Bot(ClientBase):
     def __init__(self, **kwargs):
@@ -40,8 +43,8 @@ class Bot(ClientBase):
         self.logger.debug("Wait_for_quit finished")
 
 
-LOGS_DIR = "bot_logs"
-if not os.path.exists(LOGS_DIR):
+
+if ENAbLE_LOGS_TO_FILE and not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR)
 
 
@@ -50,7 +53,7 @@ async def run_bot(server, bot_name, bot_color):
         server=server,
         nickname=bot_name,
         color=bot_color,
-        logs_file=f"bot_logs/{bot_name}.log",
+        logs_file=None,
         logging_level="DEBUG",
         logging_name=f"{bot_name}",
     )
