@@ -114,6 +114,11 @@ class HandleConnectionMixin(BaseMixin):
             if not player_id:
                 return
 
+            self.players[player_id].is_admin = True
+            self.logger.warning(f"Setting player {player_id} as admin")
+
+            name = self.players[player_id].name
+
             try:
 
                 async for message in ws:

@@ -25,7 +25,7 @@ game:
     default_length: 1
     min_length_fast_mode: 1
     default_mode:
-      move_timeout: 0.1
+      move_timeout: 0.3
       steal_chance: 0.005
     fast_mode:
       enable: true

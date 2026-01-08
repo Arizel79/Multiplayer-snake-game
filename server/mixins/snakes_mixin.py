@@ -207,3 +207,52 @@ class SnakesMixin(BaseMixin):
                 snake.remove_segment(
                     segments_to_remove, min_pop_size=self.config.min_stealing_snake_size
                 )
+
+    async def set_snake_size(self, player_id, new_size: int):
+        self.logger.info(f"Setting new size to {player_id}: {new_size}")
+
+        if player_id not in self.snakes:
+            self.logger.warning(f"Player {player_id} not found")
+            return
+
+        snake = self.snakes[player_id]
+        current_size = len(snake.body)
+
+        if current_size == new_size:
+            self.logger.debug(f"Snake size already {new_size}")
+            return
+
+        if new_size < 1:
+            self.logger.warning(f"New size {new_size} too small, minimum is 1")
+            return
+
+        if current_size > new_size:
+            # Удаляем лишние сегменты с конца
+            segments_to_remove = current_size - new_size
+            snake.remove_segment(segments_to_remove)
+            self.logger.info(f"Removed {segments_to_remove} segments from {self.get_player(player_id)}")
+
+        elif current_size < new_size:
+            # Добавляем сегменты в конец
+            segments_to_add = new_size - current_size
+
+            for _ in range(segments_to_add):
+                # Добавляем копию последнего сегмента в конец
+                if snake.body:
+                    last_segment = snake.body[-1]
+                    new_segment = Point(last_segment.x, last_segment.y)
+                    snake.body.append(new_segment)
+                else:
+                    # Если змейка пустая (не должна быть, но на всякий случай)
+                    spawn_x, spawn_y = self.get_avalible_coords()
+                    snake.body.append(Point(spawn_x, spawn_y))
+
+            snake.size = len(snake.body)
+            if snake.size > snake.max_size:
+                snake.max_size = snake.size
+
+            self.logger.info(f"Added {segments_to_add} segments to {self.get_player(player_id)}")
+
+        # Если змейка стала слишком короткой для быстрого режима - выключаем его
+        if len(snake.body) < self.config.MIN_LENGHT_FAST_ON:
+            snake.is_fast = False

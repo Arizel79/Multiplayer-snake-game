@@ -25,6 +25,17 @@ class PlayersMixin(BaseMixin):
             f"Connection {self.get_addres_from_ws(self.connections[player_id])} registered as {self.get_player(player_id)}"
         )
         return True
+    async def set_player_is_admin(self, player_id, is_admin=True):
+        self.players[player_id].is_admin = is_admin
+        self.logger.info(
+            f"Player {self.get_player(player_id)} changed admin status: {is_admin}"
+        )
+
+    async def set_is_player_frozen(self, player_id, is_frozen):
+        self.players[player_id].is_frozen = is_frozen
+        self.logger.info(
+            f"Player {self.get_player(player_id)} is frozen: {is_frozen}"
+        )
 
     async def remove_player(self, player_id):
         if player_id not in self.players.keys():

@@ -4,111 +4,214 @@ from server.mixins.base_mixin import *
 
 
 class ChatHandlerMixin(BaseMixin):
+    BOOL_TRUE_STR = ("t", "true", "y", "1")
+    BOOL_FALSE_STR = ("f", "false", "n", "0")
     class PlayerNotFound(Exception):
         pass
+
+    class PlayerNotSpecified(Exception):
+        pass
+
+    def parse_str_bool(self, bool_str, default=None):
+        bool_str = bool_str.lower()
+        out = None
+        if bool_str in self.BOOL_TRUE_STR:
+            out = True
+        elif bool_str in self.BOOL_FALSE_STR:
+            out = False
+
+        if out is None:
+            out = default
+        return out
+
+
+    async def _handle_command_admin(self, player_id, args):
+        self.logger.info(
+            f"player {self.get_player(player_id)} want to be admin"
+        )
+        try:
+            password = args[0]
+        except IndexError:
+            password = None
+        if (
+                self.config.admin_password
+                and password == self.config.admin_password
+        ):
+            await self.set_player_is_admin(player_id)
+
+            await self.send_dict_to_player(
+                player_id,
+                {"type": "chat_message", "data": "You are admin now!"},
+            )
+        else:
+            self.logger.info(
+                f"Player {self.get_player(player_id)} send wrong admin password: {password}"
+            )
+            await self.send_message_or_error(player_id, "Wrong admin password!", is_error=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",)}
+        self.ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",), "setsize": ("/setsize", "/size")}
         self.ALL_ADMIN_COMMANDS = []
         for k, v in self.ADMIN_COMMANDS.items():
             self.ALL_ADMIN_COMMANDS += v
 
+    async def send_message_or_error(self, player_id, text, is_error=False):
+        if is_error:
+            text = f"<red>{html.escape(text)}</red>"
+        await self.send_dict_to_player(
+            player_id, {"type": "chat_message", "data": text}
+        )
+
+    async def _handle_command_killme(self, player_id, args):
+
+        self.logger.info(
+            f"player {self.get_player(player_id)} want kill himself"
+        )
+        await self.player_death(
+            player_id, "%NAME% committed suicide", if_immortal=True
+        )
+
+    async def _handle_command_kill(self, player_id, args):
+        try:
+            self.logger.info(f"Killing {player_id}")
+            try:
+                target_player = self.get_player_by_name(args[0])
+            except IndexError:
+                raise self.PlayerNotSpecified
+            if not target_player:
+                raise self.PlayerNotFound()
+            await self.player_death(
+                target_player.player_id, if_immortal=True
+            )
+            await self.send_message_or_error(player_id, f"Player {target_player.name} killed")
+        except self.PlayerNotFound:
+            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+        except self.PlayerNotSpecified:
+            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+
+    async def _handle_command_kick_me(self, player_id, args):
+        self.logger.info(
+            f"player {self.get_player(player_id)} want kick himself from server"
+        )
+        await self.remove_player(player_id)
+
+    async def _handle_command_kick(self, player_id, args):
+        try:
+            self.logger.info(f"Kicking {player_id} from server")
+            target_player = self.get_player_by_name(args[0])
+            if not target_player:
+                raise self.PlayerNotFound()
+            await self.remove_player(target_player.player_id)
+            if player_id != target_player.player_id:
+                await self.send_message_or_error(player_id, f"Player {target_player.player_id} kicked")
+        except self.PlayerNotFound:
+            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+        except Exception as e:
+            self.logger.exception(e)
+
+    async def _handle_command_set_size(self, player_id, args):
+        try:
+            self.logger.info(f"Setting size {player_id}")
+            if len(args) == 2:
+                try:
+                    target_player = self.get_player_by_name(args[0])
+                except IndexError:
+                    raise self.PlayerNotSpecified
+
+                new_size = int(args[1])
+            elif len(args) == 1:
+                target_player = self.players[player_id]
+                new_size = int(args[0])
+            else:
+                raise ValueError
+            if not target_player:
+                raise self.PlayerNotFound()
+
+            await self.set_snake_size(
+                target_player.player_id, new_size=new_size
+            )
+            await self.send_message_or_error(player_id, f"Player {target_player.name} size updated: {new_size}")
+
+        except self.PlayerNotFound:
+            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+        except self.PlayerNotSpecified:
+            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+        except ValueError:
+            await self.send_message_or_error(player_id, f"Error setting size", is_error=True)
+        except Exception as e:
+            self.logger.exception(e)
+
+    async def _handle_command_freeze_player(self, player_id, args):
+        try:
+            self.logger.info(f"Freezing player {player_id}")
+            try:
+                target_player = self.get_player_by_name(args[0])
+            except IndexError:
+                raise self.PlayerNotSpecified
+
+
+            is_frozen_str = args[1].lower()
+            is_frozen = self.parse_str_bool(is_frozen_str, default=True)
+
+
+
+            await self.set_is_player_frozen(
+                target_player.player_id, is_frozen=is_frozen
+            )
+            await self.send_message_or_error(player_id, f"Player {target_player.name} size updated: {new_size}")
+
+        except self.PlayerNotFound:
+            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+        except self.PlayerNotSpecified:
+            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+        except ValueError:
+            await self.send_message_or_error(player_id, f"Error setting size", is_error=True)
+        except Exception as e:
+            self.logger.exception(e)
+
+
     async def handle_client_chat_message(self, player_id, message: str):
         con = self.connections[player_id]
-
-        async def send_message(text, is_error=False):
-            if is_error:
-                text = f"<red>{html.escape(text)}</red>"
-            await self.send_dict_to_player(
-                player_id, {"type": "chat_message", "data": text}
-            )
 
         if message.startswith("/"):
             self.logger.info(
                 f"{self.get_player(player_id)} issued server command: {message}"
             )
-            lst = message.split()
+            command_and_args = message.split()
+            args = command_and_args[1:]
             is_player_admin = self.players[player_id].is_admin
-            if lst[0] == "/help":
-                await send_message(f"Help message here?")
 
-            elif lst[0] == "/killme":
-                self.logger.info(
-                    f"player {self.get_player(player_id)} want kill himself"
-                )
-                await self.player_death(
-                    player_id, "%NAME% committed suicide", if_immortal=True
-                )
-            elif lst[0] == "/kickme":
-                self.logger.info(
-                    f"player {self.get_player(player_id)} want kick himself from server"
-                )
-                await self.remove_player(player_id)
+            if command_and_args[0] == "/help":
+                await self.send_message_or_error(f"Help message here?")
 
-            elif lst[0] == "/admin":
-                self.logger.info(
-                    f"player {self.get_player(player_id)} want to be admin"
-                )
-                try:
-                    password = lst[1]
-                except IndexError:
-                    password = None
-                if (
-                    self.config.admin_password
-                    and password == self.config.admin_password
-                ):
-                    self.players[player_id].is_admin = True
-                    self.logger.info(
-                        f"Player {self.get_player(player_id)} set to admin"
-                    )
-                    await self.send_dict_to_player(
-                        player_id,
-                        {"type": "chat_message", "data": "You are admin now!"},
-                    )
-                else:
-                    self.logger.info(
-                        f"Player {self.get_player(player_id)} send wrong admin password: {password}"
-                    )
-                    await send_message("Wrong admin password!", is_error=True)
+            elif command_and_args[0] == "/killme":
+                await self._handle_command_killme(player_id, args)
 
-            elif lst[0] in self.ALL_ADMIN_COMMANDS:
+            elif command_and_args[0] == "/kickme":
+                await self._handle_command_kick_me(player_id, args)
+
+
+            elif command_and_args[0] == "/admin":
+                await self._handle_command_admin(player_id, args)
+
+            elif command_and_args[0] in self.ALL_ADMIN_COMMANDS:
                 if is_player_admin:
                     self.logger.info("access allowed")
                 else:
                     self.logger.info("access denied")
-                    await send_message("Access denied!", is_error=True)
+                    await self.send_message(player_id, "Access denied. You are not admin", is_error=True)
                     return
 
-                if lst[0] in self.ADMIN_COMMANDS["kick"]:
-                    try:
-                        self.logger.info(f"Kicking {player_id} from server")
-                        target_player = self.get_player_by_name(lst[1])
-                        if not target_player:
-                            raise self.PlayerNotFound()
-                        await self.remove_player(target_player.player_id)
-                        if player_id != target_player.player_id:
-                            await send_message(f"Player {player_id} kicked")
-                    except self.PlayerNotFound:
-                        await send_message(f"Player not found!", is_error=True)
-                    except Exception as e:
-                        self.logger.exception(e)
+                if command_and_args[0] in self.ADMIN_COMMANDS["kick"]:
+                    await self._handle_command_kick(player_id, args)
 
-                if lst[0] in self.ADMIN_COMMANDS["kill"]:
-                    try:
-                        self.logger.info(f"Killing {player_id}")
-                        target_player = self.get_player_by_name(lst[1])
-                        if not target_player:
-                            raise self.PlayerNotFound()
-                        await self.player_death(
-                            target_player.player_id, if_immortal=True
-                        )
-                        await send_message(f"Player {player_id} killed")
-                    except self.PlayerNotFound:
-                        await send_message(f"Player not found!", is_error=True)
-                    except Exception as e:
-                        self.logger.exception(e)
+                if command_and_args[0] in self.ADMIN_COMMANDS["kill"]:
+                    await self._handle_command_kill(player_id, args)
+
+                if command_and_args[0] in self.ADMIN_COMMANDS["setsize"]:
+                    await self._handle_command_set_size(player_id, args)
 
         else:
             name = self.players[player_id].name
