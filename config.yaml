@@ -25,12 +25,12 @@ game:
     default_length: 1
     min_length_fast_mode: 1
     default_mode:
-      move_timeout: 0.3
+      move_timeout: 0.1
       steal_chance: 0.005
     fast_mode:
       enable: true
       move_timeout: 0.05
-      steal_chance: 0.01
+      steal_chance: 0.015
 
 logging:
   level: "debug"

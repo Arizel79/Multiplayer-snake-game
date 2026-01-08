@@ -113,7 +113,7 @@ class PlayersMixin(BaseMixin):
                     "data": text,
                     "stats": {
                         "size": sn.size,
-                        "max_size": sn.max_size,
+                        "max_size": pl.max_size,
                         "deaths": pl.deaths,
                         "kills": pl.kills,
                     },
@@ -151,3 +151,11 @@ class PlayersMixin(BaseMixin):
         for k, v in self.players.items():
             if v.name == player_name:
                 return v
+    async def try_update_player_max_size(self, player_id):
+        sn = self.snakes[player_id]
+        pl = self.players[player_id]
+
+        # if sn.size > pl.max_size:
+        #     pl.max_size = sn.size
+
+        pl.max_size = max(pl.max_size, sn.size)

@@ -27,7 +27,7 @@ class Snake:
     color: str
     name: str
     size: int = 0
-    max_size: int = size
+
     alive: bool = True
     is_fast: bool = False
     immortal: bool = False
@@ -46,8 +46,7 @@ class Snake:
         for i in range(n):
             self.body.append(copy.copy(self.body[-1]))
         self.size = len(self.body)
-        if len(self.body) > self.max_size:
-            self.max_size = len(self.body)
+
 
 
 @dataclass
@@ -56,10 +55,12 @@ class Player:
     name: str
     color: str
     alive: bool
+
+    # Stats
+    max_size: int = -1
     deaths: int = 0
     kills: int = 0
-    best_score: int = 0
-    last_score: int = 0
+
     is_admin: bool = False
     is_frozen: bool = False
 

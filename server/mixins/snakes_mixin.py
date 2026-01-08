@@ -40,7 +40,7 @@ class SnakesMixin(BaseMixin):
         food_key = (new_head.x, new_head.y)
         if food_key in self.food:
             del self.food[food_key]
-            snake.add_segment()
+            await self.add_segments_to_snake(player_id) # Not Seerver class method, this is movement
 
         snake.body.appendleft(new_head)
         snake.remove_segment()
@@ -118,7 +118,7 @@ class SnakesMixin(BaseMixin):
             "color": snake.color,
             "name": snake.name,
             "size": snake.size,
-            "max_size": snake.max_size,
+            "max_size": -6,
             "alive": snake.alive,
             "direction": snake.direction,
             "is_fast": snake.is_fast,
@@ -150,7 +150,7 @@ class SnakesMixin(BaseMixin):
             alive=True,
         )
 
-        sn.add_segment(lenght - 1)
+        await self.add_segments_to_snake(player_id, lenght - 1)
         self.logger.info(
             f"Spawned {self.get_player(player_id)} ({self.players[player_id].name})"
         )
@@ -158,6 +158,11 @@ class SnakesMixin(BaseMixin):
     async def respawn(self, player_id):
         await self.spawn(player_id)
 
+    async def add_segments_to_snake(self, player_id, segments_count=1):
+        sn = self.snakes[player_id]
+        sn.add_segment(segments_count)
+
+        await self.try_update_player_max_size(player_id)
     async def sometimes_steal_body(self, player_id):
         snake = self.snakes[player_id]
         if not snake.alive:
@@ -230,7 +235,6 @@ class SnakesMixin(BaseMixin):
             return
 
         if current_size > new_size:
-            # Удаляем лишние сегменты с конца
             segments_to_remove = current_size - new_size
             snake.remove_segment(segments_to_remove)
             self.logger.info(
@@ -238,28 +242,13 @@ class SnakesMixin(BaseMixin):
             )
 
         elif current_size < new_size:
-            # Добавляем сегменты в конец
             segments_to_add = new_size - current_size
 
-            for _ in range(segments_to_add):
-                # Добавляем копию последнего сегмента в конец
-                if snake.body:
-                    last_segment = snake.body[-1]
-                    new_segment = Point(last_segment.x, last_segment.y)
-                    snake.body.append(new_segment)
-                else:
-                    # Если змейка пустая (не должна быть, но на всякий случай)
-                    spawn_x, spawn_y = self.get_avalible_coords()
-                    snake.body.append(Point(spawn_x, spawn_y))
-
-            snake.size = len(snake.body)
-            if snake.size > snake.max_size:
-                snake.max_size = snake.size
+            await self.add_segments_to_snake(player_id, segments_to_add)
 
             self.logger.info(
                 f"Added {segments_to_add} segments to {self.get_player(player_id)}"
             )
 
-        # Если змейка стала слишком короткой для быстрого режима - выключаем его
         if len(snake.body) < self.config.MIN_LENGHT_FAST_ON:
             snake.is_fast = False
