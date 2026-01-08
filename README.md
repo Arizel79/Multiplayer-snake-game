@@ -17,23 +17,18 @@ TO-DO:
 - [x] Leaderboard
 - [ ] Reactions (like emoji, when you press num keyboard shows emoji above your snake head)
 
+# Running server
 
-See [screenshots](#Screenshots)
-
-#### Web client:
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/81801295-ee96-4db3-b9d6-70d0ce11ce7d" />
-
-# Server
 Tested on python 3.11
 ### Clone repository & create virtual envelopment
 ```
 git clone https://github.com/Arizel79/Multiplayer-snake-game.git
 cd Multiplayer-snake-game
-python3 -m venv \.venv
-source server/.venv/bin/activate # on Windows: .\.venv\Scripts\activate
-pip install -r server/requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate # on Windows: .\.venv\Scripts\activate
+pip install -r requirements.txt
 ```
-### Run server
+### Start server
 You can edit `config.yaml` to setup server
 ```
 python3 main.py
@@ -59,13 +54,3 @@ Chat commands:
 * `/kickme` - kick self
 
 # Screenshots
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/194b622d-94a1-45e5-8cfd-6bbfe53a6858" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/890f35cc-95be-4ade-9bdf-bcfe7379bd0f" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/88f98420-d536-447a-afc7-12a9d4e46c02" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/4db69f3d-ed6b-4dab-9ce2-f843b1358994" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/e787097d-a2e9-402e-a385-9c981dd5cc78" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/6e6bcebb-bb97-4e3d-b126-5bd279e2ea33" />
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/99d3304b-d8d7-4a70-b36f-77417a08c186" />
-
-
-
