@@ -11,9 +11,12 @@ class SnakesMixin(BaseMixin):
         if not snake.alive:
             return
 
-        should_move = (snake.is_fast and self.move_fast) or (
-            not snake.is_fast and self.move_normal
-        )
+        player = self.players[player_id]
+
+        should_move = (
+            (snake.is_fast and self.move_fast)
+            or (not snake.is_fast and self.move_normal)
+        ) and (not player.is_frozen)
         if not should_move:
             return
 
@@ -230,7 +233,9 @@ class SnakesMixin(BaseMixin):
             # Удаляем лишние сегменты с конца
             segments_to_remove = current_size - new_size
             snake.remove_segment(segments_to_remove)
-            self.logger.info(f"Removed {segments_to_remove} segments from {self.get_player(player_id)}")
+            self.logger.info(
+                f"Removed {segments_to_remove} segments from {self.get_player(player_id)}"
+            )
 
         elif current_size < new_size:
             # Добавляем сегменты в конец
@@ -251,7 +256,9 @@ class SnakesMixin(BaseMixin):
             if snake.size > snake.max_size:
                 snake.max_size = snake.size
 
-            self.logger.info(f"Added {segments_to_add} segments to {self.get_player(player_id)}")
+            self.logger.info(
+                f"Added {segments_to_add} segments to {self.get_player(player_id)}"
+            )
 
         # Если змейка стала слишком короткой для быстрого режима - выключаем его
         if len(snake.body) < self.config.MIN_LENGHT_FAST_ON:

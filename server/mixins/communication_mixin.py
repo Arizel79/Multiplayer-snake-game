@@ -34,7 +34,9 @@ class CommunicationMixin(BaseMixin):
 
     async def handle_client_data(self, player_id: str, data: dict):
         try:
-            self.logger.debug(f"Received data from {self.get_player(player_id)}: {data}")
+            self.logger.debug(
+                f"Received data from {self.get_player(player_id)}: {data}"
+            )
             if data["type"] == "direction":
 
                 self.change_direction(player_id, data["data"])

@@ -43,7 +43,6 @@ class Bot(ClientBase):
         self.logger.debug("Wait_for_quit finished")
 
 
-
 if ENAbLE_LOGS_TO_FILE and not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR)
 

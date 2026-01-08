@@ -17,7 +17,9 @@ class BaseMixin:
     def __init__(self, config: ServerConfig):
         self.config = config
         self.setup_logger(
-            __name__, getattr(logging, self.config.logging_level), self.config.logging_file
+            __name__,
+            getattr(logging, self.config.logging_level),
+            self.config.logging_file,
         )
         self.logger.info(f"Logging level: {self.config.logging_level}")
 
@@ -45,4 +47,3 @@ class BaseMixin:
         self.players = {}
 
         self.connections = {}
-

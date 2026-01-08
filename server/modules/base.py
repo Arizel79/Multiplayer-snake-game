@@ -26,6 +26,6 @@ class Server(
     UpdatesMixin,
     HandleConnectionMixin,
     GameMixin,
-    MainMixin
+    MainMixin,
 ):
-   pass
+    pass

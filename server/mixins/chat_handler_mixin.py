@@ -4,8 +4,9 @@ from server.mixins.base_mixin import *
 
 
 class ChatHandlerMixin(BaseMixin):
-    BOOL_TRUE_STR = ("t", "true", "y", "1")
-    BOOL_FALSE_STR = ("f", "false", "n", "0")
+    BOOL_TRUE_STR = ("t", "true", "y", "yes", "1")
+    BOOL_FALSE_STR = ("f", "false", "n", "no", "0")
+
     class PlayerNotFound(Exception):
         pass
 
@@ -24,19 +25,13 @@ class ChatHandlerMixin(BaseMixin):
             out = default
         return out
 
-
     async def _handle_command_admin(self, player_id, args):
-        self.logger.info(
-            f"player {self.get_player(player_id)} want to be admin"
-        )
+        self.logger.info(f"player {self.get_player(player_id)} want to be admin")
         try:
             password = args[0]
         except IndexError:
             password = None
-        if (
-                self.config.admin_password
-                and password == self.config.admin_password
-        ):
+        if self.config.admin_password and password == self.config.admin_password:
             await self.set_player_is_admin(player_id)
 
             await self.send_dict_to_player(
@@ -47,12 +42,19 @@ class ChatHandlerMixin(BaseMixin):
             self.logger.info(
                 f"Player {self.get_player(player_id)} send wrong admin password: {password}"
             )
-            await self.send_message_or_error(player_id, "Wrong admin password!", is_error=True)
+            await self.send_message_or_error(
+                player_id, "Wrong admin password!", is_error=True
+            )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.ADMIN_COMMANDS = {"kick": ("/kick",), "kill": ("/kill",), "setsize": ("/setsize", "/size")}
+        self.ADMIN_COMMANDS = {
+            "kick": ("/kick",),
+            "kill": ("/kill",),
+            "set_size": ("/setsize", "/set_size", "/s"),
+            "set_frozen": ("/frozen", "/set_frozen", "/freeze", "/fr", "/f")
+        }
         self.ALL_ADMIN_COMMANDS = []
         for k, v in self.ADMIN_COMMANDS.items():
             self.ALL_ADMIN_COMMANDS += v
@@ -66,12 +68,8 @@ class ChatHandlerMixin(BaseMixin):
 
     async def _handle_command_killme(self, player_id, args):
 
-        self.logger.info(
-            f"player {self.get_player(player_id)} want kill himself"
-        )
-        await self.player_death(
-            player_id, "%NAME% committed suicide", if_immortal=True
-        )
+        self.logger.info(f"player {self.get_player(player_id)} want kill himself")
+        await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
 
     async def _handle_command_kill(self, player_id, args):
         try:
@@ -82,14 +80,18 @@ class ChatHandlerMixin(BaseMixin):
                 raise self.PlayerNotSpecified
             if not target_player:
                 raise self.PlayerNotFound()
-            await self.player_death(
-                target_player.player_id, if_immortal=True
+            await self.player_death(target_player.player_id, if_immortal=True)
+            await self.send_message_or_error(
+                player_id, f"Player {target_player.name} killed"
             )
-            await self.send_message_or_error(player_id, f"Player {target_player.name} killed")
         except self.PlayerNotFound:
-            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not found!", is_error=True
+            )
         except self.PlayerNotSpecified:
-            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not specified", is_error=True
+            )
 
     async def _handle_command_kick_me(self, player_id, args):
         self.logger.info(
@@ -105,9 +107,13 @@ class ChatHandlerMixin(BaseMixin):
                 raise self.PlayerNotFound()
             await self.remove_player(target_player.player_id)
             if player_id != target_player.player_id:
-                await self.send_message_or_error(player_id, f"Player {target_player.player_id} kicked")
+                await self.send_message_or_error(
+                    player_id, f"Player {target_player.player_id} kicked"
+                )
         except self.PlayerNotFound:
-            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not found!", is_error=True
+            )
         except Exception as e:
             self.logger.exception(e)
 
@@ -129,48 +135,86 @@ class ChatHandlerMixin(BaseMixin):
             if not target_player:
                 raise self.PlayerNotFound()
 
-            await self.set_snake_size(
-                target_player.player_id, new_size=new_size
+            await self.set_snake_size(target_player.player_id, new_size=new_size)
+            await self.send_message_or_error(
+                player_id, f"Player {target_player.name} size updated: {new_size}"
             )
-            await self.send_message_or_error(player_id, f"Player {target_player.name} size updated: {new_size}")
 
         except self.PlayerNotFound:
-            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not found!", is_error=True
+            )
         except self.PlayerNotSpecified:
-            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not specified", is_error=True
+            )
         except ValueError:
-            await self.send_message_or_error(player_id, f"Error setting size", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Error setting size", is_error=True
+            )
         except Exception as e:
             self.logger.exception(e)
 
     async def _handle_command_freeze_player(self, player_id, args):
         try:
-            self.logger.info(f"Freezing player {player_id}")
-            try:
-                target_player = self.get_player_by_name(args[0])
-            except IndexError:
+            self.logger.debug(f"Freezing command by player {player_id}: {args}")
+
+            if not args:
                 raise self.PlayerNotSpecified
 
+            target_player_id = None
+            is_frozen = None
 
-            is_frozen_str = args[1].lower()
-            is_frozen = self.parse_str_bool(is_frozen_str, default=True)
+            first_arg = args[0].lower()
 
+            self_unfreeze_symbols = self.BOOL_FALSE_STR
+            self_freeze_symbols = self.BOOL_TRUE_STR
 
+            if first_arg in self_unfreeze_symbols:
+                target_player_id = player_id
+                is_frozen = False
+
+            elif first_arg in self_freeze_symbols:
+                target_player_id = player_id
+                is_frozen = True
+
+            else:
+                try:
+                    target_player = self.get_player_by_name(args[0])
+                    target_player_id = target_player.player_id
+                except IndexError:
+                    raise self.PlayerNotSpecified
+
+                if len(args) > 1:
+                    is_frozen_str = args[1].lower()
+                    is_frozen = self.parse_str_bool(is_frozen_str, default=True)
+                else:
+                    is_frozen = True
+
+            target_player = self.players[target_player_id]
 
             await self.set_is_player_frozen(
-                target_player.player_id, is_frozen=is_frozen
+                target_player_id, is_frozen=is_frozen
             )
-            await self.send_message_or_error(player_id, f"Player {target_player.name} size updated: {new_size}")
+
+            await self.send_message_or_error(
+                player_id, f"Player {target_player.name} set is frozen: {is_frozen}"
+            )
 
         except self.PlayerNotFound:
-            await self.send_message_or_error(player_id, f"Player not found!", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not found!", is_error=True
+            )
         except self.PlayerNotSpecified:
-            await self.send_message_or_error(player_id, f"Player not specified", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Player not specified", is_error=True
+            )
         except ValueError:
-            await self.send_message_or_error(player_id, f"Error setting size", is_error=True)
+            await self.send_message_or_error(
+                player_id, f"Error setting size", is_error=True
+            )
         except Exception as e:
             self.logger.exception(e)
-
 
     async def handle_client_chat_message(self, player_id, message: str):
         con = self.connections[player_id]
@@ -192,16 +236,17 @@ class ChatHandlerMixin(BaseMixin):
             elif command_and_args[0] == "/kickme":
                 await self._handle_command_kick_me(player_id, args)
 
-
             elif command_and_args[0] == "/admin":
                 await self._handle_command_admin(player_id, args)
 
             elif command_and_args[0] in self.ALL_ADMIN_COMMANDS:
                 if is_player_admin:
-                    self.logger.info("access allowed")
+                    self.logger.info(f"Admin access allowed to {self.get_player(player_id)}")
                 else:
-                    self.logger.info("access denied")
-                    await self.send_message(player_id, "Access denied. You are not admin", is_error=True)
+                    self.logger.info("Admin access allowed to {self.get_player(player_id)}")
+                    await self.send_message(
+                        player_id, "Access denied. You are not admin", is_error=True
+                    )
                     return
 
                 if command_and_args[0] in self.ADMIN_COMMANDS["kick"]:
@@ -210,8 +255,10 @@ class ChatHandlerMixin(BaseMixin):
                 if command_and_args[0] in self.ADMIN_COMMANDS["kill"]:
                     await self._handle_command_kill(player_id, args)
 
-                if command_and_args[0] in self.ADMIN_COMMANDS["setsize"]:
+                if command_and_args[0] in self.ADMIN_COMMANDS["set_size"]:
                     await self._handle_command_set_size(player_id, args)
+                elif command_and_args[0] in self.ADMIN_COMMANDS["set_frozen"]:
+                    await self._handle_command_freeze_player(player_id, args)
 
         else:
             name = self.players[player_id].name

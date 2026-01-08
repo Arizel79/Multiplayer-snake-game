@@ -9,7 +9,6 @@ def count_lines(content):
 ALLOWED_EXTENSIONS = ["py", "css", "js", "html"]
 
 
-
 def read_files(root_dir, exclude_files=None, exclude_dirs=None):
     lines_in_files = defaultdict(int)
     if exclude_files is None:

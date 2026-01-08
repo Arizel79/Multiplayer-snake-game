@@ -44,16 +44,18 @@ class HandleConnectionMixin(BaseMixin):
                 )
                 break
         self.connections[player_id] = ws
-        await self.send_dict_to_ws(
-            ws, {"player_id": player_id, "type": "player_id"}
-        )
+        await self.send_dict_to_ws(ws, {"player_id": player_id, "type": "player_id"})
 
         try:
 
             try:
-                data = await asyncio.wait_for(ws.recv(), timeout=TIMEOUT_WAIT_PLAYER_INFO)
+                data = await asyncio.wait_for(
+                    ws.recv(), timeout=TIMEOUT_WAIT_PLAYER_INFO
+                )
             except asyncio.TimeoutError as e:
-                self.logger.info(f"Wait player info timeout ({TIMEOUT_WAIT_PLAYER_INFO})")
+                self.logger.info(
+                    f"Wait player info timeout ({TIMEOUT_WAIT_PLAYER_INFO})"
+                )
                 return
             player_info = json.loads(data)
             is_slyth_game = player_info.get("slyth_game", False)
@@ -78,9 +80,7 @@ class HandleConnectionMixin(BaseMixin):
                 color = self.is_color_valid(color_str)
 
             except ValueError as e:
-                self.logger.debug(
-                    f"{ws.remote_address} choose invalid color: {e}"
-                )
+                self.logger.debug(f"{ws.remote_address} choose invalid color: {e}")
                 await self.send_dict_to_ws(
                     ws,
                     {
@@ -103,7 +103,9 @@ class HandleConnectionMixin(BaseMixin):
         except Exception as e:
             self.logger.exception(e)
         finally:
-            self.logger.debug(f"Registration {self.get_pretty_address(ws)} finished: {is_ok}")
+            self.logger.debug(
+                f"Registration {self.get_pretty_address(ws)} finished: {is_ok}"
+            )
 
     async def handle_connection(self, ws):
 
@@ -149,4 +151,3 @@ class HandleConnectionMixin(BaseMixin):
 
             await ws.close()
             self.logger.debug("WS closed")
-

@@ -10,6 +10,8 @@ DIRECTIONS = ["right", "down", "left", "up"]
 
 TIMEOUT_WAIT_PLAYER_INFO = 20
 
+LOW_TPS = 14
+
 DEAFAULT_SNAKE_COLORS = [
     "red",
     "green",
