@@ -53,7 +53,8 @@ class ChatHandlerMixin(BaseMixin):
             "kick": ("/kick",),
             "kill": ("/kill",),
             "set_size": ("/setsize", "/set_size", "/s"),
-            "set_frozen": ("/frozen", "/set_frozen", "/freeze", "/fr", "/f")
+            "set_frozen": ("/frozen", "/set_frozen", "/freeze", "/fr", "/f"),
+            "set": {"/set", "/param"},
         }
         self.ALL_ADMIN_COMMANDS = []
         for k, v in self.ADMIN_COMMANDS.items():
@@ -116,11 +117,39 @@ class ChatHandlerMixin(BaseMixin):
             )
         except (IndexError, ValueError):
             self.logger.debug(f"Error in _handle_command_kick: {e}")
-            await self.send_message_or_error(
-                player_id, f"Error", is_error=True
-            )
+            await self.send_message_or_error(player_id, f"Error", is_error=True)
         except Exception as e:
             self.logger.exception(e)
+
+    async def _handle_command_set(self, player_id, args):
+        try:
+            self.logger.info(f"Command set: {args}")
+            try:
+                param = args[0]
+                value = args[1]
+            except IndexError as e:
+                self.logger.exception(e)
+                await self.send_message_or_error(
+                    player_id, f"Error parsing", is_error=True
+                )
+                return
+            if param == "chat_enable":
+                is_chat_enable = self.parse_str_bool(value)
+                if is_chat_enable is None:
+                    raise ValueError
+
+                self.config.is_chat_enable = is_chat_enable
+                self.logger.info(f"Set is_chat_enable={is_chat_enable}")
+            else:
+                await self.send_message_or_error(
+                    player_id, f"Unknown param: {param}", is_error=True
+                )
+                return
+        except ValueError:
+            await self.send_message_or_error(player_id, f"Error value", is_error=True)
+        except Exception as e:
+            self.logger.exception(e)
+            await self.send_message_or_error(player_id, f"Error", is_error=True)
 
     async def _handle_command_set_size(self, player_id, args):
         try:
@@ -198,9 +227,7 @@ class ChatHandlerMixin(BaseMixin):
 
             target_player = self.players[target_player_id]
 
-            await self.set_is_player_frozen(
-                target_player_id, is_frozen=is_frozen
-            )
+            await self.set_is_player_frozen(target_player_id, is_frozen=is_frozen)
 
             await self.send_message_or_error(
                 player_id, f"Player {target_player.name} set is frozen: {is_frozen}"
@@ -246,9 +273,13 @@ class ChatHandlerMixin(BaseMixin):
 
             elif command_and_args[0] in self.ALL_ADMIN_COMMANDS:
                 if is_player_admin:
-                    self.logger.info(f"Admin access allowed to {self.get_player(player_id)}")
+                    self.logger.info(
+                        f"Admin access allowed to {self.get_player(player_id)}"
+                    )
                 else:
-                    self.logger.info("Admin access allowed to {self.get_player(player_id)}")
+                    self.logger.info(
+                        "Admin access allowed to {self.get_player(player_id)}"
+                    )
                     await self.send_message_or_error(
                         player_id, "Access denied. You are not admin", is_error=True
                     )
@@ -259,6 +290,9 @@ class ChatHandlerMixin(BaseMixin):
 
                 if command_and_args[0] in self.ADMIN_COMMANDS["kill"]:
                     await self._handle_command_kill(player_id, args)
+
+                if command_and_args[0] in self.ADMIN_COMMANDS["set"]:
+                    await self._handle_command_set(player_id, args)
 
                 if command_and_args[0] in self.ADMIN_COMMANDS["set_size"]:
                     await self._handle_command_set_size(player_id, args)

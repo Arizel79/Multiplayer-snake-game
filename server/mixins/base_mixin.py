@@ -14,8 +14,10 @@ from server.modules.dataclasses import *
 
 
 class BaseMixin:
-    def __init__(self, config: ServerConfig):
-        self.config = config
+    def __init__(self, yaml_config_file=None):
+        self.yaml_config_file = yaml_config_file
+
+    async def init(self):
         self.setup_logger(
             __name__,
             getattr(logging, self.config.logging_level),
@@ -47,3 +49,6 @@ class BaseMixin:
         self.players = {}
 
         self.connections = {}
+
+    async def load_config(self):
+        self.config = await ServerConfig.get_config_obj_from_file(self.yaml_config_file)

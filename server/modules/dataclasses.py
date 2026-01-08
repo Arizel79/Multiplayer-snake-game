@@ -48,7 +48,6 @@ class Snake:
         self.size = len(self.body)
 
 
-
 @dataclass
 class Player:
     player_id: str

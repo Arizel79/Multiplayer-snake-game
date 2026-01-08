@@ -40,7 +40,9 @@ class SnakesMixin(BaseMixin):
         food_key = (new_head.x, new_head.y)
         if food_key in self.food:
             del self.food[food_key]
-            await self.add_segments_to_snake(player_id) # Not Seerver class method, this is movement
+            await self.add_segments_to_snake(
+                player_id
+            )  # Not Seerver class method, this is movement
 
         snake.body.appendleft(new_head)
         snake.remove_segment()
@@ -163,6 +165,7 @@ class SnakesMixin(BaseMixin):
         sn.add_segment(segments_count)
 
         await self.try_update_player_max_size(player_id)
+
     async def sometimes_steal_body(self, player_id):
         snake = self.snakes[player_id]
         if not snake.alive:

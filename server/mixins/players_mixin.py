@@ -151,6 +151,7 @@ class PlayersMixin(BaseMixin):
         for k, v in self.players.items():
             if v.name == player_name:
                 return v
+
     async def try_update_player_max_size(self, player_id):
         sn = self.snakes[player_id]
         pl = self.players[player_id]
@@ -158,6 +159,5 @@ class PlayersMixin(BaseMixin):
         if sn.size > pl.max_size:
             pl.max_size = sn.size
             # self.logger.debug(f"updated player max_size: {pl.max_size}")
-
 
         # pl.max_size = max(pl.max_size, sn.size)

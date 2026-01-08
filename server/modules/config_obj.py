@@ -1,5 +1,8 @@
 from time import time
 
+import aiofiles
+import yaml
+
 from server.modules.config import *
 from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.dataclasses import *
@@ -26,7 +29,7 @@ class ServerConfig:
         fast_stealing_chance=0.5,
         viewport_width=BASE_VIEWPORT_WIDTH,
         viewport_height=BASE_VIEWPORT_HEIGHT,
-            all_players_admins=False,
+        all_players_admins=False,
         admin_password=None,
         enable_chat=True,
         max_chat_message_length=100,
@@ -90,3 +93,55 @@ class ServerConfig:
 
         self.enable_chat = enable_chat
         self.max_chat_message_length = max_chat_message_length
+
+    @staticmethod
+    def from_yaml(dict_):
+        config = dict_
+        config_server = config.get("server", {})
+        config_admin = config_server.get("admin", {})
+        config_chat = config_server.get("chat", {})
+        config_game = config.get("game", {})
+        config_map = config_game.get("map", {})
+        config_viewport = config_game.get("viewport", {})
+        config_snake = config_game.get("snake", {})
+        config_logging = config.get("logging", {})
+
+        config_default_mode = config_snake.get("default_mode", {})
+        config_fast_mode = config_snake.get("fast_mode", {})
+        config_obj = ServerConfig(
+            address=config_server.get("host", "0.0.0.0"),
+            port=config_server.get("port", 8090),
+            map_width=config_map.get("width", 100),
+            map_height=config_map.get("height", 100),
+            viewport_width=config_viewport.get("width", 100),
+            viewport_height=config_viewport.get("height", 100),
+            max_players=config_server.get("max_players", 20),
+            server_name=config_server.get("name", "Snake Server"),
+            server_desc=config_server.get("description", "This is server"),
+            logging_level=config_logging.get("level", "INFO"),
+            logging_file=config_logging.get("file"),
+            max_food_perc=config_map.get("food_perc", 2),
+            default_move_timeout=config_default_mode.get("move_timeout", 0.1),
+            default_stealing_chance=config_default_mode.get("steal_chance", 0.003),
+            default_snake_length=config_snake.get("default_length", 0.003),
+            fast_move_enable=config_fast_mode.get("enable", False),
+            fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
+            fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
+            all_players_admins=config_admin.get("all_players_admins"),
+            admin_password=config_admin.get("admin_password"),
+            enable_chat=config_chat.get("enable", True),
+            max_chat_message_length=config_chat.get("max_message_length", True),
+        )
+        return config_obj
+
+    @staticmethod
+    async def load_yaml_config(config_file):
+        async with aiofiles.open(config_file, mode="r") as f:
+            content = await f.read()
+            config = yaml.safe_load(content)
+        return config
+
+    @staticmethod
+    async def get_config_obj_from_file(yaml_config_file):
+        dict_ = await ServerConfig.load_yaml_config(yaml_config_file)
+        return ServerConfig.from_yaml(dict_)

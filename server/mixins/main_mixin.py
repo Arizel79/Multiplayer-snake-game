@@ -11,6 +11,7 @@ class MainMixin(BaseMixin):
         self.game_task = None
 
     async def run(self):
+
         self.game_task = asyncio.create_task(self.game_loop())
         try:
             async with websockets.serve(
@@ -37,3 +38,8 @@ class MainMixin(BaseMixin):
                 await self.game_task
             except KeyboardInterrupt:
                 pass
+
+    async def main(self):
+        await self.load_config()
+        await self.init()
+        await self.run()
