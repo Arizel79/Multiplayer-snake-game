@@ -116,10 +116,9 @@ class HandleConnectionMixin(BaseMixin):
             if not player_id:
                 return
 
-            self.players[player_id].is_admin = True
-            self.logger.warning(f"Setting player {player_id} as admin")
-
             name = self.players[player_id].name
+            if self.config.all_players_admins:
+                await self.set_player_is_admin(player_id, True)
 
             try:
 

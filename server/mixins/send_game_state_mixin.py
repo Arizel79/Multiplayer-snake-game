@@ -132,7 +132,7 @@ class SendGameStateMixin(BaseMixin):
 
         self._snake_dict_cache = {}
         for player_id, snake in self.snakes.items():
-            self._snake_dict_cache[player_id] = self._snake_to_dict(snake)
+            self._snake_dict_cache[player_id] = self._snake_to_dict(player_id, snake)
 
         self._food_dict_cache = {}
         for xy, food in self.food.items():

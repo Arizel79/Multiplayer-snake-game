@@ -4,7 +4,10 @@ server:
   name: "Slyth Server"
   description: "Welcome to the server!"
   max_players: 20
-  admin_password: "a3_W9dF8eQiM"
+
+  admin:
+    admin_password: "a3_W9dF8eQiM"
+    all_players_admins: false
 
   tps_log_interval: 5
 

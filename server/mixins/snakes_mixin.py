@@ -112,13 +112,13 @@ class SnakesMixin(BaseMixin):
         )
         return move_normal, move_fast
 
-    def _snake_to_dict(self, snake: Snake):
+    def _snake_to_dict(self, player_id, snake: Snake):
         return {
             "body": [{"x": p.x, "y": p.y} for p in snake.body],
             "color": snake.color,
             "name": snake.name,
             "size": snake.size,
-            "max_size": -6,
+            "max_size": self.players[player_id].max_size,
             "alive": snake.alive,
             "direction": snake.direction,
             "is_fast": snake.is_fast,

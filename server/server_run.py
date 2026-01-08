@@ -47,6 +47,7 @@ def run_server():
         config = load_yaml_config(args.config_file)
 
         config_server = config.get("server", {})
+        config_admin = config_server.get("admin", {})
         config_chat = config_server.get("chat", {})
         config_game = config.get("game", {})
         config_map = config_game.get("map", {})
@@ -75,7 +76,8 @@ def run_server():
             fast_move_enable=config_fast_mode.get("enable", False),
             fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
             fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
-            admin_password=config_server.get("admin_password"),
+            all_players_admins=config_admin.get("all_players_admins"),
+            admin_password=config_admin.get("admin_password"),
             enable_chat=config_chat.get("enable", True),
             max_chat_message_length=config_chat.get("max_message_length", True),
         )

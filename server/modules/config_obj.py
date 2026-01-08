@@ -26,6 +26,7 @@ class ServerConfig:
         fast_stealing_chance=0.5,
         viewport_width=BASE_VIEWPORT_WIDTH,
         viewport_height=BASE_VIEWPORT_HEIGHT,
+            all_players_admins=False,
         admin_password=None,
         enable_chat=True,
         max_chat_message_length=100,
@@ -77,6 +78,7 @@ class ServerConfig:
         self.viewport_height = viewport_height
         self.viewport_scale_factor = 1
 
+        self.all_players_admins = all_players_admins
         self.admin_password = admin_password
 
         self.spatial_grid = {}

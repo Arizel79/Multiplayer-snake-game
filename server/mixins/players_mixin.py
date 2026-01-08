@@ -155,7 +155,9 @@ class PlayersMixin(BaseMixin):
         sn = self.snakes[player_id]
         pl = self.players[player_id]
 
-        # if sn.size > pl.max_size:
-        #     pl.max_size = sn.size
+        if sn.size > pl.max_size:
+            pl.max_size = sn.size
+            # self.logger.debug(f"updated player max_size: {pl.max_size}")
 
-        pl.max_size = max(pl.max_size, sn.size)
+
+        # pl.max_size = max(pl.max_size, sn.size)

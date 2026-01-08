@@ -36,14 +36,14 @@ class ChatHandlerMixin(BaseMixin):
 
             await self.send_dict_to_player(
                 player_id,
-                {"type": "chat_message", "data": "You are admin now!"},
+                {"type": "chat_message", "data": "You are admin now"},
             )
         else:
             self.logger.info(
                 f"Player {self.get_player(player_id)} send wrong admin password: {password}"
             )
             await self.send_message_or_error(
-                player_id, "Wrong admin password!", is_error=True
+                player_id, "Wrong admin password", is_error=True
             )
 
     def __init__(self, *args, **kwargs):
@@ -86,7 +86,7 @@ class ChatHandlerMixin(BaseMixin):
             )
         except self.PlayerNotFound:
             await self.send_message_or_error(
-                player_id, f"Player not found!", is_error=True
+                player_id, f"Player not found", is_error=True
             )
         except self.PlayerNotSpecified:
             await self.send_message_or_error(
@@ -112,7 +112,12 @@ class ChatHandlerMixin(BaseMixin):
                 )
         except self.PlayerNotFound:
             await self.send_message_or_error(
-                player_id, f"Player not found!", is_error=True
+                player_id, f"Player not found", is_error=True
+            )
+        except (IndexError, ValueError):
+            self.logger.debug(f"Error in _handle_command_kick: {e}")
+            await self.send_message_or_error(
+                player_id, f"Error", is_error=True
             )
         except Exception as e:
             self.logger.exception(e)
@@ -142,7 +147,7 @@ class ChatHandlerMixin(BaseMixin):
 
         except self.PlayerNotFound:
             await self.send_message_or_error(
-                player_id, f"Player not found!", is_error=True
+                player_id, f"Player not found", is_error=True
             )
         except self.PlayerNotSpecified:
             await self.send_message_or_error(
@@ -203,7 +208,7 @@ class ChatHandlerMixin(BaseMixin):
 
         except self.PlayerNotFound:
             await self.send_message_or_error(
-                player_id, f"Player not found!", is_error=True
+                player_id, f"Player not found", is_error=True
             )
         except self.PlayerNotSpecified:
             await self.send_message_or_error(
@@ -244,7 +249,7 @@ class ChatHandlerMixin(BaseMixin):
                     self.logger.info(f"Admin access allowed to {self.get_player(player_id)}")
                 else:
                     self.logger.info("Admin access allowed to {self.get_player(player_id)}")
-                    await self.send_message(
+                    await self.send_message_or_error(
                         player_id, "Access denied. You are not admin", is_error=True
                     )
                     return
