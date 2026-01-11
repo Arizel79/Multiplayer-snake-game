@@ -6,19 +6,19 @@ server:
   max_players: 20
 
   admin:
-    admin_password: "a3_W9dF8eQiM"
-    all_players_admins: true
+    admin_password: "a3_W9_UiD432"
+    all_players_admins: false
 
   tps_log_interval: 5
 
   chat:
     enable: true
-    max_message_length: 5
+    max_message_length: 64
 
 game:
   map:
-    width: 256
-    height: 256
+    width: 200
+    height: 200
     food_perc: 4
   viewport:
     width: 100

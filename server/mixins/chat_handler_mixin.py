@@ -115,7 +115,7 @@ class ChatHandlerMixin(BaseMixin):
             await self.send_message_or_error(
                 player_id, f"Player not found", is_error=True
             )
-        except (IndexError, ValueError):
+        except (IndexError, ValueError) as e:
             self.logger.debug(f"Error in _handle_command_kick: {e}")
             await self.send_message_or_error(player_id, f"Error", is_error=True)
         except Exception as e:
@@ -134,12 +134,12 @@ class ChatHandlerMixin(BaseMixin):
                 )
                 return
             if param == "chat_enable":
-                is_chat_enable = self.parse_str_bool(value)
-                if is_chat_enable is None:
+                enable_chat = self.parse_str_bool(value)
+                if enable_chat is None:
                     raise ValueError
 
-                self.config.is_chat_enable = is_chat_enable
-                self.logger.info(f"Set is_chat_enable={is_chat_enable}")
+                self.config.enable_chat = enable_chat
+                self.logger.info(f"Set {self.config.enable_chat=}")
             else:
                 await self.send_message_or_error(
                     player_id, f"Unknown param: {param}", is_error=True

@@ -11,13 +11,13 @@ class HandleConnectionMixin(BaseMixin):
 
     async def handle_registration(self, ws):
         is_ok = False
-        self.logger.info(f"registration {ws}...")
+        self.logger.debug(f"registration {self.get_pretty_address(ws)}...")
         player_id = None
 
         pl_count = len(self.connections)
         pl_count_max = self.config.max_players
         self.logger.debug(
-            f"check max player for {self.get_pretty_address(ws)}: {pl_count} >= {pl_count_max}"
+            f"Check max player for {self.get_pretty_address(ws)}: {pl_count} >= {pl_count_max}"
         )
 
         if pl_count >= pl_count_max:

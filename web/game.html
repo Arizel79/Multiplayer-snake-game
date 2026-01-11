@@ -42,28 +42,19 @@
                     <li><strong>WASD</strong> - Движение змейки</li>
                     <li><strong>T</strong> - Открыть чат</li>
                     <li><strong>TAB</strong> - Список игроков</li>
-                    <li><strong>Пробел/Z</strong> - Быстрый режим (сжигает хвост)</li>
-                    <li><strong>ESC</strong> - Закрыть чат/список или пауза</li>
+                    <li><strong>Пробел/Z</strong> - Быстрый режим</li>
+                    <li><strong>ESC</strong> - Закрыть чат/список игроков</li>
                 </ul>
 
                 <h3>Правила игры</h3>
                 <ul>
-                    <li>Каждая еда увеличивает длину змейки на 1</li>
+                    <li>Каждая еда увеличивает длину змейки</li>
                     <li>Змейка медленно теряет длину, если ничего не ест</li>
                     <li>Быстрый режим ускоряет движение, но быстрее уменьшает вашу змейку</li>
                     <li>Столкновение со стенами, другими змейками или собой приводит к смерти</li>
                     <li>Мёртвые змейки оставляют еду для других</li>
                     <li>Чем длиннее змейка, тем выше счёт</li>
                 </ul>
-
-                <h3>Советы</h3>
-                <ul>
-                    <li>Используйте быстрый режим стратегически для побега</li>
-                    <li>Наблюдайте за паттернами движения других игроков</li>
-                    <li>Оставайтесь ближе к центру для большего пространства</li>
-                    <li>Общайтесь с другими игроками в чате для союзов (или отвлечения!)</li>
-                </ul>
-
             </div>
         </div>
 
@@ -90,14 +81,14 @@
             <div class="panel-header">Новости разработки</div>
             <div class="panel-content">
                 <div class="news-item">
-                    <h3>🚀 Обновление 1.1</h3>
-                    <p><strong>Основные нововведения:</strong></p>
-                    <ul>
-                        <li>Улучшены сенсорные управления для мобильных устройств</li>
-                        <li>Добавлен раздел "Как играть"</li>
-                        <li>Оптимизирована производительность сервера</li>
-                        <li>Добавлен счётчик TPS (тиков в секунду)</li>
-                    </ul>
+                    <p>Тут будут новости разработки</p>
+                    <!--                    <p><strong>Основные нововведения:</strong></p>-->
+                    <!--                    <ul>-->
+                    <!--                        <li>Улучшены сенсорные управления для мобильных устройств</li>-->
+                    <!--                        <li>Добавлен раздел "Как играть"</li>-->
+                    <!--                        <li>Оптимизирована производительность сервера</li>-->
+                    <!--                        <li>Добавлен счётчик TPS (тиков в секунду)</li>-->
+                    <!--                    </ul>-->
                 </div>
 
 
@@ -105,18 +96,16 @@
         </div>
     </div>
 
-        <!-- Футер главного меню -->
     <div id="main-menu-footer">
-        <div>© 2024 @Arizel79</div>
         <div class="footer-links">
-            <a href="https://t.me/Arizel79" target="_blank">Telegram</a>
+            <a href="https://t.me/Arizel79" target="_blank">Разработчик</a>
         </div>
     </div>
 </div>
 </div>
 <div id="game-container">
-        <div id="leaderboard">
-        <div class="leaderboard-title">TOP PLAYERS</div>
+    <div id="leaderboard">
+        <div class="leaderboard-title">Топ игроков</div>
         <div id="leaderboard-list"></div>
     </div>
     <canvas id="game-canvas"><h1>Ошибка: элемент canvas не поддерживается</h1></canvas>
@@ -203,12 +192,14 @@
 </div>
 <script src="scripts/consts.js"></script>
 <script src="scripts/config.js"></script>
-<script src="scripts/init.js"></script>
+
 <script src="scripts/utils.js"></script>
 <script src="scripts/communication.js"></script>
 <script src="scripts/game.js"></script>
 <script src="scripts/rendering.js"></script>
 <script src="scripts/mobile.js"></script>
+
+<script src="scripts/init.js"></script>
 <script src="scripts/script.js"></script>
 </body>
 </html>
