@@ -2,9 +2,9 @@
 const CELL_SIZE = 20;
 
 const default_player_name = "";
-const default_server = "cfvev-144-31-90-229.a.free.pinggy.link:44509";
+const default_server = "apwgo-85-192-48-115.a.free.pinggy.link:46723";
 const show_menu_server_address_input = true;
-const can_user_change_server = false;
+const can_user_change_server =true;
 
 
 const SKINS = [

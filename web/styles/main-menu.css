@@ -150,6 +150,9 @@
 
 .color-examples {
     width: 100%;
+    margin-top: 15px;
+    font-size: 0.8em;
+    color: #aaa;
 }
 /* Side panel content */
 .side-panel .panel-content p {

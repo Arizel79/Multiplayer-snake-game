@@ -192,3 +192,8 @@ position: absolute;
   gap: 20px;
   flex-wrap: wrap;
 }
+
+#main-menu[style*="display: flex"] ~ #game-container #leaderboard,
+#main-menu:not([style*="display: none"]) ~ #game-container #leaderboard {
+    display: none;
+}
