@@ -49,7 +49,10 @@ function startGame() {
 
 
 function handleMovementInput() {
-    if (!gameState.socket || !gameState.gameState || !gameState.gameState.snakes[gameState.playerId]?.alive || gameState.isPaused) return;
+    if (!gameState.socket || !gameState.gameState || !gameState.gameState.snakes[gameState.playerId]?.alive || gameState.isPaused) {
+        console.log("ret")
+        return
+    };
 
     let direction = null;
 
@@ -102,13 +105,9 @@ function handleKeyDown(event) {
             } else if (event.key == "Escape") {
                 event.preventDefault();
                 if (gameState.showChat) {
-                    toggleChat();
+                    closeChat();
                 } else if (gameState.showTablist) {
                     closeTablist();
-                } else if (gameState.isPaused) {
-                    hidePauseMenu();
-                } else {
-                    showPauseMenu();
                 }
             }
             break;

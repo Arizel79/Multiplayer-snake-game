@@ -8,20 +8,29 @@ from time import time
 class GameMixin(BaseMixin):
     async def game_loop(self):
         try:
-            self.logger.info("Server game_loop started")
+            self.logger.info(f"Server game_loop started (TPS limit: {self.config.tps_limit})")
+
+            tick_interval = 1.0 / self.config.tps_limit
+            next_tick = time() + tick_interval
+
             while True:
                 try:
-                    now = time()
+                    current_time = time()
 
-                    if now >= self.old_tick_time + self.config.tick:
-                        self.old_tick_time = now
-                        await self.on_tick()
+                    sleep_time = next_tick - current_time
+                    if sleep_time > 0:
+                        await asyncio.sleep(sleep_time)
 
-                    await asyncio.sleep(self.config.game_speed)
+                    next_tick = max(next_tick + tick_interval, time() + tick_interval)
+
+                    await self.on_tick()
+
                 except Exception as e:
                     self.logger.error(f"Error in game_loop: {e}")
                     self.logger.exception(e)
-        except asyncio.CancelledError as e:
+                    await asyncio.sleep(0)
+
+        except asyncio.CancelledError:
             self.logger.debug("CancelledError in game_loop")
         except Exception as e:
             self.logger.error("Game loop error:")

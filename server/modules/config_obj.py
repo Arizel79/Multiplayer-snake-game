@@ -56,7 +56,8 @@ class ServerConfig:
         else:
             self.server_desc = server_desc
 
-        self.game_speed = 0.001
+        self.tps_limit = 20
+        self.game_speed = 1 / self.tps_limit
         self.max_food_relative = max_food_perc / 100
         self.max_food = (self.width * self.height) * self.max_food_relative
 
@@ -70,7 +71,7 @@ class ServerConfig:
 
         self.default_snake_length = default_snake_length
 
-        self.tick = 0.02
+        self.tick = 1/ self.tps_limit
 
         self.logging_level = logging_level.upper()
         self.logging_file = logging_file

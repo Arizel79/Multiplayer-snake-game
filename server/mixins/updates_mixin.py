@@ -14,8 +14,9 @@ class UpdatesMixin(BaseMixin):
             self.tps = self.tps_counter / (current_time - self.last_tps_time)
             self.tps_counter = 0
             self.last_tps_time = current_time
-            if self.tps < LOW_TPS:
-                self.logger.info(f"Server TPS (low): {self.tps:.1f}")
+
+            if abs(self.tps - self.config.tps_limit) > self.config.tps_limit * 0.5:
+                self.logger.info(f"Server TPS: {self.tps:.2f} (target: {self.config.tps_limit})")
 
         for player_id, pl in self.players.items():
             if pl.is_frozen:

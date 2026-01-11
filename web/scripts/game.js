@@ -56,6 +56,10 @@ function closeChat() {
     gameState.showChat = false;
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("chat-input").value = "";
+
+        document.getElementById("chat-input").blur();
+
+
     showLastMessages();
 
 }
