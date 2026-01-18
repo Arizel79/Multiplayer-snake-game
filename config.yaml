@@ -36,6 +36,6 @@ game:
       steal_chance: 0.1
 
 logging:
-  console_level: "debug"
+  console_level: "info"
   file: "server_logs/log.txt"
   file_level: "debug"
