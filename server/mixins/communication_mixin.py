@@ -21,7 +21,7 @@ class CommunicationMixin(BaseMixin):
             to_send = json.dumps(dict_)
             await ws.send(to_send)
         except Exception as e:
-            self.logger.error(f"Error send to {ws}: {e}")
+            self.logger.debug(f"Error send to websocket {ws} {type(e).__name__}: {e}")
             await ws.close()
 
     async def broadcast_chat_message(self, data):
