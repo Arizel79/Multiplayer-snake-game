@@ -18,8 +18,8 @@ class MainMixin(BaseMixin):
                 self.handle_connection,
                 self.config.address,
                 self.config.port,
-                ping_interval=20,  # отправлять ping каждые 20 секунд
-                ping_timeout=40,  # ждать pong до 40 секунд
+                ping_interval=20,
+                ping_timeout=40,
             ):
                 self.logger.info(
                     f"Server started at {self.config.address}:{self.config.port}"
@@ -38,6 +38,8 @@ class MainMixin(BaseMixin):
                 await self.game_task
             except KeyboardInterrupt:
                 pass
+
+            self.logger.info("Slyth game server closed")
 
     async def main(self):
         await self.load_config()

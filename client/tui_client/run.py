@@ -1,7 +1,6 @@
-import json
 import os
 
-from tui_client.main import  *
+from client.tui_client.main import  *
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import argparse
 import asyncio
