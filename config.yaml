@@ -6,7 +6,7 @@ server:
   max_players: 20
 
   admin:
-    admin_password: "a3_W9_UiD432"
+    admin_password:
     all_players_admins: false
 
   tps_log_interval: 5
