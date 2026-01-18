@@ -5,7 +5,6 @@ from loguru import logger
 
 
 def setup_logging(console_level, log_file, file_level):
-    print(console_level, log_file, file_level)
     logger.remove()
 
     logger.configure()
