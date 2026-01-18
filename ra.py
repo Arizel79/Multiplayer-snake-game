@@ -67,7 +67,7 @@ def main():
 
     exclude_files = []
 
-    exclude_dirs = [".venv", ".venv1", "gen", "admin", "edit_my_tasks", "profile"]
+    exclude_dirs = [".venv", "client_tui", "server"]
     read_files(directory, exclude_files, exclude_dirs)
 
 

@@ -11,6 +11,7 @@ from server.modules.config import *
 from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
 from server.modules.config_obj import ServerConfig
 from server.modules.dataclasses import *
+from server.modules.logger import setup_logging
 
 
 class BaseMixin:
@@ -18,12 +19,14 @@ class BaseMixin:
         self.yaml_config_file = yaml_config_file
 
     async def init(self):
-        self.setup_logger(
-            __name__,
-            getattr(logging, self.config.logging_level),
-            self.config.logging_file,
-        )
-        self.logger.info(f"Logging level: {self.config.logging_level}")
+        # self.setup_logger(
+        #     __name__,
+        #     getattr(logging, self.config.logging_level),
+        #     self.config.logging_file,
+        # )
+        self.logger = setup_logging(self.config.logging_console_level, self.config.logging_file, self.config.logging_file_level)
+        self.logger.info("Starting Slyth game server...")
+        self.logger.info(f"Logging config: {self.config.logging_console_level=} {self.config.logging_file=} {self.config.logging_file_level=}")
 
         self.last_normal_snake_move_time = time()
         self.last_fast_snake_move_time = time()
