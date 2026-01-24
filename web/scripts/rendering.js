@@ -298,7 +298,7 @@ function getNeonGlowColor(snake, index, defaultColor) {
             const textY = screenY - 5;
 
             ctx.strokeStyle = 'rgba(0,0,0,.5)';
-            ctx.lineWidth = 9;
+            ctx.lineWidth = 1;
             ctx.strokeText(snake.name, textX, textY);
 
             ctx.fillText(snake.name, textX, textY);
