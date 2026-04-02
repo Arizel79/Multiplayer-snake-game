@@ -7,11 +7,11 @@ from time import time
 
 import websockets
 
-from server.modules.config import *
-from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
-from server.modules.config_obj import ServerConfig
-from server.modules.dataclasses import *
-from server.modules.logger import setup_logging
+from src.server.modules.config import *
+from src.server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
+from src.server.modules.config_obj import ServerConfig
+from src.server.modules.dataclasses import *
+from src.server.modules.logger import setup_logging
 
 
 class BaseMixin:

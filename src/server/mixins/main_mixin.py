@@ -1,4 +1,4 @@
-from server.mixins.base_mixin import BaseMixin
+from src.server.mixins.base_mixin import BaseMixin
 
 import asyncio
 

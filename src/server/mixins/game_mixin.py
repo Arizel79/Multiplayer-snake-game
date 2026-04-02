@@ -1,7 +1,7 @@
 import asyncio
 import copy
 
-from server.mixins.base_mixin import BaseMixin
+from src.server.mixins.base_mixin import BaseMixin
 from time import time
 
 

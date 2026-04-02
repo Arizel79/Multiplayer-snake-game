@@ -1,6 +1,6 @@
 import html
 
-from server.mixins.base_mixin import *
+from src.server.mixins.base_mixin import *
 
 
 class ChatHandlerMixin(BaseMixin):

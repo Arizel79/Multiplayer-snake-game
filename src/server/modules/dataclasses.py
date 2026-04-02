@@ -2,7 +2,7 @@ import copy
 from collections import deque
 from dataclasses import dataclass
 
-from server.modules.config import MIN_LENGHT_FAST_ON
+from src.server.modules.config import MIN_LENGHT_FAST_ON
 
 
 @dataclass

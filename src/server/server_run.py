@@ -6,8 +6,8 @@ import sys
 import aiofiles
 import yaml
 
-from server.modules.base import Server
-from server.modules.config_obj import ServerConfig
+from src.server.modules.base import Server
+from src.server.modules.config_obj import ServerConfig
 
 websockets_logger = logging.getLogger("websockets")
 websockets_logger.setLevel(logging.CRITICAL)

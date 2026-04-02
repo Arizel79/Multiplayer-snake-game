@@ -3,7 +3,7 @@ import json
 
 import websockets
 
-from server.mixins.base_mixin import BaseMixin
+from src.server.mixins.base_mixin import BaseMixin
 
 
 class CommunicationMixin(BaseMixin):

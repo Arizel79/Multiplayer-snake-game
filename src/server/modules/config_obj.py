@@ -3,9 +3,9 @@ from time import time
 import aiofiles
 import yaml
 
-from server.modules.config import *
-from server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
-from server.modules.dataclasses import *
+from src.server.modules.config import *
+from src.server.modules.config import DEAFAULT_SNAKE_COLORS, VALID_NAME_CHARS
+from src.server.modules.dataclasses import *
 
 
 class ServerConfig:

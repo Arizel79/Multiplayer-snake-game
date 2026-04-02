@@ -1,7 +1,7 @@
 from time import time
 
-from server.mixins.base_mixin import BaseMixin
-from server.modules.config import LOW_TPS
+from src.server.mixins.base_mixin import BaseMixin
+from src.server.modules.config import LOW_TPS
 
 
 class UpdatesMixin(BaseMixin):

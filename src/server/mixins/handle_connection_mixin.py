@@ -3,8 +3,8 @@ import json
 
 import websockets
 
-from server.mixins.base_mixin import BaseMixin
-from server.modules.config import TIMEOUT_WAIT_PLAYER_INFO
+from src.server.mixins.base_mixin import BaseMixin
+from src.server.modules.config import TIMEOUT_WAIT_PLAYER_INFO
 
 
 class HandleConnectionMixin(BaseMixin):

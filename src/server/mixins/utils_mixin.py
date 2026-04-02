@@ -2,9 +2,9 @@ import logging
 import random
 import sys
 
-from server.mixins.base_mixin import BaseMixin
-from server.modules.config import *
-from server.modules.dataclasses import *
+from src.server.mixins.base_mixin import BaseMixin
+from src.server.modules.config import *
+from src.server.modules.dataclasses import *
 
 
 class UtilsMixin(BaseMixin):
