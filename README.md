@@ -7,31 +7,48 @@
 |____/|_|\__, |\__|_| |_|
          |___/ Slyth
 ```
-Multiplayer snake game writen on Python
+Multiplayer snake game written on Python
 
 TO-DO:
 - [x] Server
-- [x] Web client (writen on JS)
+- [x] Web client (written on JS)
 - [x] Text chat
 - [x] Mobile web client (optimize for mobile devices)
 - [x] Leaderboard
 - [ ] Reactions (like emoji, when you press num keyboard shows emoji above your snake head)
 
 # Running server
-
 Tested on python 3.11
-### Clone repository & create virtual envelopment
+### Clone repository
 ```
 git clone https://github.com/Arizel79/Multiplayer-snake-game.git
 cd Multiplayer-snake-game
-python3 -m venv .venv
-source .venv/bin/activate # on Windows: .\.venv\Scripts\activate
-pip install -r requirements.txt
 ```
+
+### Install requirement 
+This project uses [UV](https://docs.astral.sh/uv/) for Python package management, but you can also use plain pip.
+#### Using UV
+```
+uv sync
+```
+#### Using pip
+```
+python -m venv .venv
+source .venv/bin/activate # Windows: .\.venv\Scripts\activate
+pip install -e .
+```
+
 ### Start server
 You can edit `config.yaml` to setup server
+
+#### Using UV
 ```
-python3 main.py
+uv run main.py
+```
+
+#### Using pip
+```
+python main.py
 ```
 
 # Client
