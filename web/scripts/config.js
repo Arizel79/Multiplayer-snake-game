@@ -2,7 +2,7 @@
 const CELL_SIZE = 20;
 
 const default_player_name = "";
-const default_server = "apwgo-85-192-48-115.a.free.pinggy.link:46723";
+const default_server = "localhost:8090";
 const show_menu_server_address_input = true;
 const can_user_change_server =true;
 
