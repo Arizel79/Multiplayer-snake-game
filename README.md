@@ -53,9 +53,32 @@ python main.py
 
 # Client
 ### Web client:
-1. Open `web/game.html` in browser
-2. Enter player name, color and server address
-3. Click "Play"
+#### Flask server
+Use Flask server only for development.
+Using UV:
+```
+uv run web-server
+```
+If not using UV:
+```
+python src/web/web_server.py
+```
+#### Setup webserver
+Setup a web server (e.g., Nginx) to serve static files from the directory src/web/www. Below is a minimal Nginx configuration example:
+
+```nginx
+server {
+    listen 80;
+    server_name localhost; 
+
+    root /path/to/this/project/src/web/www;
+    index game.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
 
 ### How to play
 Controls:
