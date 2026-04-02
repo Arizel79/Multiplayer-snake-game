@@ -7,7 +7,7 @@
 |____/|_|\__, |\__|_| |_|
          |___/ Slyth
 ```
-Multiplayer snake game written on Python
+Multiplayer snake game written in Python
 
 TO-DO:
 - [x] Server
@@ -15,9 +15,8 @@ TO-DO:
 - [x] Text chat
 - [x] Mobile web client (optimize for mobile devices)
 - [x] Leaderboard
-- [ ] Reactions (like emoji, when you press num keyboard shows emoji above your snake head)
 
-# Running server
+# Server
 Tested on python 3.11
 ### Clone repository
 ```
@@ -25,7 +24,7 @@ git clone https://github.com/Arizel79/Multiplayer-snake-game.git
 cd Multiplayer-snake-game
 ```
 
-### Install requirement 
+### Install requirements 
 This project uses [UV](https://docs.astral.sh/uv/) for Python package management, but you can also use plain pip.
 #### Using UV
 ```
@@ -39,7 +38,7 @@ pip install -e .
 ```
 
 ### Start server
-You can edit `config.yaml` to setup server
+You can edit `config.yaml` to configure server
 
 #### Using UV
 ```
@@ -52,8 +51,8 @@ python main.py
 ```
 
 # Client
-### Web client:
-#### Flask server
+## Running web client
+### Flask server
 Use Flask server only for development.
 Using UV:
 ```
@@ -63,7 +62,7 @@ If not using UV:
 ```
 python src/web/web_server.py
 ```
-#### Setup webserver
+### Setup webserver
 Setup a web server (e.g., Nginx) to serve static files from the directory src/web/www. Below is a minimal Nginx configuration example:
 
 ```nginx
@@ -75,12 +74,12 @@ server {
     index game.html;
 
     location / {
-        try_files $uri $uri/ =404;
+        try_files $uri $uri/ =405;
     }
 }
 ```
 
-### How to play
+## How to play
 Controls:
 * WASD - move snake
 * space - move faster
@@ -93,4 +92,3 @@ Chat commands:
 * `/killme` - kill self
 * `/kickme` - kick self
 
-# Screenshots
