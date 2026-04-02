@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-slyth-server = "src.server.server_run:main"
+server = "src.server.server_run:main"
 
 [build-system]
 requires = ["hatchling"]

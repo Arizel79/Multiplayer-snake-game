@@ -43,7 +43,7 @@ You can edit `config.yaml` to setup server
 
 #### Using UV
 ```
-uv run main.py
+uv run server
 ```
 
 #### Using pip
