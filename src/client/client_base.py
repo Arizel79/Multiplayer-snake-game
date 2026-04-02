@@ -9,7 +9,6 @@ from sys import stdout
 import traceback
 import logging
 from abc import ABC, abstractmethod
-from colorama import init, Fore, Back, Style
 
 
 class Disconnected(Exception):
@@ -387,16 +386,12 @@ class ClientBase(ABC):
             self.logger.info("Session finished")
 
     async def run_game(self):
-        # print(f"{Fore.GREEN}{self.ascii_logo}{Style.RESET_ALL}", end="")
         if self.run_mode in ["cli", "gui"]:
             self.logger.info(
-                f"{Fore.LIGHTBLACK_EX}{Fore.LIGHTYELLOW_EX}Welcome to Multiplayer Snake {self.version}{Style.RESET_ALL}"
+                f"Welcome to Multiplayer Snake {self.version}"
             )
             self.logger.info(
-                f"{Fore.LIGHTBLACK_EX}Powered by Arizel79 (https://github.com/Arizel79){Style.RESET_ALL}"
-            )
-            self.logger.info(
-                f"{Fore.LIGHTBLACK_EX}Source code: https://github.com/Arizel79/Multiplayer-snake-game{Style.RESET_ALL}"
+                f"Source code: https://github.com/Arizel79/Multiplayer-snake-game"
             )
 
         self.logger.debug(f"main menu? {'true' if self.use_main_menu else 'false'}")

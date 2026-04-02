@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 server = "src.server.server_run:main"
+bot = "src.client.bot:main"
 
 [build-system]
 requires = ["hatchling"]
