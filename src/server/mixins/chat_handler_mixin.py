@@ -1,17 +1,12 @@
 import html
 
 from src.server.mixins.base_mixin import *
+from src.server.modules.exceptions import *
 
 
 class ChatHandlerMixin(BaseMixin):
     BOOL_TRUE_STR = ("t", "true", "y", "yes", "1")
     BOOL_FALSE_STR = ("f", "false", "n", "no", "0")
-
-    class PlayerNotFound(Exception):
-        pass
-
-    class PlayerNotSpecified(Exception):
-        pass
 
     def parse_str_bool(self, bool_str, default=None):
         bool_str = bool_str.lower()
@@ -68,7 +63,6 @@ class ChatHandlerMixin(BaseMixin):
         )
 
     async def _handle_command_killme(self, player_id, args):
-
         self.logger.info(f"player {self.get_player(player_id)} want kill himself")
         await self.player_death(player_id, "%NAME% committed suicide", if_immortal=True)
 
@@ -78,18 +72,18 @@ class ChatHandlerMixin(BaseMixin):
             try:
                 target_player = self.get_player_by_name(args[0])
             except IndexError:
-                raise self.PlayerNotSpecified
+                raise PlayerNotSpecified
             if not target_player:
-                raise self.PlayerNotFound()
+                raise PlayerNotFound
             await self.player_death(target_player.player_id, if_immortal=True)
             await self.send_message_or_error(
                 player_id, f"Player {target_player.name} killed"
             )
-        except self.PlayerNotFound:
+        except PlayerNotFound:
             await self.send_message_or_error(
                 player_id, f"Player not found", is_error=True
             )
-        except self.PlayerNotSpecified:
+        except PlayerNotSpecified:
             await self.send_message_or_error(
                 player_id, f"Player not specified", is_error=True
             )
@@ -105,13 +99,13 @@ class ChatHandlerMixin(BaseMixin):
             self.logger.info(f"Kicking {player_id} from server")
             target_player = self.get_player_by_name(args[0])
             if not target_player:
-                raise self.PlayerNotFound()
+                raise PlayerNotFound()
             await self.remove_player(target_player.player_id)
             if player_id != target_player.player_id:
                 await self.send_message_or_error(
                     player_id, f"Player {target_player.player_id} kicked"
                 )
-        except self.PlayerNotFound:
+        except PlayerNotFound:
             await self.send_message_or_error(
                 player_id, f"Player not found", is_error=True
             )
@@ -158,7 +152,7 @@ class ChatHandlerMixin(BaseMixin):
                 try:
                     target_player = self.get_player_by_name(args[0])
                 except IndexError:
-                    raise self.PlayerNotSpecified
+                    raise PlayerNotSpecified
 
                 new_size = int(args[1])
             elif len(args) == 1:
@@ -167,18 +161,18 @@ class ChatHandlerMixin(BaseMixin):
             else:
                 raise ValueError
             if not target_player:
-                raise self.PlayerNotFound()
+                raise PlayerNotFound()
 
             await self.set_snake_size(target_player.player_id, new_size=new_size)
             await self.send_message_or_error(
                 player_id, f"Player {target_player.name} size updated: {new_size}"
             )
 
-        except self.PlayerNotFound:
+        except PlayerNotFound:
             await self.send_message_or_error(
                 player_id, f"Player not found", is_error=True
             )
-        except self.PlayerNotSpecified:
+        except PlayerNotSpecified:
             await self.send_message_or_error(
                 player_id, f"Player not specified", is_error=True
             )
@@ -194,7 +188,7 @@ class ChatHandlerMixin(BaseMixin):
             self.logger.debug(f"Freezing command by player {player_id}: {args}")
 
             if not args:
-                raise self.PlayerNotSpecified
+                raise PlayerNotSpecified
 
             target_player_id = None
             is_frozen = None
@@ -217,7 +211,7 @@ class ChatHandlerMixin(BaseMixin):
                     target_player = self.get_player_by_name(args[0])
                     target_player_id = target_player.player_id
                 except IndexError:
-                    raise self.PlayerNotSpecified
+                    raise PlayerNotSpecified
 
                 if len(args) > 1:
                     is_frozen_str = args[1].lower()
@@ -233,11 +227,11 @@ class ChatHandlerMixin(BaseMixin):
                 player_id, f"Player {target_player.name} set is frozen: {is_frozen}"
             )
 
-        except self.PlayerNotFound:
+        except PlayerNotFound:
             await self.send_message_or_error(
                 player_id, f"Player not found", is_error=True
             )
-        except self.PlayerNotSpecified:
+        except PlayerNotSpecified:
             await self.send_message_or_error(
                 player_id, f"Player not specified", is_error=True
             )
@@ -278,7 +272,7 @@ class ChatHandlerMixin(BaseMixin):
                     )
                 else:
                     self.logger.info(
-                        "Admin access allowed to {self.get_player(player_id)}"
+                        f"Admin access allowed to {self.get_player(player_id)}"
                     )
                     await self.send_message_or_error(
                         player_id, "Access denied. You are not admin", is_error=True

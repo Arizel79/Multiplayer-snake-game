@@ -20,7 +20,7 @@ class ServerConfig:
         server_desc=None,
         logging_console_level="debug",
         logging_file=None,
-            logging_file_level="debug",
+        logging_file_level="debug",
         max_food_perc=10,
         default_move_timeout=0.3,
         fast_move_enable=False,

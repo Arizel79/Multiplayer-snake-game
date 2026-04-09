@@ -61,7 +61,6 @@ class SendGameStateMixin(BaseMixin):
         return state
 
     def _get_full_state(self):
-        """Полное состояние игры (существующая логика)"""
         dict_ = {
             "type": "game_state",
             # "map_borders": [i for i in self.get_map_rect()],
@@ -74,7 +73,6 @@ class SendGameStateMixin(BaseMixin):
         return dict_
 
     def _get_partial_state(self, player_id: str):
-        """Оптимизированная версия с кэшированием"""
         if player_id not in self.snakes:
             return
 
@@ -127,7 +125,6 @@ class SendGameStateMixin(BaseMixin):
         return list(self.get_map_rect())
 
     def _update_caches(self):
-        """Обновление кэшей"""
         self._cached_map_borders = self.get_map_borders
 
         self._snake_dict_cache = {}
@@ -148,7 +145,6 @@ class SendGameStateMixin(BaseMixin):
         }
 
     def _player_to_dict(self, player: Player):
-        """Конвертирует игрока в словарь"""
         return {
             "name": player.name,
             "color": player.color,

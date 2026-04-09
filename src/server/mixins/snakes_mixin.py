@@ -97,7 +97,6 @@ class SnakesMixin(BaseMixin):
         return False
 
     def point_in_snake_body(self, point, snake, exclude_head=False):
-        """Проверяет, находится ли точка в теле змеи"""
         start_index = 1 if exclude_head else 0
         for i in range(start_index, len(snake.body)):
             if point.x == snake.body[i].x and point.y == snake.body[i].y:
@@ -105,7 +104,6 @@ class SnakesMixin(BaseMixin):
         return False
 
     async def is_move_now(self, now):
-
         move_normal = (
             now >= self.last_normal_snake_move_time + self.config.DEFAULT_MOVE_TIMEOUT
         )
