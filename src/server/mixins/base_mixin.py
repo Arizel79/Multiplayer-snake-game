@@ -24,9 +24,15 @@ class BaseMixin:
         #     getattr(logging, self.config.logging_level),
         #     self.config.logging_file,
         # )
-        self.logger = setup_logging(self.config.logging_console_level, self.config.logging_file, self.config.logging_file_level)
+        self.logger = setup_logging(
+            self.config.logging_console_level,
+            self.config.logging_file,
+            self.config.logging_file_level,
+        )
         self.logger.info("Starting Slyth game server...")
-        self.logger.info(f"Logging config: {self.config.logging_console_level=} {self.config.logging_file=} {self.config.logging_file_level=}")
+        self.logger.info(
+            f"Logging config: {self.config.logging_console_level=} {self.config.logging_file=} {self.config.logging_file_level=}"
+        )
 
         self.last_normal_snake_move_time = time()
         self.last_fast_snake_move_time = time()

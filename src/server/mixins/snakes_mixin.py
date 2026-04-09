@@ -40,9 +40,7 @@ class SnakesMixin(BaseMixin):
         food_key = (new_head.x, new_head.y)
         if food_key in self.food:
             del self.food[food_key]
-            await self.add_segments_to_snake(
-                player_id
-            )  # Not Seerver class method, this is movement
+            await self.add_segments_to_snake(player_id)
 
         snake.body.appendleft(new_head)
         snake.remove_segment()
@@ -210,7 +208,7 @@ class SnakesMixin(BaseMixin):
                     )
 
                 self.logger.debug(
-                    f"FAST SPEED Stole {segments_to_remove} segments ({self.config.steal_percentage * 100}%) from {self.get_player(player_id)}"
+                    f"Stole {segments_to_remove} segments ({self.config.steal_percentage * 100}%) from {self.get_player(player_id)} (fast speed)"
                 )
 
                 snake.remove_segment(

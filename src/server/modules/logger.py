@@ -45,6 +45,3 @@ def setup_logging(console_level, log_file, file_level):
         )
 
     return patched_logger
-
-
-

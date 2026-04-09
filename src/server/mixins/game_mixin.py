@@ -8,7 +8,9 @@ from time import time
 class GameMixin(BaseMixin):
     async def game_loop(self):
         try:
-            self.logger.info(f"Server game_loop started (TPS limit: {self.config.tps_limit})")
+            self.logger.info(
+                f"Server game_loop started (TPS limit: {self.config.tps_limit})"
+            )
 
             tick_interval = 1.0 / self.config.tps_limit
             next_tick = time() + tick_interval

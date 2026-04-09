@@ -72,7 +72,6 @@ class ServerConfig:
 
         self.default_snake_length = default_snake_length
 
-
         # logging
         self.logging_console_level = logging_console_level.upper()
         self.logging_file = logging_file
@@ -116,29 +115,23 @@ class ServerConfig:
         config_obj = ServerConfig(
             address=config_server.get("host", "0.0.0.0"),
             port=config_server.get("port", 8090),
-
             server_name=config_server.get("name", "Snake Server"),
             server_desc=config_server.get("description", "This is server"),
             max_players=config_server.get("max_players", 20),
-
             logging_console_level=config_logging.get("console_level", "INFO"),
             logging_file=config_logging.get("file"),
             logging_file_level=config_logging.get("file_level", "INFO"),
-
             map_width=config_map.get("width", 100),
             map_height=config_map.get("height", 100),
             viewport_width=config_viewport.get("width", 100),
             viewport_height=config_viewport.get("height", 100),
-
             max_food_perc=config_map.get("food_perc", 2),
             default_snake_length=config_snake.get("default_length", 0.003),
-
             default_move_timeout=config_default_mode.get("move_timeout", 0.1),
             default_stealing_chance=config_default_mode.get("steal_chance", 0.003),
             fast_move_enable=config_fast_mode.get("enable", False),
             fast_move_timeout=config_fast_mode.get("move_timeout", 0.07),
             fast_stealing_chance=config_fast_mode.get("steal_chance", 0.01),
-
             all_players_admins=config_admin.get("all_players_admins"),
             admin_password=config_admin.get("admin_password"),
             enable_chat=config_chat.get("enable", True),
