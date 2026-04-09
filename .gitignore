@@ -1,4 +1,5 @@
 server_logs
+config.yaml
 ra.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
