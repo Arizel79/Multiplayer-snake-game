@@ -38,7 +38,10 @@ pip install -e .
 ```
 
 ### Start server
-You can edit `config.yaml` to configure server
+Copy example config:
+```
+cp config.yaml.example config.yaml
+```
 
 #### Using UV
 ```
